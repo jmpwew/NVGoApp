@@ -12,7 +12,9 @@ import RegisterScreen from './screens/RegisterScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileDetails from './screens/ProfileDetailsScreen';
+import MyReportsScreen from './screens/MyReportsScreen';  
 import TabNavigator from './navigation/TabNavigator';
+
 
 
 
@@ -41,6 +43,7 @@ export default function App() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="ProfileDetails" component={ProfileDetails} />
+        <Stack.Screen name="MyReports" component={MyReportsScreen}/>
 
 
       </Stack.Navigator>

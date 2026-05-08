@@ -9,6 +9,7 @@ import {
   ScrollView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import api_url from '../utils/api';
 
 export default function RegisterScreen({ navigation }) {
   const [firstname, setFirstname] = useState('');
@@ -43,7 +44,7 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    const res = await fetch('http://192.168.254.152:5000/api/auth/register', {
+    const res = await fetch('${api_url}/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

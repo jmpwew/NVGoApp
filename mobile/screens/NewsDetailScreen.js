@@ -1,4 +1,5 @@
 import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import api_url from '../utils/api';
 
 export default function NewsDetailScreen({ route }) {
   const { news } = route.params;
@@ -24,7 +25,7 @@ export default function NewsDetailScreen({ route }) {
       {news.image && (
         <Image
           source={{
-            uri: `http://192.168.254.152:5000/uploads/${news.image}`
+            uri: `${api_url}/uploads/${news.image}`
           }}
           style={styles.image}
         />

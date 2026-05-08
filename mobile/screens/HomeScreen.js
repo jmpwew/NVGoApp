@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, StatusBar, Dimensions, Platform,
+  Linking, Alert,  RefreshControl
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { Svg, Path, Rect, Circle } from 'react-native-svg';
 
+
 const { width } = Dimensions.get('window');
 
 //colors
 import {C} from '../constants/colors';
+import api_url from '../utils/api';
 
 //icons for qa
 const IcReport = ({ s = 22, c = C.red }) => (
@@ -97,6 +100,7 @@ export default function HomeScreen({ navigation }) {
   const [weather, setWeather] = useState(null);
   const [latestNews, setLatestNews] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [refreshing,       setRefreshing]       = useState(false);
 
   useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews(); }, []);
 
@@ -111,7 +115,22 @@ export default function HomeScreen({ navigation }) {
     if (h < 18) return 'Good afternoon';
     return 'Good evening';
   };
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
 
+      await Promise.all([
+        fetchWeather(),
+        fetchLatestNews(),
+        loadUser(),
+      ]);
+
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
   const fetchWeather = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -127,7 +146,7 @@ export default function HomeScreen({ navigation }) {
 
   const fetchLatestNews = async () => {
     try {
-      const res  = await fetch('http://192.168.254.152:5000/api/news');
+      const res  = await fetch(`${api_url}/api/news`);
       const data = await res.json();
       setLatestNews(data.slice(0, 4));
     } catch (e) { console.log(e); }
@@ -141,6 +160,24 @@ export default function HomeScreen({ navigation }) {
   };
 
   const wInfo = weather ? weatherInfo(weather.weathercode) : null;
+  
+  const handleEmergencyCall = () => {
+  Alert.alert(
+    'Emergency Call',
+    'You are about to call 911 emergency services.',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Call 911',
+        style: 'destructive',
+        onPress: () => Linking.openURL('tel:911'),
+      },
+    ]
+  );
+};
 
   //render
   return (
@@ -177,7 +214,7 @@ export default function HomeScreen({ navigation }) {
                 <Image
                   source={
                     user?.image
-                      ? { uri: `http://192.168.254.152:5000/uploads/${user.image}` }
+                      ? { uri: `${api_url}/uploads/${user.image}` }
                       : require('../assets/default-avatar.png')
                   }
                   style={s.avatar}
@@ -203,7 +240,7 @@ export default function HomeScreen({ navigation }) {
                   : user.name ?? 'User'}
               </Text>
               {user.address
-                ? <Text style={s.greetAddr} numberOfLines={1}>📍 {user.address}, Guimaras</Text>
+                ? <Text style={s.greetAddr} numberOfLines={1}> {user.address}, Nueva Valencia, Guimaras</Text>
                 : null}
             </View>
             <View style={s.verifiedBadge}>
@@ -216,7 +253,7 @@ export default function HomeScreen({ navigation }) {
           <View style={s.guestCard}>
             <View style={s.guestTop}>
               <View>
-                <Text style={s.greetHello}>{getGreeting()} 👋</Text>
+            
                 <Text style={s.guestSub}>Stay informed with NVGo</Text>
               </View>
               
@@ -256,11 +293,20 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
         onScrollBeginDrag={() => setMenuVisible(false)}
-      >
+      
+         refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      tintColor={C.green}
+                      colors={[C.green]}
+                    />
+                  }
+                  >
        
 
-        {/* Quick actions  */}
-        <Text style={s.secTitle}>Quick Actions</Text>
+        {/* features  */}
+        <Text style={s.secTitle}>Features</Text>
         <View style={s.qaGrid}>
           {[
             { label:'Report Issue',      icon:<IcReport/>,  bg:C.redBg,    bc:C.red+'20',    onPress:()=>navigation.navigate('Report') },
@@ -307,7 +353,7 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity style={s.featured} activeOpacity={0.9}
               onPress={() => navigation.navigate('NewsDetail', { news: latestNews[0] })}>
               {latestNews[0].image
-                ? <Image source={{ uri:`http://192.168.254.152:5000/uploads/${latestNews[0].image}` }} style={s.featuredImg}/>
+                ? <Image source={{ uri:`${api_url}/uploads/${latestNews[0].image}` }} style={s.featuredImg}/>
                 : <View style={[s.featuredImg, { backgroundColor: C.greenDk }]}/>}
               <View style={s.featuredOverlay}/>
               <View style={s.featuredContent}>
@@ -324,7 +370,7 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity key={item.id} style={s.newsRow} activeOpacity={0.8}
                 onPress={() => navigation.navigate('NewsDetail', { news: item })}>
                 {item.image
-                  ? <Image source={{ uri:`http://192.168.254.152:5000/uploads/${item.image}` }} style={s.newsThumb}/>
+                  ? <Image source={{ uri:`${api_url}/uploads/${item.image}` }} style={s.newsThumb}/>
                   : <View style={[s.newsThumb, s.newsThumbEmpty]}><IcNews s={20} c={C.skyDk}/></View>}
                 <View style={s.newsBody}>
                   <View style={s.newsTagWrap}><Text style={s.newsTagTxt}>NEWS</Text></View>
@@ -340,17 +386,30 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {/*  Emergency SOS  */}
-        <TouchableOpacity style={s.sos} onPress={() => navigation.navigate('Emergency')} activeOpacity={0.88}>
-          <View style={s.sosOrb}/>
-          <View style={s.sosIcWrap}><IcSOS/></View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.sosTitle}>Emergency? Call 911</Text>
-            <Text style={s.sosSub}>Tap for emergency hotlines</Text>
-          </View>
-          <View style={s.sosBtn}><Text style={s.sosBtnTxt}>CALL</Text></View>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={s.sos}
+  activeOpacity={0.9}
+  delayLongPress={1200}
+  onLongPress={handleEmergencyCall}
+>
+  <View style={s.sosOrb}/>
 
-      </ScrollView>
+  <View style={s.sosIcWrap}>
+    <IcSOS/>
+  </View>
+
+  <View style={{ flex: 1 }}>
+    <Text style={s.sosTitle}>Emergency? Call 911</Text>
+    <Text style={s.sosSub}>
+      Press and hold for emergency call
+    </Text>
+  </View>
+
+  <View style={s.sosBtn}>
+    <Text style={s.sosBtnTxt}>HOLD</Text>
+  </View>
+</TouchableOpacity>
+</ScrollView>
     </View>
   );
 }
@@ -411,7 +470,7 @@ const s = StyleSheet.create({
   secTitle:    { fontSize: 13.5, fontWeight: '800', color: C.text, letterSpacing: -0.2, marginBottom: 10 },
   secLink:     { fontSize: 11.5, fontWeight: '700', color: C.skyDk, marginBottom: 10 },
 
-  /* Quick actions */
+  /* features */
   qaGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   qaCard:      { width: (width - 42) / 2, backgroundColor: C.card, borderRadius: 16, padding: 14, gap: 10, borderWidth: 1.5, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   qaIcWrap:    { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },

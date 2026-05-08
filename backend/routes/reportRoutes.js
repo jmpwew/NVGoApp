@@ -5,21 +5,20 @@ const upload = require('../config/multer');
 const router = express.Router();
 
 // CREATE REPORT
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', upload.array('images', 5), async (req, res) => {  
   try {
-    console.log('BODY:', req.body);   
-    console.log('FILE:', req.file);  
-     
    
-    const { name, contact, description, latitude, longitude, location_note } = req.body;
+    const {user_id, name, contact, description, latitude, longitude, location_note } = req.body;
 
-    const image = req.file ? req.file.filename : null;
+    const images = req.files
+    ? req.files.map(file => file.filename)
+    : [];
 
     const result = await pool.query(
-      `INSERT INTO reports (name, contact, description, latitude, longitude, image, location_note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO reports (user_id, name, contact, description, latitude, longitude, images, location_note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8 )
        RETURNING *`,
-      [name, contact, description, latitude, longitude, image, location_note]
+      [user_id, name, contact, description, latitude, longitude, images, location_note]
     );
    
     res.json(result.rows[0]);
@@ -31,11 +30,19 @@ router.post('/', upload.single('image'), async (req, res) => {
 });
 
 // GET REPORTS
-router.get('/', async (req, res) => {
+
+
+router.get('/user/:id', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM reports ORDER BY created_at DESC');
+    const result = await pool.query(
+      'SELECT * FROM reports WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.params.id]
+    );
+
     res.json(result.rows);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });

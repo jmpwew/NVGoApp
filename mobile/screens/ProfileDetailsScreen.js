@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api_url from '../utils/api';
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
@@ -19,7 +20,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const imageUrl = user?.image
-    ? `http://192.168.254.152:5000/uploads/${user.image}`
+    ? `${api_url}/uploads/${user.image}`
     : null;
 
   return (

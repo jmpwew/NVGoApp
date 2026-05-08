@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
+import api_url from '../utils/api';
 
 export default function EditProfileScreen({ navigation }) {
   const [userId, setUserId] = useState(null);
@@ -92,7 +93,7 @@ export default function EditProfileScreen({ navigation }) {
         });
       }
 
-      const res = await fetch('http://192.168.254.152:5000/api/profile', {
+      const res = await fetch('${api_url}/api/profile', {
         method: 'PUT',
         body: formData
       });
@@ -134,7 +135,7 @@ export default function EditProfileScreen({ navigation }) {
             ? { uri: image.uri }
             : currentImage
             ? {
-                uri: `http://192.168.254.152:5000/uploads/${currentImage}?t=${Date.now()}`
+                uri: `${api_url}/uploads/${currentImage}?t=${Date.now()}`
               }
             : require('../assets/default-avatar.png')
         }

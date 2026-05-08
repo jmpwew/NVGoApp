@@ -5,7 +5,7 @@ const upload = require('../config/multer');
 const router = express.Router();
 
 
-// 📝 CREATE NEWS (with image)
+//  CREATE NEWS (with image)
 router.post('/', upload.single('image'), async (req, res) => {
   try {
     console.log('BODY:', req.body);
@@ -50,7 +50,7 @@ router.get('/category/:category', async (req, res) => {
 });
 
 
-// 📥 GET ALL NEWS
+//  GET ALL NEWS
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
