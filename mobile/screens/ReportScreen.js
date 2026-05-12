@@ -180,7 +180,7 @@ export default function ReportScreen() {
       });
     });
 
-    const res = await fetch('${api_url}/api/reports', {
+    const res = await fetch(`${api_url}/api/reports`, {
       method: 'POST',
       body: formData,
     });
@@ -426,4 +426,4 @@ const s = StyleSheet.create({
   submitBtn:    { backgroundColor: C.green, borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14, shadowColor: C.green, shadowOpacity: 0.35, shadowRadius: 10, elevation: 4 },
   submitTxt:    { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },
   disclaimer:   { fontSize: 10.5, color: C.muted, textAlign: 'center', lineHeight: 15, marginTop: 10, paddingHorizontal: 20 },
-});s
+});

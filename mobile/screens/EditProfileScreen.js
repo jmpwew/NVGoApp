@@ -93,7 +93,7 @@ export default function EditProfileScreen({ navigation }) {
         });
       }
 
-      const res = await fetch('${api_url}/api/profile', {
+      const res = await fetch(`${api_url}/api/profile`, {
         method: 'PUT',
         body: formData
       });

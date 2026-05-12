@@ -16,7 +16,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('${api_url}/api/auth/login', {
+      const response = await fetch(`${api_url}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -31,13 +31,13 @@ export default function LoginScreen({ navigation }) {
         return;
       }
 
-      // ✅ Save session
+      //  Save session
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
       Alert.alert('Success', 'Logged in!');
 
-      // 🔥 Role-based navigation
+      //  Role-based navigation
       if (data.user.role === 'admin') {
         navigation.replace('Main'); // or AdminScreen later
       } else {
