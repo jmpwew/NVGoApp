@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 /*  IMPORT DB */
-const pool = require('./config/db'); // make sure you have db.js
+const pool = require('./config/db'); 
 
 /*  IMPORT MULTER */
 const multer = require('multer');
