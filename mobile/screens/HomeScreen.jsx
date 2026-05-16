@@ -11,7 +11,7 @@ import { Svg, Path, Rect, Circle } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 
-//colors
+
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
 
@@ -100,7 +100,7 @@ export default function HomeScreen({ navigation }) {
   const [weather, setWeather] = useState(null);
   const [latestNews, setLatestNews] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [refreshing,       setRefreshing]       = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews(); }, []);
 

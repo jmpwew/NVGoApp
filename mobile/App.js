@@ -14,6 +14,7 @@ import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileDetails from './screens/ProfileDetailsScreen';
 import MyReportsScreen from './screens/MyReportsScreen';  
 import TabNavigator from './navigation/TabNavigator';
+import ChangePasswordScreen from './screens/ChangePasswordScreen';
 
 
 
@@ -25,25 +26,52 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
 
-        {/* Main App (Tabs) */}
         <Stack.Screen
           name="Main"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
-        
-        {/* Auth Screens */}
+
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
 
         
 
-        {/* Other Screens (outside tabs) */}
-        <Stack.Screen name="NewsDetail" component={NewsDetailScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-        <Stack.Screen name="ProfileDetails" component={ProfileDetails} />
-        <Stack.Screen name="MyReports" component={MyReportsScreen}/>
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="EditProfile"
+          component={EditProfileScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="ProfileDetails"
+          component={ProfileDetails}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="MyReports"
+          component={MyReportsScreen}
+          options={{ headerShown: false }}
+        />
+        
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+            options={{ headerShown: false }}
+          />
+           <Stack.Screen
+              name="NewsDetail"
+              component={NewsDetailScreen}
+              options={{ headerShown: false }}
+            />
+     
 
 
       </Stack.Navigator>

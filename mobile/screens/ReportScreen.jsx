@@ -72,13 +72,13 @@ const IcSend = () => (
 
 export default function ReportScreen() {
   const [name, setName] = useState('');
-  const [contact,      setContact]      = useState('');
-  const [description,  setDescription]  = useState('');
-  const [location,     setLocation]     = useState(null);
+  const [contact, setContact] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState(null);
   const [locationNote, setLocationNote] = useState('');
-  const [images,       setImages]       = useState([]);
-  const [submitting,   setSubmitting]   = useState(false);
-  const [locLoading,   setLocLoading]   = useState(false);
+  const [images, setImages] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
 
   useEffect(() => {
     getLocation();

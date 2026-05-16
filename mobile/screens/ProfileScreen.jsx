@@ -185,21 +185,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
           )}
 
-          {/* Stats row */}
-          {user && (
-            <View style={s.statsRow}>
-              {[
-                { val: user.role === 'admin' ? 'Admin' : 'Resident', label: 'Role' },
-                { val: '',    label: 'Reports' },
-                { val: '', label: 'Member' },
-              ].map((st, i) => (
-                <View key={i} style={[s.statItem, i < 2 && s.statBorder]}>
-                  <Text style={s.statVal}>{st.val}</Text>
-                  <Text style={s.statLabel}>{st.label}</Text>
-                </View>
-              ))}
-            </View>
-          )}
+         
         </View>
 
         {/*  GUEST BANNER */}
