@@ -212,7 +212,7 @@ export default function ProfileScreen({ navigation }) {
             icon={<IcBell/>}
             iconBg={C.skyBg}
             label="Notifications"
-            onPress={() => requireLogin(() => console.log('Notifications'))}
+            onPress={() => requireLogin(() => navigation.navigate('Notifications'))}
           />
           <MenuItem
             icon={<IcUserEdit/>}
@@ -236,7 +236,7 @@ export default function ProfileScreen({ navigation }) {
             icon={<IcSupport/>}
             iconBg={C.greenLt}
             label="Contact Support"
-            onPress={() => console.log('Support')}
+            onPress={() => navigation.navigate('ContactSupport')}
           />
           <MenuItem
             icon={<IcInfo/>}

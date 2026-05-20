@@ -12,9 +12,10 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 
-export default function MyReportsScreen() {
+export default function MyReportsScreen({ navigation }) {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -23,6 +24,14 @@ export default function MyReportsScreen() {
   const loadReports = async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
+
+      // Guest: no user in storage — show login prompt instead of crashing
+      if (!userData) {
+        setIsGuest(true);
+        setLoading(false);
+        return;
+      }
+
       const user = JSON.parse(userData);
 
       const res = await fetch(
@@ -30,7 +39,6 @@ export default function MyReportsScreen() {
       );
 
       const data = await res.json();
-
       setReports(data);
 
     } catch (err) {
@@ -44,6 +52,30 @@ export default function MyReportsScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#0B7A75" />
+      </View>
+    );
+  }
+
+  // Guest screen — prompt to log in
+  if (isGuest) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>My Reports</Text>
+        <View style={styles.guestBox}>
+          <Text style={styles.guestIcon}>📋</Text>
+          <Text style={styles.guestTitle}>Login to view your reports</Text>
+          <Text style={styles.guestSub}>
+            Guest reports are anonymous and cannot be tracked.{'\n'}
+            Create an account to see all your submitted reports here.
+          </Text>
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={() => navigation.navigate('Login')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.loginBtnText}>Login / Register</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -91,6 +123,7 @@ export default function MyReportsScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -139,5 +172,42 @@ const styles = StyleSheet.create({
   empty: {
     fontSize: 16,
     color: '#888',
+  },
+
+  // Guest state
+  guestBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  guestIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  guestTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  guestSub: {
+    fontSize: 13,
+    color: '#777',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  loginBtn: {
+    backgroundColor: '#0B7A75',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 36,
+  },
+  loginBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });

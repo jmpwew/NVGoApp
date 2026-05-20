@@ -1,0 +1,168 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.btn-green {
+  background-color: #1B8A4C;
+  color: white;
+}
+
+.btn-green:hover {
+  background-color: #136835;
+}
+
+.btn-red {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-red:hover {
+  background-color: #c0392b;
+}
+
+.btn-gray {
+  background-color: #ccc;
+  color: #333;
+}
+
+.btn-gray:hover {
+  background-color: #bbb;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f0f0f0;
+  font-weight: 700;
+  color: #555;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background-color: #fafafa;
+}
+
+/* ── Badge ───────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.badge-resolved {
+  background-color: #d1f5e0;
+  color: #1B8A4C;
+}
+
+.badge-admin {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.badge-user {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+/* ── Page wrapper ────────────────────────────────────── */
+.page {
+  padding: 24px;
+}
+
+.page h1 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #1B8A4C;
+}
+
+/* ── Card ────────────────────────────────────────────── */
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── Form ────────────────────────────────────────────── */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1B8A4C;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ── Top bar of a page section ───────────────────────── */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}

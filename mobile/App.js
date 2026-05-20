@@ -12,11 +12,11 @@ import RegisterScreen from './screens/RegisterScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
 import ProfileDetails from './screens/ProfileDetailsScreen';
-import MyReportsScreen from './screens/MyReportsScreen';  
+import MyReportsScreen from './screens/MyReportsScreen';
 import TabNavigator from './navigation/TabNavigator';
 import ChangePasswordScreen from './screens/ChangePasswordScreen';
-
-
+import NotificationsScreen from './screens/NotificationsScreen';
+import ContactSupportScreen from './screens/ContactSupportScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -34,8 +34,6 @@ export default function App() {
 
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-
-        
 
         <Stack.Screen
           name="Profile"
@@ -60,22 +58,32 @@ export default function App() {
           component={MyReportsScreen}
           options={{ headerShown: false }}
         />
-        
-          <Stack.Screen
-            name="ChangePassword"
-            component={ChangePasswordScreen}
-            options={{ headerShown: false }}
-          />
-           <Stack.Screen
-              name="NewsDetail"
-              component={NewsDetailScreen}
-              options={{ headerShown: false }}
-            />
-     
 
+        <Stack.Screen
+          name="ChangePassword"
+          component={ChangePasswordScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="NewsDetail"
+          component={NewsDetailScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="ContactSupport"
+          component={ContactSupportScreen}
+          options={{ headerShown: false }}
+        />
 
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
-   

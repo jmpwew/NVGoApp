@@ -13,7 +13,6 @@ import { Svg, Path, Rect, Circle, G } from 'react-native-svg';
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
 
-  
 const IcUser = () => (
   <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
     <Circle cx="9" cy="7" r="3.2" stroke={C.green} strokeWidth="1.4"/>
@@ -29,12 +28,6 @@ const IcDesc = () => (
   <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
     <Rect x="2.5" y="2.5" width="13" height="13" rx="2.5" stroke={C.green} strokeWidth="1.4"/>
     <Path d="M5.5 6.5h7M5.5 9h7M5.5 11.5h4.5" stroke={C.green} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcPin = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1.5A5 5 0 004 6.5c0 3.5 5 10 5 10s5-6.5 5-10a5 5 0 00-5-5z" stroke={C.green} strokeWidth="1.4"/>
-    <Circle cx="9" cy="6.5" r="1.8" stroke={C.green} strokeWidth="1.3"/>
   </Svg>
 );
 const IcNote = () => (
@@ -80,32 +73,33 @@ export default function ReportScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
 
+  // Track logged-in user id — null means guest
+  const [userId, setUserId] = useState(null);
+
   useEffect(() => {
     getLocation();
     loadUserData();
   }, []);
 
-  /* Auto-fill*/
+  /* Auto-fill if logged in — guests fill in name/contact manually */
   const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-
+        setUserId(user.id);
         const fullName =
           user.firstname && user.lastname
             ? `${user.firstname} ${user.lastname}`
             : user.name || '';
-
-            setName(fullName);
-
-        
+        setName(fullName);
         setContact(user.contact || '');
       }
+      // guest: userId stays null, fields stay empty
     } catch (err) { console.log(err); }
   };
 
-  /* Get GPS  */
+  /* Get GPS */
   const getLocation = async () => {
     try {
       setLocLoading(true);
@@ -120,7 +114,7 @@ export default function ReportScreen() {
     finally { setLocLoading(false); }
   };
 
-  /* Pick images  */
+  /* Pick images */
   const pickImage = async () => {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -143,63 +137,78 @@ export default function ReportScreen() {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  /* Submit */
+  /* Submit — works for both guest (userId=null) and logged-in users */
   const submitReport = async () => {
-  if (!location) {
-    Alert.alert('Error', 'Location not ready. Tap Get My Location first.');
-    return;
-  }
+    if (!location) {
+      Alert.alert('Error', 'Location not ready. Tap Get My Location first.');
+      return;
+    }
 
-  if (!description.trim()) {
-    Alert.alert('Error', 'Please add a description.');
-    return;
-  }
+    // Guests must fill name and contact manually
+    if (!name.trim()) {
+      Alert.alert('Error', 'Please enter your full name.');
+      return;
+    }
+    if (!contact.trim()) {
+      Alert.alert('Error', 'Please enter your contact number.');
+      return;
+    }
+    if (!description.trim()) {
+      Alert.alert('Error', 'Please add a description.');
+      return;
+    }
 
-  try {
-    setSubmitting(true);
+    try {
+      setSubmitting(true);
 
-    // GET LOGGED IN USER
-    const userData = await AsyncStorage.getItem('user');
-    const user = JSON.parse(userData);
+      const formData = new FormData();
 
-    const formData = new FormData();
+      // Only send user_id if logged in — DB accepts NULL for guests
+      if (userId) {
+        formData.append('user_id', userId);
+      }
 
-    formData.append('user_id', user.id);
-    formData.append('name', name);
-    formData.append('contact', contact);
-    formData.append('description', description);
-    formData.append('latitude', location.latitude);
-    formData.append('longitude', location.longitude);
-    formData.append('location_note', locationNote);
+      formData.append('name', name);
+      formData.append('contact', contact);
+      formData.append('description', description);
+      formData.append('latitude', location.latitude);
+      formData.append('longitude', location.longitude);
+      formData.append('location_note', locationNote);
 
-    images.forEach((img, i) => {
-      formData.append('images', {
-        uri: img,
-        name: `report_${i}.jpg`,
-        type: 'image/jpeg',
+      images.forEach((img, i) => {
+        formData.append('images', {
+          uri: img,
+          name: `report_${i}.jpg`,
+          type: 'image/jpeg',
+        });
       });
-    });
 
-    const res = await fetch(`${api_url}/api/reports`, {
-      method: 'POST',
-      body: formData,
-    });
+      const res = await fetch(`${api_url}/api/reports`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    Alert.alert('Success', 'Report submitted successfully');
+      Alert.alert('Success', 'Report submitted successfully!');
 
-    setDescription('');
-    setLocationNote('');
-    setImages([]);
+      // Reset form
+      setDescription('');
+      setLocationNote('');
+      setImages([]);
+      // Clear name/contact only for guests
+      if (!userId) {
+        setName('');
+        setContact('');
+      }
 
-  } catch (err) {
-    console.log(err);
-    Alert.alert('Error', 'Failed to submit report');
-  } finally {
-    setSubmitting(false);
-  }
-};
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Error', 'Failed to submit report');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   /* RENDER */
   return (
@@ -210,7 +219,9 @@ export default function ReportScreen() {
       <View style={s.header}>
         <Text style={s.headerSup}>COMMUNITY</Text>
         <Text style={s.headerTitle}>Submit a Report</Text>
-        <Text style={s.headerSub}>Report your concern</Text>
+        <Text style={s.headerSub}>
+          {userId ? 'Logged in — your info is pre-filled' : 'Reporting as guest'}
+        </Text>
       </View>
 
       <ScrollView
@@ -220,7 +231,16 @@ export default function ReportScreen() {
         keyboardShouldPersistTaps="handled"
       >
 
-        {/* Section Your Info*/}
+        {/* Guest notice */}
+        {!userId && (
+          <View style={s.guestBanner}>
+            <Text style={s.guestBannerText}>
+              You're reporting as a guest. Please fill in your name and contact number below.
+            </Text>
+          </View>
+        )}
+
+        {/* Section: Your Info */}
         <Text style={s.secLabel}>YOUR INFORMATION</Text>
         <View style={s.card}>
           <Field
@@ -228,6 +248,7 @@ export default function ReportScreen() {
             placeholder="Full Name"
             value={name}
             onChangeText={setName}
+            editable={!userId}
           />
           <View style={s.divider}/>
           <Field
@@ -236,10 +257,11 @@ export default function ReportScreen() {
             value={contact}
             onChangeText={setContact}
             keyboardType="phone-pad"
+            editable={!userId}
           />
         </View>
 
-        {/* Incident  */}
+        {/* Incident */}
         <Text style={s.secLabel}>INCIDENT DETAILS</Text>
         <View style={s.card}>
           <Field
@@ -252,11 +274,10 @@ export default function ReportScreen() {
           />
         </View>
 
-        {/*  Section: Location */}
+        {/* Section: Location */}
         <Text style={s.secLabel}>LOCATION</Text>
         <View style={s.card}>
 
-          {/* GPS button */}
           <TouchableOpacity
             style={[s.gpsBtn, location && s.gpsBtnActive]}
             onPress={getLocation}
@@ -276,7 +297,6 @@ export default function ReportScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Map preview */}
           {location && (
             <MapView
               style={s.map}
@@ -294,7 +314,6 @@ export default function ReportScreen() {
 
           <View style={s.divider}/>
 
-          {/* Location note */}
           <Field
             icon={<IcNote/>}
             placeholder="Landmark or description (e.g. near barangay hall)"
@@ -303,7 +322,7 @@ export default function ReportScreen() {
           />
         </View>
 
-        {/* Section: Photos  */}
+        {/* Section: Photos */}
         <Text style={s.secLabel}>PHOTOS (optional)</Text>
         <View style={s.card}>
 
@@ -331,7 +350,7 @@ export default function ReportScreen() {
           )}
         </View>
 
-        {/* Submit button */}
+        {/* Submit */}
         <TouchableOpacity
           style={[s.submitBtn, submitting && { opacity: 0.7 }]}
           onPress={submitReport}
@@ -342,7 +361,7 @@ export default function ReportScreen() {
             <ActivityIndicator color="#fff" size="small"/>
           ) : (
             <>
-              
+              <IcSend/>
               <Text style={s.submitTxt}>Submit Report</Text>
             </>
           )}
@@ -358,19 +377,24 @@ export default function ReportScreen() {
   );
 }
 
-/*Reusable field */
-function Field({ icon, placeholder, value, onChangeText, multiline, keyboardType, minHeight }) {
+/* Reusable field */
+function Field({ icon, placeholder, value, onChangeText, multiline, keyboardType, minHeight, editable = true }) {
   return (
     <View style={[fs.wrap, multiline && { alignItems: 'flex-start' }]}>
       <View style={[fs.icon, multiline && { marginTop: 3 }]}>{icon}</View>
       <TextInput
-        style={[fs.input, multiline && { minHeight: minHeight ?? 80, textAlignVertical: 'top' }]}
+        style={[
+          fs.input,
+          multiline && { minHeight: minHeight ?? 80, textAlignVertical: 'top' },
+          !editable && { color: C.muted },
+        ]}
         placeholder={placeholder}
         placeholderTextColor={C.muted}
         value={value}
         onChangeText={onChangeText}
         multiline={multiline}
         keyboardType={keyboardType ?? 'default'}
+        editable={editable}
       />
     </View>
   );
@@ -385,44 +409,45 @@ const fs = StyleSheet.create({
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
 
-  /* Header */
   header:       { backgroundColor: C.greenDk, paddingTop: Platform.OS === 'android' ? 16 : 52, paddingHorizontal: 20, paddingBottom: 20 },
   headerSup:    { color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2 },
   headerTitle:  { color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
   headerSub:    { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 3 },
 
-  /* Scroll */
   scroll:       { flex: 1 },
   scrollContent:{ padding: 16, paddingBottom: 48, gap: 8 },
 
-  /* Section label */
+  guestBanner: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F9A825',
+    padding: 12,
+    marginBottom: 4,
+  },
+  guestBannerText: { fontSize: 12, color: '#7B6000', lineHeight: 18 },
+
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginTop: 10, marginBottom: 6, marginLeft: 2 },
 
-  /* Card */
   card:         { backgroundColor: C.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: C.border },
   divider:      { height: 1, backgroundColor: C.border, marginLeft: 34 },
 
-  /* GPS button */
   gpsBtn:       { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.muted, borderRadius: 12, padding: 13, marginVertical: 6 },
   gpsBtnActive: { backgroundColor: C.green },
   gpsBtnTxt:    { color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 },
 
-  /* Map */
   map:          { width: '100%', height: 170, borderRadius: 12, marginVertical: 10, overflow: 'hidden' },
 
-  /* Photo picker */
   photoBtn:     { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 10 },
   photoBtnIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: C.greenLt, alignItems: 'center', justifyContent: 'center' },
   photoBtnTitle:{ fontSize: 13, fontWeight: '700', color: C.text },
   photoBtnSub:  { fontSize: 11, color: C.muted, marginTop: 1 },
 
-  /* Image grid */
   imgGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 6 },
   imgWrap:      { position: 'relative' },
   imgThumb:     { width: 90, height: 90, borderRadius: 10 },
   imgDel:       { position: 'absolute', top: 5, right: 5, width: 24, height: 24, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
 
-  /* Submit */
   submitBtn:    { backgroundColor: C.green, borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14, shadowColor: C.green, shadowOpacity: 0.35, shadowRadius: 10, elevation: 4 },
   submitTxt:    { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },
   disclaimer:   { fontSize: 10.5, color: C.muted, textAlign: 'center', lineHeight: 15, marginTop: 10, paddingHorizontal: 20 },
