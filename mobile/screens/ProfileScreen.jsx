@@ -4,76 +4,12 @@ import {
   Image, Alert, StatusBar, Platform, ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Rect, Circle } from 'react-native-svg';
 import api_url from '../utils/api';
+import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield} from '../constants/icons';
 
-/*  Colors */
+
 import {C} from '../constants/colors';
-/* SVG Icons  */
-const IcBell = ({ c = C.skyDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1a5 5 0 00-5 5v3.5L2.5 12h13L14 9.5V6A5 5 0 009 1z" stroke={c} strokeWidth="1.4" strokeLinejoin="round"/>
-    <Path d="M7 14a2 2 0 004 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcUserEdit = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="8" cy="7" r="3" stroke={c} strokeWidth="1.4"/>
-    <Path d="M2 16c0-3.3 2.7-6 6-6" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
-    <Path d="M12 13l2-2 1.5 1.5-2 2H12v-1.5z" stroke={c} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcReport = ({ c = C.yellowDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="3" y="2" width="12" height="14" rx="2.5" stroke={c} strokeWidth="1.4"/>
-    <Path d="M6 6.5h6M6 9h6M6 11.5h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-    <Circle cx="13" cy="13" r="3" fill={c}/>
-    <Path d="M11.8 13l.9.9 1.8-1.8" stroke="#fff" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcSupport = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
-    <Path d="M6.5 6.5A2.5 2.5 0 019 4a2.5 2.5 0 012.5 2.5c0 1.4-.9 2-1.8 2.6-.5.3-.7.7-.7 1.2" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-    <Circle cx="9" cy="13" r="1" fill={c}/>
-  </Svg>
-);
-const IcInfo = ({ c = C.skyDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
-    <Path d="M9 8v5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
-    <Circle cx="9" cy="5.5" r="1" fill={c}/>
-  </Svg>
-);
-const IcLogout = ({ c = C.red }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M7 3H4.5A1.5 1.5 0 003 4.5v9A1.5 1.5 0 004.5 15H7" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
-    <Path d="M12 6l3 3-3 3M15 9H7" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcLogin = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 3h2.5A1.5 1.5 0 0115 4.5v9A1.5 1.5 0 0113.5 15H11" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
-    <Path d="M6 12l3-3-3-3M9 9H3" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcChevron = () => (
-  <Svg width={7} height={12} viewBox="0 0 8 12" fill="none">
-    <Path d="M1.5 1.5l5 5-5 5" stroke={C.border} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcCamera = () => (
-  <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
-    <Path d="M2 5A1.5 1.5 0 013.5 3.5H4.5L5.5 2h3l1 1.5H10.5A1.5 1.5 0 0112 5v5.5A1.5 1.5 0 0110.5 12h-7A1.5 1.5 0 012 10.5V5z" stroke="#fff" strokeWidth="1.2"/>
-    <Circle cx="7" cy="7.5" r="1.8" stroke="#fff" strokeWidth="1.1"/>
-  </Svg>
-);
-const IcShield = () => (
-  <Svg width={12} height={12} viewBox="0 0 14 14" fill="none">
-    <Path d="M7 1L2 3v4c0 3.5 2.3 5.5 5 6.5 2.7-1 5-3 5-6.5V3L7 1z" fill={C.green} stroke={C.greenDk} strokeWidth="0.8"/>
-    <Path d="M4.5 7l2 2 3-3" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
+
 
 const MenuItem = ({ icon, label, iconBg, onPress, danger, last }) => (
   <View>
@@ -114,7 +50,7 @@ export default function ProfileScreen({ navigation }) {
     callback();
   };
 
-  /* Logout */
+// logout
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -122,6 +58,7 @@ export default function ProfileScreen({ navigation }) {
         text: 'Logout', style: 'destructive',
         onPress: async () => {
           await AsyncStorage.removeItem('user');
+          await AsyncStorage.removeItem('token');  
           setUser(null);
         },
       },
@@ -132,7 +69,7 @@ export default function ProfileScreen({ navigation }) {
     ? `${api_url}/uploads/${user.image}`
     : null;
 
-  /* RENDER  */
+// render
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={C.greenDk}/>
@@ -169,7 +106,7 @@ export default function ProfileScreen({ navigation }) {
             )}
           </View>
 
-          {/* Name & address */}
+   {/* name and address */}
           <Text style={s.heroName}>
             {user ? `${user.firstname} ${user.lastname}` : 'Guest User'}
           </Text>
@@ -177,14 +114,7 @@ export default function ProfileScreen({ navigation }) {
             {user?.address ? ` ${user.address}` : 'Nueva Valencia, Guimaras'}
           </Text>
 
-          {/* Verified badge */}
-          {user && (
-            <View style={s.verifiedBadge}>
-              <IcShield/>
-              <Text style={s.verifiedTxt}>Verified Resident</Text>
-            </View>
-          )}
-
+         
          
         </View>
 
@@ -209,7 +139,7 @@ export default function ProfileScreen({ navigation }) {
         <Text style={s.secLabel}>ACCOUNT</Text>
         <View style={s.menuCard}>
           <MenuItem
-            icon={<IcBell/>}
+            icon={<IcBell2/>}
             iconBg={C.skyBg}
             label="Notifications"
             onPress={() => requireLogin(() => navigation.navigate('Notifications'))}

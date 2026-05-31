@@ -5,6 +5,10 @@ const {
   changePassword
 } = require('../controllers/changePasswordController');
 
-router.put('/change-password', changePassword);
+
+const { verifyUser } = require('../middleware/auth');
+router.put('/change-password', verifyUser, changePassword);
+
+
 
 module.exports = router;

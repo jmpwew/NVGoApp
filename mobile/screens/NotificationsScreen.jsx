@@ -4,62 +4,20 @@ import {
   ScrollView, StatusBar, Platform, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import { C } from '../constants/colors';
+import { IcBack, IcBell, IcAlert, IcCheck, IcInfo, IcTrash } from '../constants/icons';
 import api_url from '../utils/api';
 
-/* ─── Icons ──────────────────────────────────────────────────── */
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke="#fff" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcBell = ({ c = C.skyDk, size = 18 }) => (
-  <Svg width={size} height={size} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1a5 5 0 00-5 5v3.5L2.5 12h13L14 9.5V6A5 5 0 009 1z"
-      stroke={c} strokeWidth="1.4" strokeLinejoin="round"/>
-    <Path d="M7 14a2 2 0 004 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcAlert = ({ c = C.yellowDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1.5L1.5 15.5h15L9 1.5z" stroke={c} strokeWidth="1.4" strokeLinejoin="round"/>
-    <Rect x="8.3" y="7" width="1.4" height="4.5" rx="0.7" fill={c}/>
-    <Circle cx="9" cy="13" r="0.9" fill={c}/>
-  </Svg>
-);
-const IcCheck = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
-    <Path d="M5.5 9l2.5 2.5 4.5-4.5" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcInfo = ({ c = C.skyDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
-    <Path d="M9 8v5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
-    <Circle cx="9" cy="5.5" r="1" fill={c}/>
-  </Svg>
-);
-const IcTrash = () => (
-  <Svg width={15} height={15} viewBox="0 0 16 16" fill="none">
-    <Path d="M2 4h12M5 4V2.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5V4M6 7v5M10 7v5"
-      stroke={C.red} strokeWidth="1.3" strokeLinecap="round"/>
-    <Path d="M3 4l.8 9.5a.5.5 0 00.5.5h7.4a.5.5 0 00.5-.5L13 4"
-      stroke={C.red} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
 
-/* ─── Notification type config ────────────────────────────────── */
+
 const TYPE = {
-  alert:   { icon: <IcAlert/>,  bg: '#FFFBE6', border: C.yellowDk, dot: C.yellowDk },
-  update:  { icon: <IcCheck/>,  bg: C.greenLt, border: C.green,    dot: C.green    },
-  info:    { icon: <IcInfo/>,   bg: C.skyBg,   border: C.skyDk,    dot: C.skyDk    },
-  report:  { icon: <IcBell c={C.skyDk}/>, bg: C.skyBg, border: C.skyDk, dot: C.skyDk },
+  alert:{ icon: <IcAlert/>,  bg: '#FFFBE6', border: C.yellowDk, dot: C.yellowDk },
+  update:{ icon: <IcCheck/>, bg: C.greenLt, border: C.green, dot: C.green  },
+  info: { icon: <IcInfo/>,bg: C.skyBg, border: C.skyDk,dot: C.skyDk  },
+  report:{ icon: <IcBell c={C.skyDk}/>, bg: C.skyBg, border: C.skyDk, dot: C.skyDk },
 };
 
-/* ─── Format timestamp ───────────────────────────────────────── */
+// timestamp
 function formatTime(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -76,7 +34,7 @@ function formatTime(dateStr) {
   return date.toLocaleDateString();
 }
 
-/* ─── Single notification card ────────────────────────────────── */
+// notification
 function NotifCard({ item, onRead, onDelete }) {
   const cfg = TYPE[item.type] ?? TYPE.info;
   return (
@@ -108,9 +66,6 @@ function NotifCard({ item, onRead, onDelete }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════════ */
 export default function NotificationsScreen({ navigation }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -2,55 +2,26 @@ import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, Alert,
   StyleSheet, StatusBar, Platform, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView,
+  KeyboardAvoidingView, ScrollView, Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Circle, Rect, G } from 'react-native-svg';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import { IcMail, IcLock, IcEye} from '../constants/icons';
+import { registerPushToken } from '../utils/registerPushToken';
 
-/* ─── Icons ──────────────────────────────────────────────────── */
-const IcMail = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="2" y="4" width="14" height="10" rx="2.5" stroke={C.muted} strokeWidth="1.4"/>
-    <Path d="M2 7l7 4.5L16 7" stroke={C.muted} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcLock = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="3.5" y="8" width="11" height="8" rx="2.5" stroke={C.muted} strokeWidth="1.4"/>
-    <Path d="M6 8V6a3 3 0 016 0v2" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round"/>
-    <Circle cx="9" cy="12" r="1.2" fill={C.muted}/>
-  </Svg>
-);
-const IcEye = ({ show }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    {show ? (
-      <>
-        <Path d="M1.5 9S4 4 9 4s7.5 5 7.5 5S14 14 9 14 1.5 9 1.5 9z" stroke={C.muted} strokeWidth="1.4"/>
-        <Circle cx="9" cy="9" r="2.2" stroke={C.muted} strokeWidth="1.4"/>
-      </>
-    ) : (
-      <>
-        <Path d="M1.5 9S4 4 9 4s7.5 5 7.5 5S14 14 9 14 1.5 9 1.5 9z" stroke={C.muted} strokeWidth="1.4"/>
-        <Circle cx="9" cy="9" r="2.2" stroke={C.muted} strokeWidth="1.4"/>
-        <Path d="M2 2l14 14" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round"/>
-      </>
-    )}
-  </Svg>
-);
 
-/* ─── Logo mark ──────────────────────────────────────────────── */
+
+
 const LogoMark = () => (
-  <Svg width={56} height={56} viewBox="0 0 56 56" fill="none">
-    <Rect width="56" height="56" rx="16" fill={C.green}/>
-    <Path d="M14 28c0-7.7 6.3-14 14-14s14 6.3 14 14-6.3 14-14 14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
-    <Path d="M28 20v8l5 3" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <Circle cx="28" cy="42" r="2.5" fill={C.yellow}/>
-  </Svg>
+  <Image
+    source={require('../assets/nvgo-logo.png')}
+    style={{ width: 90, height: 90, borderRadius: 22 }}
+    resizeMode="cover"
+  />
 );
 
-/* ─── Input field component ──────────────────────────────────── */
+// input
 function InputField({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, rightElement }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -80,9 +51,6 @@ const inp = StyleSheet.create({
   right:       { marginLeft: 8 },
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════════ */
 export default function LoginScreen({ navigation }) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -108,6 +76,7 @@ export default function LoginScreen({ navigation }) {
       }
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      await registerPushToken();
       navigation.replace('Main');
     } catch (err) {
       console.log(err);
@@ -137,7 +106,7 @@ export default function LoginScreen({ navigation }) {
         {/* Logo + heading */}
         <View style={s.header}>
           <LogoMark/>
-          <Text style={s.appName}>NVGo</Text>
+     
           <Text style={s.tagline}>Nueva Valencia at your fingertips</Text>
         </View>
 
@@ -205,7 +174,7 @@ export default function LoginScreen({ navigation }) {
   );
 }
 
-/* ─── Styles ─────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
   scroll:       { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },

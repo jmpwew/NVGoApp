@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "807013677187",
+    "project_id": "nvgo-cea2f",
+    "storage_bucket": "nvgo-cea2f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807013677187:android:30ed8ae643166bbd7283b6",
+        "android_client_info": {
+          "package_name": "com.nvgo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5OSZbiBy212Efz91E7yKBU1n882XTOGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

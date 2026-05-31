@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,46 +7,69 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 
-export default function MyReportsScreen({ navigation }) {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(false);
+const STATUS_STYLE = {
+  pending:  { bg: '#FFF3CD', text: '#856404', label: 'Pending' },
+  resolved: { bg: '#D1E7DD', text: '#0A3622', label: 'Resolved' },
+};
 
-  useEffect(() => {
-    loadReports();
-  }, []);
+export default function MyReportsScreen({ navigation }) {
+  const [reports, setReports]   = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isGuest, setIsGuest]   = useState(false);
+  const [error, setError]       = useState(null);
+
+  useEffect(() => { loadReports(); }, []);
 
   const loadReports = async () => {
     try {
+      setError(null);
       const userData = await AsyncStorage.getItem('user');
 
-      // Guest: no user in storage — show login prompt instead of crashing
       if (!userData) {
         setIsGuest(true);
-        setLoading(false);
         return;
       }
 
-      const user = JSON.parse(userData);
+      const user  = JSON.parse(userData);
+      const token = await AsyncStorage.getItem('token');
 
-      const res = await fetch(
-        `${api_url}/api/reports/user/${user.id}`
-      );
+      if (!token) {
+        setIsGuest(true);
+        return;
+      }
+
+      const res = await fetch(`${api_url}/api/reports/user/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        setError(`Server error: ${res.status}`);
+        return;
+      }
 
       const data = await res.json();
-      setReports(data);
+      setReports(Array.isArray(data) ? data : []);
 
     } catch (err) {
       console.log(err);
+      setError('Could not load reports. Check your connection.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadReports();
+  }, []);
 
   if (loading) {
     return (
@@ -56,7 +79,6 @@ export default function MyReportsScreen({ navigation }) {
     );
   }
 
-  // Guest screen — prompt to log in
   if (isGuest) {
     return (
       <View style={styles.container}>
@@ -80,6 +102,20 @@ export default function MyReportsScreen({ navigation }) {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>My Reports</Text>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={loadReports}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Reports</Text>
@@ -89,36 +125,49 @@ export default function MyReportsScreen({ navigation }) {
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0B7A75']} />
+        }
         ListEmptyComponent={
           <View style={styles.center}>
             <Text style={styles.empty}>No reports yet</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.desc}>{item.description}</Text>
+        renderItem={({ item }) => {
+          const s = STATUS_STYLE[item.status] ?? STATUS_STYLE.pending;
+          return (
+            <View style={styles.card}>
 
-            <Text style={styles.date}>
-              {new Date(item.created_at).toLocaleString()}
-            </Text>
+              {/* Status badge */}
+              <View style={styles.cardHeader}>
+              
+                <View style={[styles.badge, { backgroundColor: s.bg }]}>
+                  <Text style={[styles.badgeText, { color: s.text }]}>{s.label}</Text>
+                </View>
+              </View>
 
-            {item.images && item.images.length > 0 && (
-              <FlatList
-                horizontal
-                data={item.images}
-                keyExtractor={(img, index) => index.toString()}
-                renderItem={({ item: img }) => (
-                  <Image
-                    source={{
-                      uri: `${api_url}/uploads/${img}`,
-                    }}
-                    style={styles.image}
-                  />
-                )}
-              />
-            )}
-          </View>
-        )}
+              <Text style={styles.desc}>{item.description}</Text>
+
+              <Text style={styles.date}>
+                {new Date(item.created_at).toLocaleString()}
+              </Text>
+
+              {item.images && item.images.length > 0 && (
+                <FlatList
+                  horizontal
+                  data={item.images}
+                  keyExtractor={(img, index) => index.toString()}
+                  renderItem={({ item: img }) => (
+                    <Image
+                      source={{ uri: `${api_url}/uploads/${img}` }}
+                      style={styles.image}
+                    />
+                  )}
+                />
+              )}
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -130,51 +179,78 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7FA',
     padding: 16,
   },
-
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
   },
-
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
   },
-
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reportId: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#555',
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   desc: {
     fontSize: 15,
     color: '#222',
     marginBottom: 8,
   },
-
   date: {
     fontSize: 12,
     color: '#777',
     marginBottom: 10,
   },
-
   image: {
     width: 110,
     height: 110,
     borderRadius: 10,
     marginRight: 10,
   },
-
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   empty: {
     fontSize: 16,
     color: '#888',
   },
-
-  // Guest state
+  errorText: {
+    fontSize: 14,
+    color: '#cc0000',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryBtn: {
+    backgroundColor: '#0B7A75',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+  },
+  retryText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
   guestBox: {
     flex: 1,
     alignItems: 'center',

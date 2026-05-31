@@ -2,14 +2,8 @@ const pool = require('../config/db');
 
 exports.updateProfile = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
-
-    const { firstname, lastname, email, contact, address, user_id } = req.body;
-
-    if (!user_id) {
-      return res.status(400).json({ error: 'User ID missing' });
-    }
+    const user_id = req.user.id; // ← from token, not body
+    const { firstname, lastname, email, contact, address } = req.body;
 
     const filename = req.file ? req.file.filename : null;
 
@@ -30,12 +24,10 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({
-      user: result.rows[0]
-    });
+    res.json({ user: result.rows[0] });
 
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
+    console.error('UPDATE ERROR:', err);
     res.status(500).json({ error: err.message });
   }
 };

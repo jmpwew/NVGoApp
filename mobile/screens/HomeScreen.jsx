@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { Svg, Path, Rect, Circle } from 'react-native-svg';
+import { IcReport, IcNews, IcPhone, IcMore, IcBell, IcUser, IcChevron, IcWarn, IcSOS, IcLogout, IcProfile} from '../constants/icons';
 
 
 const { width } = Dimensions.get('window');
@@ -15,88 +15,13 @@ const { width } = Dimensions.get('window');
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
 
-//icons for qa
-const IcReport = ({ s = 22, c = C.red }) => (
-  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
-    <Rect x="4" y="3" width="14" height="16" rx="2.5" stroke={c} strokeWidth="1.4"/>
-    <Path d="M8 8h6M8 11h6M8 14h4" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-    <Circle cx="15" cy="16" r="3.5" fill={c}/>
-    <Path d="M13.8 16l.9.9 1.8-1.8" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcNews = ({ s = 22, c = C.skyDk }) => (
-  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
-    <Rect x="3" y="4" width="16" height="14" rx="2.5" stroke={c} strokeWidth="1.4"/>
-    <Path d="M3 8h16" stroke={c} strokeWidth="1.3"/>
-    <Circle cx="7" cy="6" r="1" fill={c}/>
-    <Circle cx="11" cy="6" r="1" fill={c}/>
-    <Path d="M6 12h10M6 15h7" stroke={c} strokeWidth="1.2" strokeLinecap="round"/>
-  </Svg>
-);
-const IcPhone = ({ s = 22, c = C.green }) => (
-  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
-    <Path d="M5 3h-.5A2.5 2.5 0 002 5.5v.5c0 7.2 5.8 13 13 13h.5A2.5 2.5 0 0018 16.5V16a1 1 0 00-.6-.9l-3.5-1.5a1 1 0 00-1.1.2l-1.3 1.3a9.1 9.1 0 01-4.1-4.1l1.3-1.3a1 1 0 00.2-1.1L7.4 5.1A1 1 0 006.5 4.5L5 4.5"
-      stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcPermit = ({ s = 22, c = C.yellowDk }) => (
-  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
-    <Rect x="3" y="3" width="16" height="16" rx="2.5" stroke={c} strokeWidth="1.4"/>
-    <Path d="M7 8h8M7 11h8M7 14h5" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-    <Circle cx="16" cy="15" r="3.5" fill={c}/>
-    <Path d="M14.8 15l.9.9 1.8-1.8" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcBell = ({ s = 17, c = '#fff' }) => (
-  <Svg width={s} height={s} viewBox="0 0 16 16" fill="none">
-    <Path d="M8 1a5 5 0 00-5 5v3l-1.5 2h13L13 9V6A5 5 0 008 1z" stroke={c} strokeWidth="1.3" strokeLinejoin="round"/>
-    <Path d="M6.5 13a1.5 1.5 0 003 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcUser = ({ s = 17, c = '#fff' }) => (
-  <Svg width={s} height={s} viewBox="0 0 16 16" fill="none">
-    <Circle cx="8" cy="6" r="3" stroke={c} strokeWidth="1.3"/>
-    <Path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcChevron = ({ s = 7, c = '#c0d4c8' }) => (
-  <Svg width={s} height={s + 4} viewBox="0 0 8 12" fill="none">
-    <Path d="M1.5 1.5l5 5-5 5" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcWarn = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1.5L1 16h16L9 1.5z" fill={C.yellow} stroke={C.yellowDk} strokeWidth="1" strokeLinejoin="round"/>
-    <Rect x="8.3" y="7" width="1.5" height="5" rx="0.75" fill={C.yellowDk}/>
-    <Circle cx="9" cy="13.5" r="0.9" fill={C.yellowDk}/>
-  </Svg>
-);
-const IcSOS = () => (
-  <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.7"/>
-    <Path d="M12 7v5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
-    <Circle cx="12" cy="16" r="1.3" fill="#fff"/>
-  </Svg>
-);
-const IcLogout = () => (
-  <Svg width={16} height={16} viewBox="0 0 18 18" fill="none">
-    <Path d="M7 3H4a1 1 0 00-1 1v10a1 1 0 001 1h3" stroke={C.red} strokeWidth="1.4" strokeLinecap="round"/>
-    <Path d="M12 6l3 3-3 3M15 9H7" stroke={C.red} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcProfile = () => (
-  <Svg width={16} height={16} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="7" r="3" stroke={C.skyDk} strokeWidth="1.4"/>
-    <Path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke={C.skyDk} strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-
 // Weather code 
 import { weatherInfo} from '../utils/weather.js';
 
 
 export default function HomeScreen({ navigation }) {
   const [user, setUser] = useState(null);
+  const [userLoaded, setUserLoaded] = useState(false);
   const [weather, setWeather] = useState(null);
   const [latestNews, setLatestNews] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -107,6 +32,7 @@ export default function HomeScreen({ navigation }) {
   const loadUser = async () => {
     const stored = await AsyncStorage.getItem('user');
     if (stored) setUser(JSON.parse(stored));
+    setUserLoaded(true);
   };
 
   const getGreeting = () => {
@@ -184,27 +110,20 @@ export default function HomeScreen({ navigation }) {
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={C.greenDk}/>
 
-      {//header}
+      {/*header*/}
       <View style={s.header}>
         {/* Brand row */}
         <View style={s.headerRow}>
           <View style={s.brand}>
-            <View style={s.brandIc}>
-              <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
-                <Path d="M10 1L2 6v8l8 5 8-5V6L10 1z" fill={C.greenDk}/>
-                <Rect x="9" y="7" width="2" height="6" rx="1" fill={C.yellow}/>
-                <Rect x="7" y="10" width="6" height="2" rx="1" fill={C.yellow}/>
-              </Svg>
-            </View>
             <View>
-              <Text style={s.brandName}>NVGo</Text>
+              <Text style={s.brandName}>NV<Text style={s.brandNameGo}>Go</Text></Text>
               <Text style={s.brandSub}>NUEVA VALENCIA</Text>
             </View>
           </View>
 
           <View style={s.headerRight}>
             {user && (
-              <TouchableOpacity style={s.iconBtn}>
+              <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('Notifications')}>
                 <IcBell/>
                 <View style={s.notifDot}/>
               </TouchableOpacity>
@@ -229,7 +148,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Logged-in greeting  */}
-        {user ? (
+        {userLoaded && (user ? (
           <View style={s.greetCard}>
             
             <View style={{ flex: 1 }}>
@@ -245,7 +164,7 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={s.verifiedBadge}>
               <View style={s.verifiedDot}/>
-              <Text style={s.verifiedTxt}>Verified</Text>
+              <Text style={s.verifiedTxt}>Resident</Text>
             </View>
           </View>
         ) : (
@@ -253,10 +172,8 @@ export default function HomeScreen({ navigation }) {
           <View style={s.guestCard}>
             <View style={s.guestTop}>
               <View>
-            
                 <Text style={s.guestSub}>Stay informed with NVGo</Text>
               </View>
-              
             </View>
             <View style={s.guestBtns}>
               <TouchableOpacity style={s.createBtn} onPress={() => navigation.navigate('Register')} activeOpacity={0.85}>
@@ -267,10 +184,10 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           </View>
-        )}
+        ))}
       </View>
 
-      /* DROPDOWN  */}
+      {/* DROPDOWN  */}
       {menuVisible && (
         <View style={s.dropdown}>
           <TouchableOpacity style={s.dropItem}
@@ -312,7 +229,7 @@ export default function HomeScreen({ navigation }) {
             { label:'Report Issue',      icon:<IcReport/>,  bg:C.redBg,    bc:C.red+'20',    onPress:()=>navigation.navigate('Report') },
             { label:'View News',         icon:<IcNews/>,    bg:C.skyBg,    bc:C.skyDk+'20',  onPress:()=>navigation.navigate('News') },
             { label:'Emergency Hotline', icon:<IcPhone/>,   bg:C.greenLt,  bc:C.green+'20',  onPress:()=>navigation.navigate('Hotlines') },
-            { label:'Business Permit',   icon:<IcPermit/>,  bg:C.yellowBg, bc:C.yellowDk+'20', onPress:null },
+            { label:'More',              icon:<IcMore/>,    bg:'#F3EEF9',  bc:'#7B5EA720',   onPress:()=>navigation.navigate('MoreFeatures') },
           ].map((q, i) => (
             <TouchableOpacity key={i} style={[s.qaCard, { borderColor: q.bc }]}
               onPress={q.onPress} activeOpacity={0.82}>
@@ -422,8 +339,10 @@ const s = StyleSheet.create({
   header:      { backgroundColor: C.greenDk, paddingTop: Platform.OS === 'android' ? 14 : 50, paddingHorizontal: 20, paddingBottom: 22 },
   headerRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   brand:       { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brandIc:     { width: 36, height: 36, borderRadius: 11, backgroundColor: C.yellow, alignItems: 'center', justifyContent: 'center' },
-  brandName:   { color: '#fff', fontSize: 19, fontWeight: '800', letterSpacing: -0.5 },
+  brandIc:      { width: 36, height: 36, borderRadius: 10, backgroundColor: C.yellow, alignItems: 'center', justifyContent: 'center' },
+  brandIcTxt:   { color: C.greenDk, fontSize: 12, fontWeight: '800', letterSpacing: -0.5 },
+  brandName:    { color: '#fff', fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+  brandNameGo:  { color: C.yellow },
   brandSub:    { color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: '700', letterSpacing: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn:     { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
@@ -436,7 +355,7 @@ const s = StyleSheet.create({
   greetHello:  { color: 'rgba(255,255,255,0.6)', fontSize: 11.5 },
   greetName:   { color: '#fff', fontSize: 17, fontWeight: '800', marginTop: 1, letterSpacing: -0.3 },
   greetAddr:   { color: 'rgba(255,255,255,0.5)', fontSize: 10, marginTop: 3 },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(245,196,0,0.18)', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 9, borderWidth: 1, borderColor: 'rgba(245,196,0,0.28)' },
+  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(245,196,0,0.25)', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, borderWidth: 1, borderColor: 'rgba(245,196,0,0.4)' },
   verifiedDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.yellow },
   verifiedTxt: { color: C.yellow, fontSize: 9, fontWeight: '700' },
 

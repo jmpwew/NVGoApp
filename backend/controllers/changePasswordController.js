@@ -1,9 +1,10 @@
- const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 
 const changePassword = async (req, res) => {
   try {
-    const { user_id, currentPassword, newPassword } = req.body;
+    const user_id = req.user.id; 
+    const { currentPassword, newPassword } = req.body;
 
     const result = await pool.query(
       'SELECT * FROM users WHERE id = $1',

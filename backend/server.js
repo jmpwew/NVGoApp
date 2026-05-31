@@ -28,6 +28,7 @@ const changePasswordRoute = require('./routes/changePasswordRoute');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const supportRoutes = require('./routes/supportRoutes');
+const hotlineRoutes = require('./routes/hotlineRoutes');
 
 app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -38,6 +39,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/auth/password', changePasswordRoute);
+app.use('/api/hotlines', hotlineRoutes);
 
 /* STATIC FILES */
 app.use('/uploads', express.static('uploads'));

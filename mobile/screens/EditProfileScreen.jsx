@@ -7,47 +7,13 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
+
 import api_url from '../utils/api';
+import { IcBack, IcCamera, IcSave, IcLock, IcChevron} from '../constants/icons';
 
 
 import {C} from '../constants/colors';
 
-
-
-/*  Icons  */
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke="#fff" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcCamera = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Path d="M2 6A1.5 1.5 0 013.5 4.5H5L6 3h4l1 1.5H13.5A1.5 1.5 0 0115 6v6.5A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 012 12.5V6z"
-      stroke="#fff" strokeWidth="1.2"/>
-    <Circle cx="8" cy="9" r="2" stroke="#fff" strokeWidth="1.1"/>
-  </Svg>
-);
-const IcSave = () => (
-  <Svg width={17} height={17} viewBox="0 0 18 18" fill="none">
-    <Path d="M3 9l4 4 8-8" stroke="#fff" strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcLock = () => (
-  <Svg width={15} height={15} viewBox="0 0 16 16" fill="none">
-    <Rect x="3" y="7" width="10" height="8" rx="2" stroke={C.green} strokeWidth="1.3"/>
-    <Path d="M5 7V5a3 3 0 016 0v2" stroke={C.green} strokeWidth="1.3" strokeLinecap="round"/>
-    <Circle cx="8" cy="11" r="1.2" fill={C.green}/>
-  </Svg>
-);
-const IcChevron = () => (
-  <Svg width={7} height={12} viewBox="0 0 8 12" fill="none">
-    <Path d="M1.5 1.5l5 5-5 5" stroke={C.muted} strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
 
 
 const BARANGAYS = [

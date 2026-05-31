@@ -4,72 +4,21 @@ import {
   StyleSheet, StatusBar, Platform, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Modal, FlatList,
 } from 'react-native';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import Svg, { Path } from 'react-native-svg';
+import {IcBack, IcUser, IcMail, IcLock, IcPhone, IcMap, IcChevron, IcEye, IcCheck} from '../constants/icons';
 
-/* ─── Icons ──────────────────────────────────────────────────── */
-const IcUser = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="7" r="3.2" stroke={C.muted} strokeWidth="1.4"/>
-    <Path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcMail = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="2" y="4" width="14" height="10" rx="2.5" stroke={C.muted} strokeWidth="1.4"/>
-    <Path d="M2 7l7 4.5L16 7" stroke={C.muted} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcLock = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="3.5" y="8" width="11" height="8" rx="2.5" stroke={C.muted} strokeWidth="1.4"/>
-    <Path d="M6 8V6a3 3 0 016 0v2" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round"/>
-    <Circle cx="9" cy="12" r="1.2" fill={C.muted}/>
-  </Svg>
-);
-const IcPhone = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M4 2.5h-.3A1.7 1.7 0 002 4.2v.3c0 5.8 4.7 10.5 10.5 10.5h.3a1.7 1.7 0 001.7-1.7v-.3a.8.8 0 00-.5-.75L11.2 11a.8.8 0 00-.9.17L9.2 12.3A7 7 0 015.7 8.8l1.05-1.05a.8.8 0 00.17-.9L5.67 3.98A.8.8 0 004.92 3L4 2.5" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcMap = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M9 1.5A5.5 5.5 0 013.5 7C3.5 11 9 16.5 9 16.5S14.5 11 14.5 7A5.5 5.5 0 009 1.5z" stroke={C.muted} strokeWidth="1.4"/>
-    <Circle cx="9" cy="7" r="2" stroke={C.muted} strokeWidth="1.3"/>
-  </Svg>
-);
-const IcChevron = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Path d="M4 6l4 4 4-4" stroke={C.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcEye = ({ show }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M1.5 9S4 4 9 4s7.5 5 7.5 5S14 14 9 14 1.5 9 1.5 9z" stroke={C.muted} strokeWidth="1.4"/>
-    <Circle cx="9" cy="9" r="2.2" stroke={C.muted} strokeWidth="1.4"/>
-    {!show && <Path d="M2 2l14 14" stroke={C.muted} strokeWidth="1.4" strokeLinecap="round"/>}
-  </Svg>
-);
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke={C.text} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcCheck = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Path d="M3 8l4 4 6-6" stroke={C.green} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
 
-/* ─── Barangays ──────────────────────────────────────────────── */
+
+
 const BARANGAYS = [
   'Poblacion', 'Igang', 'Lanipe', 'Lucmayan', 'Magamay',
   'Montpiller', 'Oracon Sur', 'Oracon Norte', 'Panobolon',
   'Salvacion', 'San Antonio', 'San Roque', 'Tando', 'Zaragosa',
 ];
 
-/* ─── Input field ────────────────────────────────────────────── */
+// input fiekds
 function InputField({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, rightElement, editable = true }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -101,7 +50,7 @@ const inp = StyleSheet.create({
   right:        { marginLeft: 8 },
 });
 
-/* ─── Barangay picker modal ──────────────────────────────────── */
+// barangay picker modal
 function BarangayPicker({ value, onChange }) {
   const [visible, setVisible] = useState(false);
 
@@ -156,7 +105,7 @@ const modal = StyleSheet.create({
   sep:      { height: 1, backgroundColor: C.border },
 });
 
-/* ─── Step indicator ─────────────────────────────────────────── */
+// steps
 function StepDot({ active, done }) {
   return (
     <View style={[step.dot,
@@ -175,19 +124,17 @@ const step = StyleSheet.create({
   dot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════════ */
+
 export default function RegisterScreen({ navigation }) {
   const [page, setPage] = useState(0); // 0 = personal, 1 = account
   const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname]   = useState('');
-  const [contact, setContact]     = useState('');
-  const [address, setAddress]     = useState('');
-  const [email, setEmail]         = useState('');
-  const [password, setPassword]   = useState('');
-  const [showPw, setShowPw]       = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [lastname, setLastname]= useState('');
+  const [contact, setContact]  = useState('');
+  const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const goNext = () => {
     if (!firstname.trim() || !lastname.trim()) { Alert.alert('Required', 'Please enter your full name.'); return; }
@@ -260,7 +207,7 @@ export default function RegisterScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         {page === 0 ? (
-          /* ── Page 1: Personal info ── */
+          // page1 
           <View style={s.card}>
             <Text style={s.cardTitle}>Personal Information</Text>
             <Text style={s.cardSub}>Tell us about yourself</Text>
@@ -286,7 +233,7 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         ) : (
-          /* ── Page 2: Account credentials ── */
+      //  page 2
           <View style={s.card}>
             <Text style={s.cardTitle}>Account Details</Text>
             <Text style={s.cardSub}>Set your login credentials</Text>
@@ -342,7 +289,7 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
-/* ─── Styles ─────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   root:           { flex: 1, backgroundColor: C.bg },
   scroll:         { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 40 },

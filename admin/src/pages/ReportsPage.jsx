@@ -31,7 +31,7 @@ export default function ReportsPage() {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Update locally so UI refreshes without full reload
+      //  refreshes without full reload
       setReports(prev =>
         prev.map(r => r.id === id ? { ...r, status } : r)
       );

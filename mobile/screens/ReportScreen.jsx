@@ -8,59 +8,11 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import MapView, { Marker } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Rect, Circle, G } from 'react-native-svg';
+import {IcPhone, IcUser, IcDesc, IcNote, IcCamera, IcGPS, IcTrash, IcSend} from '../constants/icons';
+
 
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
-
-const IcUser = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="7" r="3.2" stroke={C.green} strokeWidth="1.4"/>
-    <Path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke={C.green} strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcPhone = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M4 2.5h-.4A2 2 0 001.5 4.5v.4c0 5.8 4.7 10.5 10.5 10.5h.4a2 2 0 002-2v-.4a.8.8 0 00-.5-.74l-2.8-1.2a.8.8 0 00-.9.16l-1.04 1.04A7.3 7.3 0 015.7 8.8L6.74 7.76a.8.8 0 00.16-.9L5.7 4.06A.8.8 0 004.96 3.6L4 3.6" stroke={C.green} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcDesc = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="2.5" y="2.5" width="13" height="13" rx="2.5" stroke={C.green} strokeWidth="1.4"/>
-    <Path d="M5.5 6.5h7M5.5 9h7M5.5 11.5h4.5" stroke={C.green} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcNote = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="2.5" y="2.5" width="13" height="13" rx="2.5" stroke={C.green} strokeWidth="1.4"/>
-    <Path d="M5.5 6.5h7M5.5 9h5" stroke={C.green} strokeWidth="1.3" strokeLinecap="round"/>
-    <Path d="M11 13l2-2-1-1-2 2v1h1z" stroke={C.green} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcCamera = () => (
-  <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
-    <Path d="M3 8.5A2.5 2.5 0 015.5 6H7l1.5-2h5L15 6h1.5A2.5 2.5 0 0119 8.5v7a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 013 15.5v-7z" stroke={C.green} strokeWidth="1.4"/>
-    <Circle cx="11" cy="12" r="2.8" stroke={C.green} strokeWidth="1.3"/>
-  </Svg>
-);
-const IcGPS = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="9" r="6.5" stroke="#fff" strokeWidth="1.4"/>
-    <Circle cx="9" cy="9" r="2" fill="#fff"/>
-    <Path d="M9 1v2.5M9 14.5V17M1 9h2.5M14.5 9H17" stroke="#fff" strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcTrash = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Path d="M2 4h12M5 4V2.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5V4M6 7v5M10 7v5" stroke={C.red} strokeWidth="1.3" strokeLinecap="round"/>
-    <Path d="M3 4l.8 9.5a.5.5 0 00.5.5h7.4a.5.5 0 00.5-.5L13 4" stroke={C.red} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcSend = () => (
-  <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
-    <Path d="M17 3L9 11M17 3l-5 14-3-6-6-3 14-5z" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
 
 
 export default function ReportScreen() {
@@ -137,7 +89,7 @@ export default function ReportScreen() {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  /* Submit — works for both guest (userId=null) and logged-in users */
+  /* Submit — both guest and logged-in users */
   const submitReport = async () => {
     if (!location) {
       Alert.alert('Error', 'Location not ready. Tap Get My Location first.');
@@ -160,6 +112,8 @@ export default function ReportScreen() {
 
     try {
       setSubmitting(true);
+
+      const token = await AsyncStorage.getItem('token');
 
       const formData = new FormData();
 
@@ -185,6 +139,9 @@ export default function ReportScreen() {
 
       const res = await fetch(`${api_url}/api/reports`, {
         method: 'POST',
+        headers: {
+        'Authorization': `Bearer ${token}`, 
+      },
         body: formData,
       });
 

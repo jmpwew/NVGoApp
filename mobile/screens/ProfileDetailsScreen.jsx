@@ -4,26 +4,15 @@ import {
   Image, ScrollView, StatusBar, Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import api_url from '../utils/api';
+import { IcEdit, IcBack} from '../constants/icons';
+
 
 import {C} from '../constants/colors';
 
-/* ─── Small SVG icons ─────────────────────────────────────────── */
-const IcEdit = () => (
-  <Svg width={15} height={15} viewBox="0 0 16 16" fill="none">
-    <Path d="M11 2l3 3-8 8H3v-3l8-8z" stroke="#fff" strokeWidth="1.3"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke="#fff" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
 
-/* ─── Row component ───────────────────────────────────────────── */
+
+
 const InfoRow = ({ label, value }) => (
   <View style={s.row}>
     <Text style={s.rowLabel}>{label}</Text>
@@ -31,9 +20,7 @@ const InfoRow = ({ label, value }) => (
   </View>
 );
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════════ */
+
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
 
@@ -54,7 +41,7 @@ export default function ProfileScreen({ navigation }) {
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={C.greenDk}/>
 
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/*Header */}
       <View style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
           <IcBack/>
@@ -70,7 +57,7 @@ export default function ProfileScreen({ navigation }) {
       >
         {user ? (
           <>
-            {/* ── Avatar ────────────────────────────────────── */}
+            {/* Avatar  */}
             <View style={s.avatarSection}>
               <Image
                 source={
@@ -86,7 +73,7 @@ export default function ProfileScreen({ navigation }) {
               </View>
             </View>
 
-            {/* ── Info card ─────────────────────────────────── */}
+            {/* Info card  */}
             <View style={s.card}>
               <InfoRow label="Email"    value={user.email}   />
               <View style={s.divider}/>
@@ -95,7 +82,7 @@ export default function ProfileScreen({ navigation }) {
               <InfoRow label="Address"  value={`${user.address}, Nueva Valencia, Guimaras`} />
             </View>
 
-            {/* ── Edit button ───────────────────────────────── */}
+            {/*Edit button */}
             <TouchableOpacity
               style={s.editBtn}
               onPress={() => navigation.navigate('EditProfile')}
@@ -115,7 +102,7 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-/* ─── Styles ─────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
   scroll:       { flex: 1 },

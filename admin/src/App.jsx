@@ -6,6 +6,7 @@ import UsersPage         from './pages/UsersPage';
 import NewsPage          from './pages/NewsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SupportPage       from './pages/SupportPage';
+import HotlinesPage      from './pages/HotlinesPage';
 import Sidebar           from './components/Sidebar';
 import './index.css';
 
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/news"      element={<PrivateRoute><NewsPage /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
         <Route path="/support"   element={<PrivateRoute><SupportPage /></PrivateRoute>} />
+        <Route path="/hotlines"  element={<PrivateRoute><HotlinesPage /></PrivateRoute>} />
         <Route path="*"          element={<Navigate to="/dashboard" />} />
       </Routes>
     </BrowserRouter>

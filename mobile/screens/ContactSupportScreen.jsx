@@ -7,51 +7,9 @@ import {
 import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import { IcBack, IcPhone, IcMail, IcFB, IcUser, IcMsg, IcSend} from '../constants/icons';
 
-/* ─── Icons ──────────────────────────────────────────────────── */
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke="#fff" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcPhone = ({ c = C.green }) => (
-  <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
-    <Path d="M4.5 3h-.4A2 2 0 002 5v.4c0 6.5 5.2 11.7 11.7 11.7h.4a2 2 0 002-2v-.4a.9.9 0 00-.56-.83l-3.1-1.33a.9.9 0 00-1 .18L10.3 13.7A8 8 0 016.3 9.7l1.18-1.16a.9.9 0 00.18-1L6.33 4.4A.9.9 0 005.5 3.84L4.5 3.84"
-      stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcMail = ({ c = C.skyDk }) => (
-  <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
-    <Rect x="2" y="4" width="16" height="12" rx="2.5" stroke={c} strokeWidth="1.5"/>
-    <Path d="M2 7l8 5 8-5" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcFB = ({ c = '#1877F2' }) => (
-  <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
-    <Circle cx="10" cy="10" r="8" stroke={c} strokeWidth="1.5"/>
-    <Path d="M11.5 7H10a.5.5 0 00-.5.5V9H11l-.3 2H9.5v5" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcUser = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Circle cx="9" cy="7" r="3.2" stroke={c} strokeWidth="1.4"/>
-    <Path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcMsg = ({ c = C.green }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Rect x="1.5" y="2.5" width="15" height="11" rx="2.5" stroke={c} strokeWidth="1.4"/>
-    <Path d="M5 13.5l2 3 2-3" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-    <Path d="M5 7h8M5 10h5" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-const IcSend = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M15.5 2.5L8.5 9.5M15.5 2.5l-4.5 13-3-5.5-5.5-3 13-4.5z"
-      stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
+
 
 /* ─── Contact channel card ────────────────────────────────────── */
 function ChannelCard({ icon, label, value, onPress, iconBg, borderColor }) {
@@ -175,37 +133,28 @@ export default function ContactSupportScreen({ navigation }) {
           <ChannelCard
             icon={<IcPhone c={C.green}/>}
             label="Municipal Hotline"
-            value="(033) 581-0002"
+            value="(033) 322 0221"
             iconBg={C.greenLt}
             borderColor={C.green}
-            onPress={() => Linking.openURL('tel:033581002')}
-          />
-          <View style={s.groupDivider}/>
-          <ChannelCard
-            icon={<IcPhone c={C.green}/>}
-            label="MDRRMO Emergency"
-            value="0917-123-4567"
-            iconBg={C.greenLt}
-            borderColor={C.green}
-            onPress={() => Linking.openURL('tel:09171234567')}
+            onPress={() => Linking.openURL('tel:0333220221')}
           />
           <View style={s.groupDivider}/>
           <ChannelCard
             icon={<IcMail c={C.skyDk}/>}
             label="Email"
-            value="nuevavalencia.lgu@gmail.com"
+            value="lgunuevavalencia@gmail.com"
             iconBg={C.skyBg}
             borderColor={C.skyDk}
-            onPress={() => Linking.openURL('mailto:nuevavalencia.lgu@gmail.com')}
+            onPress={() => Linking.openURL('mailto:lgunuevavalencia@gmail.com')}
           />
           <View style={s.groupDivider}/>
           <ChannelCard
             icon={<IcFB/>}
             label="Facebook Page"
-            value="LGU Nueva Valencia Official"
+            value="Municipality of Nueva Valencia"
             iconBg="#E8F0FE"
             borderColor="#1877F2"
-            onPress={() => Linking.openURL('https://www.facebook.com')}
+            onPress={() => Linking.openURL('https://www.facebook.com/MunicipalityOfNuevaValencia')}
           />
         </View>
 

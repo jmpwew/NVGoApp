@@ -23,6 +23,7 @@ export default function Sidebar() {
         <NavLink to="/news"          className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> News</NavLink>
         <NavLink to="/notifications" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Notifications</NavLink>
         <NavLink to="/support"       className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Support Messages</NavLink>
+        <NavLink to="/hotlines"      className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Emergency Hotlines</NavLink>
       </nav>
 
       <div className="sidebar-logout">

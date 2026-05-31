@@ -8,47 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import api_url from '../utils/api';
 import { C } from '../constants/colors';
+import { IcBack, IcEye, IcCheck, IcLock } from '../constants/icons';
 
-
-const IcBack = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M11 4L6 9l5 5" stroke="#fff" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-
-const IcEyeOn = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M1.5 9s3-6 7.5-6 7.5 6 7.5 6-3 6-7.5 6-7.5-6-7.5-6z"
-      stroke={C.muted} strokeWidth="1.3"/>
-    <Circle cx="9" cy="9" r="2.5" stroke={C.muted} strokeWidth="1.3"/>
-  </Svg>
-);
-
-const IcEyeOff = () => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
-    <Path d="M1.5 9s3-6 7.5-6 7.5 6 7.5 6-3 6-7.5 6-7.5-6-7.5-6z"
-      stroke={C.muted} strokeWidth="1.3"/>
-    <Circle cx="9" cy="9" r="2.5" stroke={C.muted} strokeWidth="1.3"/>
-    <Path d="M2 2l14 14" stroke={C.muted} strokeWidth="1.3" strokeLinecap="round"/>
-  </Svg>
-);
-
-const IcLock = ({ color = C.green }) => (
-  <Svg width={38} height={38} viewBox="0 0 38 38" fill="none">
-    <Rect x="8" y="17" width="22" height="16" rx="4" stroke={color} strokeWidth="2"/>
-    <Path d="M12 17v-5a7 7 0 0114 0v5" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    <Circle cx="19" cy="25" r="2.5" fill={color}/>
-    <Path d="M19 25v3" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-  </Svg>
-);
-
-const IcCheck = () => (
-  <Svg width={17} height={17} viewBox="0 0 18 18" fill="none">
-    <Path d="M3 9l4 4 8-8" stroke="#fff" strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
 
 /* Password field  */
 const PwField = ({ label, value, onChangeText, show, onToggle, hint }) => (
@@ -66,7 +27,7 @@ const PwField = ({ label, value, onChangeText, show, onToggle, hint }) => (
         autoCorrect={false}
       />
       <TouchableOpacity onPress={onToggle} style={s.eyeBtn} activeOpacity={0.7}>
-        {show ? <IcEyeOn/> : <IcEyeOff/>}
+        <IcEye show={show}/>
       </TouchableOpacity>
     </View>
   </View>
@@ -170,7 +131,7 @@ export default function ChangePasswordScreen({ navigation }) {
         {/* Icon */}
         <View style={s.intro}>
           <View style={s.introIconWrap}>
-            <IcLock color={C.green}/>
+            <IcLock s={38} c={C.green}/>
           </View>
           <Text style={s.introTitle}>Update your password</Text>
           <Text style={s.introSub}>

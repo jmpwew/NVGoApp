@@ -1,8 +1,7 @@
-
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
-
+const sendPushNotification = require('../utils/sendPushNotification');
 
 // register user
 exports.register = async (req, res) => {
@@ -39,7 +38,6 @@ exports.register = async (req, res) => {
   }
 };
 
-
 // login user
 exports.login = async (req, res) => {
   try {
@@ -65,7 +63,21 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+    );
+
+    // send welcome notification on first login
+    if (user.push_token && !user.last_login) {
+      await sendPushNotification(
+        [user.push_token],
+        '👋 Welcome to NVGo!',
+        `Hello ${user.firstname}! Your account is ready. Stay updated with your barangay.`
+      );
+    }
+
+    // update last_login
+    await pool.query(
+      'UPDATE users SET last_login = NOW() WHERE id = $1',
+      [user.id]
     );
 
     res.json({

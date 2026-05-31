@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity,
-  StyleSheet, Image,
-  StatusBar,  Platform, RefreshControl, ScrollView
+  StyleSheet, Image, TextInput,
+  StatusBar, Platform, RefreshControl, ScrollView
 } from 'react-native';
 import { Svg, Path, Rect, Circle } from 'react-native-svg';
 import api_url from '../utils/api';
+import { IcSearch, IcClock, IcEye, IcChevron, IcEmpty} from '../constants/icons';
 
 
 
@@ -20,39 +21,6 @@ const CATS = {
   crime:        { label: 'Crime',        color: C.red,     bg: C.redBg    },
 };
 
-/* Utility SVG  */
-const IcSearch = () => (
-  <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
-    <Circle cx="7" cy="7" r="4.5" stroke="rgba(255,255,255,0.8)" strokeWidth="1.4"/>
-    <Path d="M10.5 10.5l3 3" stroke="rgba(255,255,255,0.8)" strokeWidth="1.4" strokeLinecap="round"/>
-  </Svg>
-);
-const IcClock = ({ color = C.muted }) => (
-  <Svg width={11} height={11} viewBox="0 0 12 12" fill="none">
-    <Circle cx="6" cy="6" r="4.5" stroke={color} strokeWidth="1.2"/>
-    <Path d="M6 3.5V6l2 1.5" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcEye = ({ color = C.muted }) => (
-  <Svg width={11} height={11} viewBox="0 0 12 12" fill="none">
-    <Path d="M1 6s2-4 5-4 5 4 5 4-2 4-5 4-5-4-5-4z" stroke={color} strokeWidth="1.2"/>
-    <Circle cx="6" cy="6" r="1.5" stroke={color} strokeWidth="1.2"/>
-  </Svg>
-);
-const IcChevron = () => (
-  <Svg width={6} height={10} viewBox="0 0 8 12" fill="none">
-    <Path d="M1.5 1.5l5 5-5 5" stroke={C.border} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-const IcEmpty = () => (
-  <Svg width={52} height={52} viewBox="0 0 52 52" fill="none">
-    <Rect x="8" y="10" width="36" height="32" rx="5" stroke={C.border} strokeWidth="1.8"/>
-    <Path d="M8 18h36" stroke={C.border} strokeWidth="1.6"/>
-    <Path d="M16 26h20M16 31h14" stroke={C.border} strokeWidth="1.5" strokeLinecap="round"/>
-    <Circle cx="38" cy="38" r="8" fill={C.bg} stroke={C.border} strokeWidth="1.5"/>
-    <Path d="M35 38h6M38 35v6" stroke={C.border} strokeWidth="1.5" strokeLinecap="round"/>
-  </Svg>
-);
 
 /* Format date */
 const formatDate = (dateStr) => {
@@ -168,6 +136,8 @@ export default function NewsScreen({ navigation }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [refreshing,       setRefreshing]       = useState(false);
   const [loading,          setLoading]          = useState(true);
+  const [searchQuery,      setSearchQuery]      = useState('');
+  const [searchVisible,    setSearchVisible]    = useState(false);
 
   const categories = Object.keys(CATS);
 
@@ -201,6 +171,13 @@ export default function NewsScreen({ navigation }) {
   const getCatConfig = (cat) =>
     CATS[cat] ?? { label: cat, color: C.green, bg: C.greenLt };
 
+  const filteredNews = searchQuery.trim()
+    ? news.filter(item =>
+        item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.content?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : news;
+
   const renderItem = ({ item, index }) => {
     const catConfig = getCatConfig(item.category);
     if (index === 0) {
@@ -233,10 +210,29 @@ export default function NewsScreen({ navigation }) {
             <Text style={s.headerSup}>NUEVA VALENCIA</Text>
             <Text style={s.headerTitle}>News &amp; Updates</Text>
           </View>
-          <TouchableOpacity style={s.searchBtn}>
+          <TouchableOpacity style={s.searchBtn} onPress={() => { setSearchVisible(v => !v); setSearchQuery(''); }}>
             <IcSearch/>
           </TouchableOpacity>
         </View>
+
+        {/* Search bar */}
+        {searchVisible && (
+          <View style={s.searchWrap}>
+            <TextInput
+              style={s.searchInput}
+              placeholder="Search news..."
+              placeholderTextColor="rgba(255,255,255,0.5)"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Text style={s.searchClear}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* Text-only category pills */}
         <ScrollView
@@ -293,17 +289,19 @@ export default function NewsScreen({ navigation }) {
         </View>
       ) : (
         <FlatList
-          data={news}
+          data={filteredNews}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            news.length > 0
+            filteredNews.length > 0
               ? () => (
                 <Text style={s.resultCount}>
-                  {news.length} {news.length === 1 ? 'article' : 'articles'}
-                  {selectedCategory !== 'all'
+                  {filteredNews.length} {filteredNews.length === 1 ? 'article' : 'articles'}
+                  {searchQuery.trim()
+                    ? ` for "${searchQuery}"`
+                    : selectedCategory !== 'all'
                     ? ` in ${CATS[selectedCategory]?.label ?? selectedCategory}`
                     : ''}
                 </Text>
@@ -337,7 +335,9 @@ const s = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.5, marginTop: 1 },
   searchBtn:   { width: 36, height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
 
-  /* Category pills */
+  searchWrap:  { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingHorizontal: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  searchInput: { flex: 1, color: '#fff', fontSize: 14, paddingVertical: 10 },
+  searchClear: { color: 'rgba(255,255,255,0.6)', fontSize: 14, paddingLeft: 8 },
   catsWrap: {
   paddingHorizontal: 16,
   gap: 7,
