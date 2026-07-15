@@ -2,12 +2,20 @@
 -- PostgreSQL database dump
 --
 
+<<<<<<< HEAD
 \restrict oCcTSmFFMg6ItsxDCStgXWUufipr89twSmzDpeK8QCCztOloD2nH1L5I2sbo40I
+=======
+\restrict egOGAPd0MdlhV7i1v0Mtj37i1HZZl0169Wglp7U3PGfGYlmc3uouUOSPDsuNJix
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
 
+<<<<<<< HEAD
 -- Started on 2026-07-07 15:20:14
+=======
+-- Started on 2026-06-01 01:24:27
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -377,12 +385,17 @@ COPY public.news (id, title, content, created_at, created_by, category, image) F
 --
 
 COPY public.notifications (id, user_id, title, body, type, is_read, created_at) FROM stdin;
+<<<<<<< HEAD
 2	3	Typhoon Alert	hello test test	alert	t	2026-05-25 20:41:41.970967
 3	\N	heyyy	testinghgggg	info	t	2026-06-10 01:35:20.237394
 1	\N	Test	Hello World	info	t	2026-05-17 22:47:02.331609
 4	6	heheheheh	hehehehe	info	t	2026-07-03 16:16:42.415493
 5	6	hey hey heyyyuow	howwwwwwwwwwwwwqwwwwwwwwwwwwwwwwwwwwwwwwwwwwqwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww	alert	f	2026-07-03 16:50:23.122816
 6	5	heyyyy	wwhatahskjassssssssssssssssssssssssssssssssjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj	alert	t	2026-07-03 16:50:52.674566
+=======
+1	\N	Test	Hello World	info	t	2026-05-17 22:47:02.331609
+2	3	Typhoon Alert	hello test test	alert	t	2026-05-25 20:41:41.970967
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 \.
 
 
@@ -404,6 +417,7 @@ COPY public.reports (id, name, contact, description, latitude, longitude, status
 12	John Pami	09641822714	Hello	10.8626306	122.7107564	pending	2026-05-17 23:50:57.192065	Hey	{1779033057138.jpg}	2
 13	John Pami	09641822714	heyy	10.8626306	122.7107564	pending	2026-05-17 23:52:21.098606	hi	{1779033141075.jpg}	2
 14	Jude Sayo	09090454545	helllo ka boii	10.8625159	122.7106973	pending	2026-05-27 13:05:39.241982		{1779858339157.jpg}	3
+<<<<<<< HEAD
 16	Jude Sayo	09090454545	heyyy	10.8628804	122.7119608	pending	2026-06-01 00:21:27.865097	hello	{1780244487602.jpg}	3
 17	boy	0964678767	hshsisjsnkss	10.8625485	122.7107204	pending	2026-06-01 00:37:01.354329	likod lng	{1780245420895.jpg}	\N
 18	Jude Sayo	09090454545	heyy boyyy	10.8625311	122.7107135	pending	2026-06-01 01:12:30.550233	yeyeyey	{1780247550156.jpg}	3
@@ -413,6 +427,12 @@ COPY public.reports (id, name, contact, description, latitude, longitude, status
 22	El Juan	09467546464	John Mark	10.8627086	122.7107707	pending	2026-07-03 14:57:28.954217	markk	{1783061848580.jpg}	6
 24	John 	0964575454546	nsjsjsjsjjsjajsjajajajajjajajajajajajajajjahshsjsjsnsjsjsjsjjssjjsjsnsjsjsjsjsjdjsjsjsnjsjsnsjsjsnsjjssnsjsjsnjsjsnsksjsnsksksmsnskksnsksksjsnsjsksjsnsjsjsjsjsksjskksjsjsjsksjsjsjsjsjsnjsjsjsjsjsjsjsndjshgshsjsjsjshshjsjsjsjsjsjsjjskwlwkdosowodjsjjsiwjsndjsksjdnjskwidjsnsjeijdnejsksosoosksjsndjsjsiiskssjsjsjsjdhdbsjkskaososkdjdjs	10.8627081	122.7107726	pending	2026-07-07 13:55:24.724488		{1783403724338.jpg}	\N
 25	j	09496464646	gehshsjsk	10.8627086	122.7107704	pending	2026-07-07 14:51:17.598333		{1783407077188.jpg}	\N
+=======
+15	Jude Sayo	09090454545	hello kaaa	10.6926585	122.5618943	pending	2026-05-29 17:52:33.876584	heyy	{1780048353612.jpg}	3
+16	Jude Sayo	09090454545	heyyy	10.8628804	122.7119608	pending	2026-06-01 00:21:27.865097	hello	{1780244487602.jpg}	3
+17	boy	0964678767	hshsisjsnkss	10.8625485	122.7107204	pending	2026-06-01 00:37:01.354329	likod lng	{1780245420895.jpg}	\N
+18	Jude Sayo	09090454545	heyy boyyy	10.8625311	122.7107135	pending	2026-06-01 01:12:30.550233	yeyeyey	{1780247550156.jpg}	3
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 \.
 
 
@@ -435,12 +455,18 @@ COPY public.support_messages (id, name, message, is_read, created_at) FROM stdin
 --
 
 COPY public.users (id, firstname, lastname, email, password, contact, address, role, created_at, image, push_token, last_login) FROM stdin;
+<<<<<<< HEAD
 4	John	Pami	gpamijohnmark5@gmail.com	$2b$10$wz/KeA5K0x.XjXUFE/hoVez6qPENhsoy/IB4Uv2E2wayxDlfXKyDS	09641822714	Zaragosa	user	2026-06-04 19:29:10.279283	1781027988772.jpg	ExponentPushToken[4Xfe-wFhe2F-7zQnUE6sIj]	2026-06-24 14:37:57.026122
 2	John	Pami	pami@gmail.com	$2b$10$HUZFsrPXh39cYvY3JSSZp.nlNmIbAxdtdj0hbRXPk9O9orYyMTS6W	09641822714	Oracon Sur	user	2026-05-17 18:58:41.194727	\N	\N	\N
 5	John	Does	tejovab301@padyou.com	$2b$10$JqVl8qrlmwg5WyEX1VtAZuh3mwQHxqy.jH4LGMhH8.WvOqnm1YrdC	09641822714	Magamay	user	2026-06-27 15:32:44.576112	\N	ExponentPushToken[4Xfe-wFhe2F-7zQnUE6sIj]	2026-06-27 15:32:55.465268
 3	Jude	Sayo	sayo@gmail.com	$2b$10$VzQxbxIPVacyUDt1dIXhHO7V8rvEw56Bu2zegY7U0ddsB5gku/aNK	09090454545	Magamay	user	2026-05-18 00:47:25.259111	\N	ExponentPushToken[4Xfe-wFhe2F-7zQnUE6sIj]	2026-06-01 01:11:52.866217
 6	El	Juan	babaf13342@mitvec.com	$2b$10$.woW.n.rMWXGj5KOW5Qg/eONNXtOD8Utl1O37lwcV/AJ9kIvmAUUS	09467546464	Lucmayan	user	2026-07-02 13:54:30.108979	\N	ExponentPushToken[4Xfe-wFhe2F-7zQnUE6sIj]	2026-07-03 18:30:02.499464
 1	John Mark	Pami	john@gmail.com	$2b$10$.I/srmq44dB5FfZ0Gc7J8eoKD1JD0UL3hooqjeLGpOqcJ6mpRJMTy	09641822714	Salvacion	admin	2026-05-07 18:24:57.747166	1778750685711.jpg	\N	2026-07-07 13:52:48.499048
+=======
+1	John Mark	Pami	john@gmail.com	$2b$10$.I/srmq44dB5FfZ0Gc7J8eoKD1JD0UL3hooqjeLGpOqcJ6mpRJMTy	09641822714	Salvacion	admin	2026-05-07 18:24:57.747166	1778750685711.jpg	\N	\N
+2	John	Pami	pami@gmail.com	$2b$10$HUZFsrPXh39cYvY3JSSZp.nlNmIbAxdtdj0hbRXPk9O9orYyMTS6W	09641822714	Oracon Sur	user	2026-05-17 18:58:41.194727	\N	\N	\N
+3	Jude	Sayo	sayo@gmail.com	$2b$10$VzQxbxIPVacyUDt1dIXhHO7V8rvEw56Bu2zegY7U0ddsB5gku/aNK	09090454545	Magamay	user	2026-05-18 00:47:25.259111	\N	ExponentPushToken[4Xfe-wFhe2F-7zQnUE6sIj]	2026-06-01 01:11:52.866217
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 \.
 
 
@@ -468,7 +494,11 @@ SELECT pg_catalog.setval('public.news_id_seq', 6, true);
 -- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
+<<<<<<< HEAD
 SELECT pg_catalog.setval('public.notifications_id_seq', 6, true);
+=======
+SELECT pg_catalog.setval('public.notifications_id_seq', 2, true);
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 
 --
@@ -477,7 +507,11 @@ SELECT pg_catalog.setval('public.notifications_id_seq', 6, true);
 -- Name: reports_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
+<<<<<<< HEAD
 SELECT pg_catalog.setval('public.reports_id_seq', 25, true);
+=======
+SELECT pg_catalog.setval('public.reports_id_seq', 18, true);
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 
 --
@@ -486,7 +520,11 @@ SELECT pg_catalog.setval('public.reports_id_seq', 25, true);
 -- Name: support_messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
+<<<<<<< HEAD
 SELECT pg_catalog.setval('public.support_messages_id_seq', 3, true);
+=======
+SELECT pg_catalog.setval('public.support_messages_id_seq', 2, true);
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 
 --
@@ -495,7 +533,11 @@ SELECT pg_catalog.setval('public.support_messages_id_seq', 3, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
+<<<<<<< HEAD
 SELECT pg_catalog.setval('public.users_id_seq', 6, true);
+=======
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 
 --
@@ -612,11 +654,19 @@ ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
+<<<<<<< HEAD
 -- Completed on 2026-07-07 15:20:15
+=======
+-- Completed on 2026-06-01 01:24:27
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
 --
 -- PostgreSQL database dump complete
 --
 
+<<<<<<< HEAD
 \unrestrict oCcTSmFFMg6ItsxDCStgXWUufipr89twSmzDpeK8QCCztOloD2nH1L5I2sbo40I
+=======
+\unrestrict egOGAPd0MdlhV7i1v0Mtj37i1HZZl0169Wglp7U3PGfGYlmc3uouUOSPDsuNJix
+>>>>>>> 28fcff808b21a2ade68ef76ef2097cec5901fbf0
 
