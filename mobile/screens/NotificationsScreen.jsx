@@ -35,12 +35,12 @@ function formatTime(dateStr) {
 }
 
 // notification
-function NotifCard({ item, onRead, onDelete }) {
+function NotifCard({ item, onOpen, onDelete }) {
   const cfg = TYPE[item.type] ?? TYPE.info;
   return (
     <TouchableOpacity
       style={[s.card, { borderLeftColor: cfg.border, backgroundColor: item.is_read ? C.card : cfg.bg }]}
-      onPress={() => onRead(item.id)}
+      onPress={() => onOpen(item)}
       activeOpacity={0.82}
     >
       {!item.is_read && <View style={[s.unreadDot, { backgroundColor: cfg.dot }]}/>}
@@ -117,6 +117,11 @@ export default function NotificationsScreen({ navigation }) {
     } catch (err) {
       console.error('Mark read error:', err);
     }
+  };
+
+  const openNotification = (item) => {
+    if (!item.is_read) markRead(item.id);
+    navigation.navigate('NotificationDetail', { notification: item });
   };
 
   const markAllRead = async () => {
@@ -222,7 +227,7 @@ export default function NotificationsScreen({ navigation }) {
             <>
               <Text style={s.secLabel}>NEW</Text>
               {notifications.filter(n => !n.is_read).map(item => (
-                <NotifCard key={item.id} item={item} onRead={markRead} onDelete={deleteNotif}/>
+                <NotifCard key={item.id} item={item} onOpen={openNotification} onDelete={deleteNotif}/>
               ))}
             </>
           )}
@@ -232,7 +237,7 @@ export default function NotificationsScreen({ navigation }) {
             <>
               <Text style={s.secLabel}>EARLIER</Text>
               {notifications.filter(n => n.is_read).map(item => (
-                <NotifCard key={item.id} item={item} onRead={markRead} onDelete={deleteNotif}/>
+                <NotifCard key={item.id} item={item} onOpen={openNotification} onDelete={deleteNotif}/>
               ))}
             </>
           )}

@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { createAlert } = require('./alertController');
 
 exports.submitSupportMessage = async (req, res) => {
   try {
@@ -16,6 +17,15 @@ exports.submitSupportMessage = async (req, res) => {
        VALUES ($1, $2) RETURNING *`,
       [name.trim(), message.trim()]
     );
+
+    const newMessage = result.rows[0];
+
+    createAlert({
+      type: 'support',
+      related_id: newMessage.id,
+      title: 'New support message',
+      detail: `From ${newMessage.name}`,
+    }).catch(err => console.error('createAlert (support) failed:', err));
 
     res.json({ success: true, data: result.rows[0] });
   } catch (err) {

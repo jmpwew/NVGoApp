@@ -9,6 +9,7 @@ exports.getStats = async (req, res) => {
     const resolvedReports = await pool.query("SELECT COUNT(*) FROM reports WHERE status = 'resolved'");
     const totalUsers      = await pool.query('SELECT COUNT(*) FROM users');
     const totalNews       = await pool.query('SELECT COUNT(*) FROM news');
+    const unreadSupport   = await pool.query('SELECT COUNT(*) FROM support_messages WHERE is_read = FALSE');
 
     res.json({
       totalReports:    parseInt(totalReports.rows[0].count),
@@ -16,10 +17,85 @@ exports.getStats = async (req, res) => {
       resolvedReports: parseInt(resolvedReports.rows[0].count),
       totalUsers:      parseInt(totalUsers.rows[0].count),
       totalNews:       parseInt(totalNews.rows[0].count),
+      unreadSupport:   parseInt(unreadSupport.rows[0].count),
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error fetching stats' });
+  }
+};
+
+
+// user growth for the current year, grouped by month (for dashboard chart)
+exports.getUserGrowth = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT EXTRACT(MONTH FROM created_at)::int AS month, COUNT(*)::int AS count
+       FROM users
+       WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
+       GROUP BY month
+       ORDER BY month`
+    );
+
+    // fill in every month (1-12) so the chart always has 12 points
+    const counts = Array(12).fill(0);
+    result.rows.forEach(row => {
+      counts[row.month - 1] = row.count;
+    });
+
+    res.json({
+      year: new Date().getFullYear(),
+      months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      counts,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching user growth' });
+  }
+};
+
+
+
+// recent activity feed for the notification bell (unresolved reports + unread support messages)
+exports.getRecentActivity = async (req, res) => {
+  try {
+    const reports = await pool.query(
+      `SELECT id, name, description, created_at
+       FROM reports
+       WHERE status = 'pending'
+       ORDER BY created_at DESC
+       LIMIT 8`
+    );
+
+    const support = await pool.query(
+      `SELECT id, name, message, created_at
+       FROM support_messages
+       WHERE is_read = FALSE
+       ORDER BY created_at DESC
+       LIMIT 8`
+    );
+
+    const items = [
+      ...reports.rows.map(r => ({
+        type: 'report',
+        id: r.id,
+        title: 'New report submitted',
+        detail: r.name ? `From ${r.name}` : (r.description ? r.description.slice(0, 60) : ''),
+        created_at: r.created_at,
+      })),
+      ...support.rows.map(s => ({
+        type: 'support',
+        id: s.id,
+        title: 'New support message',
+        detail: s.name ? `From ${s.name}` : (s.message ? s.message.slice(0, 60) : ''),
+        created_at: s.created_at,
+      })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(items);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching recent activity' });
   }
 };
 
@@ -40,6 +116,48 @@ exports.getAllReports = async (req, res) => {
   }
 };
 
+// Full trail for the main admin: reporter -> verifier -> every office's assignment/action.
+// Each report includes a `verifier` object (null if not yet verified) and an
+// `assignments` array (one entry per office it was turned over to).
+exports.getFullReportTrail = async (req, res) => {
+  try {
+    const reportsResult = await pool.query(
+      `SELECT r.*,
+              u.firstname AS reporter_firstname,
+              u.lastname  AS reporter_lastname,
+              v.firstname AS verifier_firstname,
+              v.lastname  AS verifier_lastname
+       FROM reports r
+       LEFT JOIN users u ON r.user_id = u.id
+       LEFT JOIN users v ON r.verified_by = v.id
+       ORDER BY r.created_at DESC`
+    );
+
+    const assignmentsResult = await pool.query(
+      `SELECT * FROM report_assignments ORDER BY assigned_at ASC`
+    );
+
+    const assignmentsByReport = {};
+    for (const a of assignmentsResult.rows) {
+      if (!assignmentsByReport[a.report_id]) assignmentsByReport[a.report_id] = [];
+      assignmentsByReport[a.report_id].push(a);
+    }
+
+    const reports = reportsResult.rows.map(r => ({
+      ...r,
+      verifier: r.verified_by
+        ? { id: r.verified_by, firstname: r.verifier_firstname, lastname: r.verifier_lastname, verified_at: r.verified_at }
+        : null,
+      assignments: assignmentsByReport[r.id] || [],
+    }));
+
+    res.json(reports);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching report trail' });
+  }
+};
+
 exports.updateReportStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -51,17 +169,28 @@ exports.updateReportStatus = async (req, res) => {
     const report = result.rows[0];
 
     // notify the user whose report was updated
-    const tokenResult = await pool.query(
-      'SELECT push_token FROM users WHERE id = $1',
-      [report.user_id]
-    );
-    const pushToken = tokenResult.rows[0]?.push_token;
-    if (pushToken) {
-      await sendPushNotification(
-        [pushToken],
-        'Report Status Updated',
-        `Your report is now marked as: ${status}`
+    if (report.user_id) {
+      const isResolved = status === 'resolved';
+      const title = isResolved ? 'Report Resolved' : 'Report Status Updated';
+      const body = isResolved
+        ? 'Your report has been resolved. Thank you for helping keep the community safe.'
+        : `Your report is now marked as: ${status}`;
+
+      // save to the user's in-app notification history
+      await pool.query(
+        `INSERT INTO notifications (user_id, title, body, type)
+         VALUES ($1, $2, $3, $4)`,
+        [report.user_id, title, body, isResolved ? 'update' : 'report']
+      ).catch(err => console.error('insert notification (report status) failed:', err));
+
+      const tokenResult = await pool.query(
+        'SELECT push_token FROM users WHERE id = $1',
+        [report.user_id]
       );
+      const pushToken = tokenResult.rows[0]?.push_token;
+      if (pushToken) {
+        await sendPushNotification([pushToken], title, body);
+      }
     }
 
     res.json(report);

@@ -4,12 +4,24 @@ const router = express.Router();
 const { verifyAdmin } = require('../middleware/auth');
 const upload = require('../config/multer');
 const adminController = require('../controllers/adminController');
+const alertController = require('../controllers/alertController');
 
 // Dashboard
 router.get('/stats', verifyAdmin, adminController.getStats);
+router.get('/users/growth', verifyAdmin, adminController.getUserGrowth);
+
+router.get('/activity', verifyAdmin, adminController.getRecentActivity);
+
+// Header bell (persistent read/unread notifications)
+router.get('/alerts', verifyAdmin, alertController.getFeed);
+router.get('/alerts/unread-count', verifyAdmin, alertController.getUnreadCount);
+router.patch('/alerts/read-all', verifyAdmin, alertController.markAllRead);
+router.patch('/alerts/:id/read', verifyAdmin, alertController.markRead);
+router.delete('/alerts/:id', verifyAdmin, alertController.deleteAlert);
 
 // Reports
 router.get('/reports',verifyAdmin, adminController.getAllReports);
+router.get('/reports/trail', verifyAdmin, adminController.getFullReportTrail);
 router.put('/reports/:id/status', verifyAdmin, adminController.updateReportStatus);
 router.delete('/reports/:id', verifyAdmin, adminController.deleteReport);
 

@@ -90,6 +90,11 @@ tr:hover td {
   color: #856404;
 }
 
+.badge-ongoing {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
 .badge-resolved {
   background-color: #d1f5e0;
   color: #1B8A4C;
@@ -105,6 +110,27 @@ tr:hover td {
   color: #555;
 }
 
+/* Office badges — distinct color identity per responding office */
+.badge-office-police {
+  background-color: #dbe7ff;
+  color: #1d4ed8;
+}
+
+.badge-office-bfp {
+  background-color: #ffe1d6;
+  color: #c2410c;
+}
+
+.badge-office-medical {
+  background-color: #ffd9e3;
+  color: #be123c;
+}
+
+.badge-verifier {
+  background-color: #ede4ff;
+  color: #6d28d9;
+}
+
 /* ── Page wrapper ────────────────────────────────────── */
 .page {
   padding: 24px;
@@ -112,8 +138,100 @@ tr:hover td {
 
 .page h1 {
   font-size: 22px;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
   color: #1B8A4C;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #999;
+}
+
+.empty-state-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  opacity: 0.6;
+}
+
+.empty-state-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.empty-state-text {
+  font-size: 13px;
+  color: #aaa;
+}
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #1B8A4C;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toast-in 0.25s ease;
+}
+
+.toast-error {
+  background-color: #e74c3c;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Spinner ─────────────────────────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Skeleton loading rows ─────────────────────────────── */
+.skeleton-row td {
+  padding: 14px;
+}
+
+.skeleton-bar {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
 }
 
 /* ── Card ────────────────────────────────────────────── */

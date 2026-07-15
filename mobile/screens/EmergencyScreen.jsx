@@ -3,33 +3,66 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, Platform, Linking, Alert, RefreshControl, ActivityIndicator
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
-import { IcPhone} from '../constants/icons';
-
-
+import { IcPhone } from '../constants/icons';
 
 const categoryStyle = {
   Emergency: { bg: C.greenLt, ic: C.green, label: 'Emergency' },
-  Medical:{ bg: C.greenLt, ic: C.green, label: 'Medical' },
-  Police: {bg: C.greenLt, ic: C.green, label: 'Police' },
-  Fire: { bg: C.greenLt, ic: C.green, label: 'Fire'},
-  Health:{bg: C.greenLt, ic: C.green, label: 'Health' },
-  General: { bg: C.greenLt, ic: C.green, label: 'General' },
+  Medical:   { bg: C.greenLt, ic: C.green, label: 'Medical'   },
+  Police:    { bg: C.greenLt, ic: C.green, label: 'Police'    },
+  Fire:      { bg: C.greenLt, ic: C.green, label: 'Fire'      },
+  Health:    { bg: C.greenLt, ic: C.green, label: 'Health'    },
+  General:   { bg: C.greenLt, ic: C.green, label: 'General'   },
 };
 
+const HOTLINES_CACHE_KEY = 'cached_hotlines';
+
 export default function EmergencyScreen({ navigation }) {
-  const [hotlines, setHotlines] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hotlines, setHotlines]     = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // true when what's on screen came from cache, not a fresh fetch
+  const [isOffline, setIsOffline]   = useState(false);
+
+  const loadCachedHotlines = async () => {
+    try {
+      const cached = await AsyncStorage.getItem(HOTLINES_CACHE_KEY);
+      if (cached) {
+        setHotlines(JSON.parse(cached));
+        return true;
+      }
+    } catch (e) {
+      console.log('Failed to read cached hotlines:', e);
+    }
+    return false;
+  };
 
   const fetchHotlines = async () => {
     try {
-      const res  = await fetch(`${api_url}/api/hotlines`);
+      const res = await fetch(`${api_url}/api/hotlines`);
+      if (!res.ok) throw new Error(`Request failed with ${res.status}`);
       const data = await res.json();
+
       setHotlines(data);
+      setIsOffline(false);
+
+      // Save a copy so we have something to show next time the network/API is down
+      AsyncStorage.setItem(HOTLINES_CACHE_KEY, JSON.stringify(data)).catch((e) =>
+        console.log('Failed to cache hotlines:', e)
+      );
     } catch (e) {
       console.log(e);
+      // Couldn't reach the server — fall back to whatever we last saved
+      const hadCache = await loadCachedHotlines();
+      setIsOffline(true);
+      if (!hadCache) {
+        Alert.alert(
+          'No connection',
+          "Couldn't load hotlines and no saved copy was found. Please check your connection."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +86,7 @@ export default function EmergencyScreen({ navigation }) {
       ]
     );
   };
-  /* group by category */
+
   const grouped = hotlines.reduce((acc, h) => {
     const cat = h.category || 'General';
     if (!acc[cat]) acc[cat] = [];
@@ -63,15 +96,11 @@ export default function EmergencyScreen({ navigation }) {
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor={C.green} />
+      <StatusBar barStyle="light-content" backgroundColor={C.greenDk} />
 
-      {/* Header */}
+      {/* Header — same size/style as News & Report screens */}
       <View style={s.header}>
-        
-        <View style={s.headerText}>
-          <Text style={s.headerTitle}>Emergency Hotlines</Text>
-          <Text style={s.headerSub}>Nueva Valencia, Guimaras</Text>
-        </View>
+        <Text style={s.headerTitle}>Emergency Hotlines</Text>
       </View>
 
       {loading ? (
@@ -85,11 +114,31 @@ export default function EmergencyScreen({ navigation }) {
           contentContainerStyle={s.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-              tintColor={C.green} colors={[C.green]} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={C.green}
+              colors={[C.green]}
+            />
           }
         >
-          {Object.entries(grouped).map(([category, items]) => {
+          {isOffline && hotlines.length > 0 && (
+            <View style={s.offlineBanner}>
+              <Text style={s.offlineBannerText}>
+                Showing saved hotlines — couldn't refresh. Pull down to try again.
+              </Text>
+            </View>
+          )}
+
+          {hotlines.length === 0 ? (
+            <View style={s.emptyWrap}>
+              <Text style={s.emptyTitle}>No hotlines available</Text>
+              <Text style={s.emptyTxt}>
+                We couldn't load hotlines and don't have a saved copy yet. Pull down to try again once you have a connection.
+              </Text>
+            </View>
+          ) : (
+            Object.entries(grouped).map(([category, items]) => {
             const cs = categoryStyle[category] || categoryStyle.General;
             return (
               <View key={category}>
@@ -115,8 +164,9 @@ export default function EmergencyScreen({ navigation }) {
                   </TouchableOpacity>
                 ))}
               </View>
-            );
-          })}
+              );
+            })
+          )}
 
           <Text style={s.footer}>Keep these numbers handy — every second counts.</Text>
         </ScrollView>
@@ -126,30 +176,46 @@ export default function EmergencyScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  root:       { flex: 1, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bg },
 
-  /* Header */
-  header:     { backgroundColor: C.green, paddingTop: Platform.OS === 'android' ? 16 : 54,
-                paddingHorizontal: 18, paddingBottom: 18,
-                flexDirection: 'row', alignItems: 'center', gap: 14 },
-  backBtn:    { width: 36, height: 36, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.18)',
-                alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  headerText: { flex: 1 },
-  headerTitle:{ color: '#fff', fontSize: 18, fontWeight: '800', letterSpacing: -0.4 },
-  headerSub:  { color: 'rgba(255,255,255,0.55)', fontSize: 10.5, marginTop: 2 },
+  // header
+  header: {
+    backgroundColor: C.greenDk,
+    paddingTop: Platform.OS === 'android' ? 16 : 52,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: { color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
 
   /* Scroll */
-  scroll:         { flex: 1 },
-  scrollContent:  { padding: 16, paddingTop: 12, paddingBottom: 40, gap: 4 },
+  scroll:        { flex: 1 },
+  scrollContent: { padding: 16, paddingTop: 12, paddingBottom: 40, gap: 4 },
 
-  catLabel:   { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2,
-                marginTop: 14, marginBottom: 8 },
+  catLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: C.muted,
+    letterSpacing: 1.2,
+    marginTop: 14,
+    marginBottom: 8,
+  },
 
   /* Card */
-  card:       { backgroundColor: '#fff', borderRadius: 14, padding: 12,
-                flexDirection: 'row', alignItems: 'center', gap: 12,
-                borderWidth: 1, borderColor: C.border, marginBottom: 8,
-                shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
   iconWrap:   { width: 46, height: 46, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   cardBody:   { flex: 1 },
   cardName:   { fontSize: 13, fontWeight: '800', color: C.text },
@@ -159,8 +225,24 @@ const s = StyleSheet.create({
   callBtnTxt: { color: '#fff', fontSize: 11, fontWeight: '800' },
 
   /* Loading */
-  loadWrap:   { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  loadTxt:    { color: C.muted, fontSize: 13 },
+  loadWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
+  loadTxt:  { color: C.muted, fontSize: 13 },
 
-  footer:     { textAlign: 'center', fontSize: 11, color: C.muted, marginTop: 12, lineHeight: 17 },
+  /* Offline banner */
+  offlineBanner: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F9A825',
+    padding: 12,
+    marginBottom: 8,
+  },
+  offlineBannerText: { fontSize: 12, color: '#7B6000', lineHeight: 18 },
+
+  /* Empty state */
+  emptyWrap:  { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 },
+  emptyTitle: { fontSize: 15, fontWeight: '800', color: C.text, marginBottom: 6 },
+  emptyTxt:   { fontSize: 13, color: C.muted, textAlign: 'center', lineHeight: 19 },
+
+  footer: { textAlign: 'center', fontSize: 11, color: C.muted, marginTop: 12, lineHeight: 17 },
 });

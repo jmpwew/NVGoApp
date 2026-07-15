@@ -13,9 +13,11 @@ import {IcBack, IcUser, IcMail, IcLock, IcPhone, IcMap, IcChevron, IcEye, IcChec
 
 
 const BARANGAYS = [
-  'Poblacion', 'Igang', 'Lanipe', 'Lucmayan', 'Magamay',
-  'Montpiller', 'Oracon Sur', 'Oracon Norte', 'Panobolon',
-  'Salvacion', 'San Antonio', 'San Roque', 'Tando', 'Zaragosa',
+  'Cabalagnan', 'Calaya', 'Canhawan', 'Concordia Sur', 'Dolores',
+  'Guiwanon', 'Igang', 'Igdarapdap', 'La Paz', 'Lanipe',
+  'Lucmayan', 'Magamay', 'Napandong', 'Oracon Sur', 'Pandaraonan',
+  'Panobolon', 'Poblacion', 'Salvacion', 'San Antonio', 'San Roque',
+  'Santo Domingo', 'Tando',
 ];
 
 // input fiekds
@@ -42,12 +44,12 @@ function InputField({ icon, placeholder, value, onChangeText, secureTextEntry, k
   );
 }
 const inp = StyleSheet.create({
-  wrap:         { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 14, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 14, height: 52, marginBottom: 12 },
+  wrap:  { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 14, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 14, height: 52, marginBottom: 12 },
   wrapFocused:  { borderColor: C.green },
   wrapDisabled: { backgroundColor: C.bg },
-  icon:         { marginRight: 10 },
-  input:        { flex: 1, fontSize: 15, color: C.text },
-  right:        { marginLeft: 8 },
+  icon:   { marginRight: 10 },
+  input:   { flex: 1, fontSize: 15, color: C.text },
+  right: { marginLeft: 8 },
 });
 
 // barangay picker modal
@@ -137,39 +139,51 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const goNext = () => {
-    if (!firstname.trim() || !lastname.trim()) { Alert.alert('Required', 'Please enter your full name.'); return; }
-    if (!contact.trim()) { Alert.alert('Required', 'Please enter your contact number.'); return; }
-    if (!address) { Alert.alert('Required', 'Please select your barangay.'); return; }
-    setPage(1);
-  };
+  if (!firstname.trim() || !lastname.trim()) { Alert.alert('Required', 'Please enter your full name.'); return; }
+  if (!contact.trim()) { Alert.alert('Required', 'Please enter your contact number.'); return; }
+
+ 
+  const phoneRegex = /^(09|\+639)\d{9}$/;
+  if (!phoneRegex.test(contact.trim())) {
+    Alert.alert('Invalid Number', 'Please enter a valid contact number (e.g. 09123456789).');
+    return;
+  }
+
+  if (!address) { Alert.alert('Required', 'Please select your barangay.'); return; }
+  setPage(1);
+};
 
   const register = async () => {
-    if (!email.trim()) { Alert.alert('Required', 'Please enter your email.'); return; }
-    if (!password || password.length < 6) { Alert.alert('Weak password', 'Password must be at least 6 characters.'); return; }
+  if (!email.trim()) { Alert.alert('Required', 'Please enter your email.'); return; }
 
-    try {
-      setLoading(true);
-      const res = await fetch(`${api_url}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstname, lastname, email: email.trim(), password, contact, address }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        Alert.alert('Registration failed', data.message || 'Please try again.');
-        return;
-      }
-      Alert.alert('Account created!', 'You can now sign in.', [
-        { text: 'Sign In', onPress: () => navigation.navigate('Login') },
-      ]);
-    } catch (err) {
-      console.log('REGISTER ERROR:', err);
-      Alert.alert('Error', 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    Alert.alert('Invalid Email', 'Please enter a valid email address (e.g. juan@gmail.com).');
+    return;
+  }
+
+  if (!password || password.length < 6) { Alert.alert('Weak password', 'Password must be at least 6 characters.'); return; }
+
+  try {
+    setLoading(true);
+    const res = await fetch(`${api_url}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstname, lastname, email: email.trim(), password, contact, address }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      Alert.alert('Registration failed', data.message || 'Please try again.');
+      return;
     }
-  };
-
+    navigation.navigate('VerifyRegisterOtp', { email: email.trim() });
+  } catch (err) {
+    console.log('REGISTER ERROR:', err);
+    Alert.alert('Error', 'Registration failed. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <KeyboardAvoidingView style={s.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg}/>
@@ -219,9 +233,16 @@ export default function RegisterScreen({ navigation }) {
             <Text style={s.fieldLabel}>LAST NAME</Text>
             <InputField icon={<IcUser/>} placeholder="e.g. dela Cruz" value={lastname} onChangeText={setLastname}/>
 
-            <Text style={s.fieldLabel}>CONTACT NUMBER</Text>
-            <InputField icon={<IcPhone/>} placeholder="09XXXXXXXXX" value={contact} onChangeText={setContact} keyboardType="phone-pad"/>
 
+            <Text style={s.fieldLabel}>CONTACT NUBER</Text>
+            <InputField 
+              icon={<IcPhone/>} 
+              placeholder="09XXXXXXXXX" 
+              value={contact} 
+              onChangeText={setContact} 
+              keyboardType="phone-pad"
+              maxLength={11}   
+            />
             <Text style={s.fieldLabel}>BARANGAY</Text>
             <BarangayPicker value={address} onChange={setAddress}/>
 

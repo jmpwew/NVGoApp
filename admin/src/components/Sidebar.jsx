@@ -1,34 +1,72 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
-export default function Sidebar() {
-  const navigate = useNavigate();
+function NavBadge({ count }) {
+  if (!count) return null;
+  return <span className="nav-badge">{count > 99 ? '99+' : count}</span>;
+}
 
-  function handleLogout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('admin');
-    navigate('/login');
-  }
+const ROLE_LABELS = {
+  admin:   'Admin',
+  verifier:'Verifier',
+  police:  'Police',
+  bfp:     'BFP',
+  medical: 'Medical',
+};
+
+export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }) {
+  const { pendingReports = 0, unreadSupport = 0 } = badges;
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-logo">
-        NV<span>Go</span> Admin
-      </div>
+    <>
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
-      <nav>
-        <NavLink to="/dashboard"     className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Dashboard</NavLink>
-        <NavLink to="/reports"       className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Reports</NavLink>
-        <NavLink to="/users"         className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Users</NavLink>
-        <NavLink to="/news"          className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> News</NavLink>
-        <NavLink to="/notifications" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Notifications</NavLink>
-        <NavLink to="/support"       className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Support Messages</NavLink>
-        <NavLink to="/hotlines"      className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}> Emergency Hotlines</NavLink>
-      </nav>
+      <div className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+        <div className="sidebar-section-label">{ROLE_LABELS[role] || 'Main'}</div>
+        <nav>
+          {role === 'admin' && (
+            <>
+              <NavLink to="/dashboard"     onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Dashboard</span>
+              </NavLink>
+              <NavLink to="/reports"       onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Reports</span> <NavBadge count={pendingReports} />
+              </NavLink>
+              <NavLink to="/users"         onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Users</span>
+              </NavLink>
+              <NavLink to="/news"          onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>News</span>
+              </NavLink>
+              <NavLink to="/notifications" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Notifications</span>
+              </NavLink>
+              <NavLink to="/support"       onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Support Messages</span> <NavBadge count={unreadSupport} />
+              </NavLink>
+              <NavLink to="/hotlines"      onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Emergency Hotlines</span>
+              </NavLink>
+            </>
+          )}
 
-      <div className="sidebar-logout">
-        <button onClick={handleLogout}>Logout</button>
+          {role === 'verifier' && (
+            <NavLink to="/verifier" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              <span>Pending Reports</span>
+            </NavLink>
+          )}
+
+          {['police', 'bfp', 'medical'].includes(role) && (
+            <NavLink to="/office" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              <span>Assigned Reports</span>
+            </NavLink>
+          )}
+
+          <NavLink to="/profile" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            <span>Profile</span>
+          </NavLink>
+        </nav>
       </div>
-    </div>
+    </>
   );
 }

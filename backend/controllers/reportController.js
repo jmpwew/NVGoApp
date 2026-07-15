@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
+const { createAlert } = require('./alertController');
 
 exports.createReport = async (req, res) => {
   try {
@@ -17,8 +18,30 @@ exports.createReport = async (req, res) => {
       [user_id, name, contact, description, latitude, longitude, images, location_note]
     );
 
+    const newReport = result.rows[0];
+
+    // fire-and-forget: don't let a bell-notification failure break report submission
+    createAlert({
+      type: 'report',
+      related_id: newReport.id,
+      title: 'New report submitted',
+      detail: name ? `From ${name}` : (description ? description.slice(0, 60) : ''),
+    }).catch(err => console.error('createAlert (report) failed:', err));
+
     // only send notification if logged-in user (guests have no push token)
     if (user_id) {
+      // save to the user's in-app notification history
+      await pool.query(
+        `INSERT INTO notifications (user_id, title, body, type)
+         VALUES ($1, $2, $3, $4)`,
+        [
+          user_id,
+          'Report Submitted',
+          'Your report has been received. We will review it shortly.',
+          'report',
+        ]
+      ).catch(err => console.error('insert notification (report submitted) failed:', err));
+
       const tokenResult = await pool.query(
         'SELECT push_token FROM users WHERE id = $1',
         [user_id]

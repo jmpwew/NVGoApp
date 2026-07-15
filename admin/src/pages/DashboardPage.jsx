@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import UserGrowthChart from '../components/UserGrowthChart';
 import './DashboardPage.css';
 
 const API = 'http://localhost:5000';
@@ -7,11 +8,13 @@ const API = 'http://localhost:5000';
 export default function DashboardPage() {
   const [stats, setStats]     = useState(null);
   const [reports, setReports] = useState([]);
+  const [growth, setGrowth]   = useState(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     fetchStats();
     fetchRecentReports();
+    fetchUserGrowth();
   }, []);
 
   async function fetchStats() {
@@ -32,6 +35,17 @@ export default function DashboardPage() {
       });
       // Only show the 5 most recent
       setReports(res.data.slice(0, 5));
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async function fetchUserGrowth() {
+    try {
+      const res = await axios.get(`${API}/api/admin/users/growth`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGrowth(res.data);
     } catch (err) {
       console.log(err);
     }
@@ -63,6 +77,21 @@ export default function DashboardPage() {
           <h3>News Posts</h3>
           <div className="number">{stats ? stats.totalNews : '...'}</div>
         </div>
+      </div>
+
+      {/* User growth chart */}
+      <div className="chart-section">
+        <h2>User Growth</h2>
+        <div className="chart-subtitle">
+          New users per month{growth ? ` — ${growth.year}` : ''}
+        </div>
+        {growth ? (
+          <UserGrowthChart months={growth.months} counts={growth.counts} />
+        ) : (
+          <div style={{ padding: '40px 0', textAlign: 'center', color: '#999', fontSize: 13 }}>
+            Loading chart...
+          </div>
+        )}
       </div>
 
       {/* Recent reports */}

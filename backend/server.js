@@ -21,20 +21,29 @@ const path = require('path');
 
 /* ROUTES */
 const authRoutes = require('./routes/authRoutes');
+const forgotPasswordRoutes = require('./routes/forgotPasswordRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const changePasswordRoute = require('./routes/changePasswordRoute');
 const adminRoutes = require('./routes/adminRoutes');
+const verifierRoutes = require('./routes/verifierRoutes');
+const officeRoutes = require('./routes/officeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const hotlineRoutes = require('./routes/hotlineRoutes');
+const deleteAccountRoute = require('./routes/deleteAccountRoute');
+
+app.use('/api/auth', deleteAccountRoute);
 
 app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/verifier', verifierRoutes);
+app.use('/api/office', officeRoutes);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', forgotPasswordRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/profile', profileRoutes);
@@ -42,7 +51,7 @@ app.use('/api/auth/password', changePasswordRoute);
 app.use('/api/hotlines', hotlineRoutes);
 
 /* STATIC FILES */
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 

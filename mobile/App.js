@@ -1,5 +1,3 @@
-
-
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -19,9 +17,16 @@ import MyReportsScreen from './screens/MyReportsScreen';
 import TabNavigator from './navigation/TabNavigator';
 import ChangePasswordScreen from './screens/ChangePasswordScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
+import NotificationDetailScreen from './screens/NotificationDetailScreen';
 import ContactSupportScreen from './screens/ContactSupportScreen';
 import MoreFeaturesScreen from './screens/MoreFeaturesScreen';
+import DeleteAccountScreen from './screens/DeleteAccountScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import VerifyOTPScreen from './screens/VerifyOTPScreen';
+import VerifyRegisterOtpScreen from './screens/VerifyRegisterOtpScreen';
 import * as Notifications from 'expo-notifications';
+import { useEffect } from 'react';
+import { requestLocationPermission } from './utils/locationPermission';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -35,6 +40,10 @@ const Stack = createNativeStackNavigator();
 
 
 export default function App() {
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1 }}  edges={['top']}>
@@ -93,6 +102,12 @@ export default function App() {
           />
 
           <Stack.Screen
+            name="NotificationDetail"
+            component={NotificationDetailScreen}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
             name="ContactSupport"
             component={ContactSupportScreen}
             options={{ headerShown: false }}
@@ -103,6 +118,11 @@ export default function App() {
             component={MoreFeaturesScreen}
             options={{ headerShown: false }}
           />
+
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="VerifyOtp" component={VerifyOTPScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="VerifyRegisterOtp" component={VerifyRegisterOtpScreen} options={{ headerShown: false }} />
 
         </Stack.Navigator>
       </NavigationContainer>

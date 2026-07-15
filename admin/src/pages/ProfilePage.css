@@ -1,0 +1,64 @@
+.profile-card {
+  max-width: 560px;
+}
+
+.profile-avatar-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-avatar-lg {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #136835;
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.profile-message {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.profile-message-success {
+  background-color: #d1f5e0;
+  color: #136835;
+}
+
+.profile-message-error {
+  background-color: #fdecea;
+  color: #c0392b;
+}
+
+.profile-card .form-buttons {
+  margin-top: 6px;
+}

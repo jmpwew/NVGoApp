@@ -38,3 +38,234 @@
   display: flex;
   gap: 6px;
 }
+
+.report-row {
+  cursor: pointer;
+}
+
+.report-row:hover td {
+  background-color: #f4f9f6;
+}
+
+.report-description-cell {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-map {
+  width: 200px;
+  height: 140px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.report-map:hover {
+  border-color: #1B8A4C;
+}
+
+.report-map iframe {
+  width: 200px;
+  height: 192px;
+  border: none;
+  display: block;
+  margin-top: -6px;
+}
+
+.map-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.map-modal {
+  position: relative;
+  width: min(720px, 90vw);
+  height: min(560px, 80vh);
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+}
+
+.map-modal iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.map-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: white;
+  color: #333;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.map-modal-close:hover {
+  background-color: #f4f6f5;
+}
+
+.detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.detail-modal {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+}
+
+.detail-modal-title {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.detail-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #999;
+  margin-bottom: 4px;
+  margin-top: 16px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #333;
+}
+
+.detail-description {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background-color: #f8f9f8;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.detail-map {
+  width: 100%;
+  height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.detail-map iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.detail-modal-actions {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+/* ── Turnover trail (table cell + detail modal) ─────────── */
+.trail-cell {
+  min-width: 200px;
+}
+
+.trail-verifier-line {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.trail-verifier-line strong {
+  color: #666;
+}
+
+.trail-assignment-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.trail-assignment-note {
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.trail-none {
+  font-size: 12px;
+  color: #bbb;
+  font-style: italic;
+}
+
+.trail-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.trail-section-assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.trail-assignment-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f8f9f8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.trail-assignment-card-note {
+  color: #777;
+  flex: 1;
+}

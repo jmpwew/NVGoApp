@@ -1,0 +1,47 @@
+/* ── Office picker (verify modal) ─────────────────────── */
+.office-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0 20px;
+}
+
+.office-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #fafafa;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.office-option:hover {
+  transform: translateY(-1px);
+}
+
+.office-option-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.office-option-police .office-option-icon { background-color: #dbe7ff; color: #1d4ed8; }
+.office-option-police.selected { border-color: #1d4ed8; background-color: #eef4ff; }
+
+.office-option-bfp .office-option-icon { background-color: #ffe1d6; color: #c2410c; }
+.office-option-bfp.selected { border-color: #c2410c; background-color: #fff3ee; }
+
+.office-option-medical .office-option-icon { background-color: #ffd9e3; color: #be123c; }
+.office-option-medical.selected { border-color: #be123c; background-color: #fff0f4; }

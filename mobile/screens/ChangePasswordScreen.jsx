@@ -5,7 +5,7 @@ import {
   StatusBar, Platform, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
+
 import api_url from '../utils/api';
 import { C } from '../constants/colors';
 import { IcBack, IcEye, IcCheck, IcLock } from '../constants/icons';

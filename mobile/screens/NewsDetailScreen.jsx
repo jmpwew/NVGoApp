@@ -2,7 +2,6 @@ import {
   View, Text, Image, StyleSheet, ScrollView,
   StatusBar, TouchableOpacity, Platform,
 } from 'react-native';
-import { Svg, Path, Circle } from 'react-native-svg';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcBack, IcClock, IcTag} from '../constants/icons';

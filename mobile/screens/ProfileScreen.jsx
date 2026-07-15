@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
-import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield} from '../constants/icons';
-
+import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield, IcLock, IcTrash } from '../constants/icons';
 
 import {C} from '../constants/colors';
 
@@ -34,13 +33,11 @@ export default function ProfileScreen({ navigation }) {
     return unsubscribe;
   }, []);
 
- 
   const loadUser = async () => {
     const stored = await AsyncStorage.getItem('user');
     setUser(stored ? JSON.parse(stored) : null);
   };
 
- 
   const requireLogin = (callback) => {
     if (!user) {
       Alert.alert('Login Required', 'Please log in first.');
@@ -50,26 +47,30 @@ export default function ProfileScreen({ navigation }) {
     callback();
   };
 
-// logout
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout', style: 'destructive',
         onPress: async () => {
+         
           await AsyncStorage.removeItem('user');
-          await AsyncStorage.removeItem('token');  
+          await AsyncStorage.removeItem('token');
           setUser(null);
+
+      
+          
         },
       },
     ]);
   };
 
-  const imageUrl = user?.image
-    ? `${api_url}/uploads/${user.image}`
-    : null;
 
-// render
+   
+
+
+  const imageUrl = user?.image ? `${api_url}/uploads/${user.image}?t=${Date.now()}` : null;
+
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" backgroundColor={C.greenDk}/>
@@ -80,12 +81,11 @@ export default function ProfileScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* HERO HEADER  */}
+        {/* HERO HEADER */}
         <View style={s.hero}>
           <View style={s.orb1}/>
           <View style={s.orb2}/>
 
-          {/* Avatar */}
           <View style={s.avatarWrap}>
             <Image
               source={
@@ -106,19 +106,15 @@ export default function ProfileScreen({ navigation }) {
             )}
           </View>
 
-   {/* name and address */}
           <Text style={s.heroName}>
             {user ? `${user.firstname} ${user.lastname}` : 'Guest User'}
           </Text>
           <Text style={s.heroSub}>
             {user?.address ? ` ${user.address}` : 'Nueva Valencia, Guimaras'}
           </Text>
-
-         
-         
         </View>
 
-        {/*  GUEST BANNER */}
+        {/* GUEST BANNER */}
         {!user && (
           <View style={s.guestBanner}>
             <View>
@@ -135,7 +131,7 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
 
-        {/*  ACCOUNT SECTION  */}
+        {/* ACCOUNT SECTION */}
         <Text style={s.secLabel}>ACCOUNT</Text>
         <View style={s.menuCard}>
           <MenuItem
@@ -171,8 +167,33 @@ export default function ProfileScreen({ navigation }) {
           <MenuItem
             icon={<IcInfo/>}
             iconBg={C.skyBg}
+            label="FAQs / How to Use"
+            onPress={() => Alert.alert('Coming Soon', 'FAQs will be available soon.')}
+          />
+          <MenuItem
+            icon={<IcInfo/>}
+            iconBg={C.skyBg}
             label="About NVGo"
-            onPress={() => console.log('About')}
+            onPress={() => Alert.alert('NVGo', 'Nueva Valencia Go s\nVersion 1.0.0')}
+            last
+          />
+        </View>
+
+        {/* SECURITY SECTION */}
+        <Text style={s.secLabel}>SECURITY</Text>
+        <View style={s.menuCard}>
+          <MenuItem
+            icon={<IcLock/>}
+            iconBg={C.greenLt}
+            label="Change Password"
+            onPress={() => requireLogin(() => navigation.navigate('ChangePassword'))}
+          />
+          <MenuItem
+            icon={<IcTrash/>}
+            iconBg={C.redBg}
+            label="Delete Account"
+            onPress={() => requireLogin(() => navigation.navigate('DeleteAccount'))}
+            danger
             last
           />
         </View>
@@ -200,7 +221,6 @@ export default function ProfileScreen({ navigation }) {
           )}
         </View>
 
-       
         <Text style={s.version}>NVGo · Nueva Valencia, Guimaras</Text>
 
       </ScrollView>
@@ -208,13 +228,11 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
- 
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
   scroll:       { flex: 1 },
   scrollContent:{ paddingBottom: 50 },
 
-  /* Hero */
   hero: {
     backgroundColor: C.greenDk,
     alignItems: 'center',
@@ -227,43 +245,26 @@ const s = StyleSheet.create({
   orb1: { position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(245,196,0,0.07)' },
   orb2: { position: 'absolute', bottom: -40, left: -40, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,255,255,0.04)' },
 
-  /* Avatar */
   avatarWrap:   { position: 'relative', marginBottom: 14 },
   avatar:       { width: 92, height: 92, borderRadius: 28, borderWidth: 3, borderColor: C.yellow },
   cameraBtn:    { position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: 9, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.greenDk },
 
-  /* Hero text */
   heroName:     { color: '#fff', fontSize: 20, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
   heroSub:      { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 12 },
 
-  /* Verified */
-  verifiedBadge:{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, paddingVertical: 5, paddingHorizontal: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginBottom: 18 },
-  verifiedTxt:  { color: 'rgba(255,255,255,0.85)', fontSize: 10, fontWeight: '700' },
-
-  /* Stats */
-  statsRow:     { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', width: '100%' },
-  statItem:     { flex: 1, alignItems: 'center', paddingVertical: 12 },
-  statBorder:   { borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.12)' },
-  statVal:      { color: '#fff', fontSize: 14, fontWeight: '800' },
-  statLabel:    { color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '600', marginTop: 2, letterSpacing: 0.3 },
-
-  /* Guest banner */
   guestBanner:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.yellowBg, marginHorizontal: 16, marginTop: 16, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.yellowDk + '30', borderLeftWidth: 3.5, borderLeftColor: C.yellowDk },
   guestTitle:   { fontSize: 13, fontWeight: '700', color: C.text },
   guestSub:     { fontSize: 11, color: C.muted, marginTop: 2 },
   loginNowBtn:  { backgroundColor: C.green, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 },
   loginNowTxt:  { color: '#fff', fontSize: 12, fontWeight: '800' },
 
-  /* Section label */
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginTop: 20, marginBottom: 8, marginLeft: 18 },
 
-  /* Menu card */
   menuCard:     { backgroundColor: C.card, marginHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
   menuItem:     { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16 },
   menuIconWrap: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   menuLabel:    { flex: 1, fontSize: 14, fontWeight: '600', color: C.text },
   menuDivider:  { height: 1, backgroundColor: C.border, marginLeft: 66 },
-
 
   version:      { textAlign: 'center', fontSize: 10, color: C.muted, marginTop: 24, marginBottom: 4 },
 });

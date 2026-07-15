@@ -6,9 +6,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import { requestLocationPermission } from '../utils/locationPermission';
 import { IcReport, IcNews, IcPhone, IcMore, IcBell, IcUser, IcChevron, IcWarn, IcSOS, IcLogout, IcProfile} from '../constants/icons';
 
-
+  
 const { width } = Dimensions.get('window');
 
 
@@ -27,14 +28,17 @@ export default function HomeScreen({ navigation }) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews(); }, []);
+  useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews();
+
+  const unsubscribe = navigation.addListener('focus', loadUser); 
+  return unsubscribe;                                            
+}, []);
 
   const loadUser = async () => {
     const stored = await AsyncStorage.getItem('user');
-    if (stored) setUser(JSON.parse(stored));
+    setUser(stored ? JSON.parse(stored) : null);  
     setUserLoaded(true);
   };
-
   const getGreeting = () => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
@@ -59,8 +63,8 @@ export default function HomeScreen({ navigation }) {
   }, []);
   const fetchWeather = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      const granted = await requestLocationPermission();
+      if (!granted) return;
       const loc = await Location.getCurrentPositionAsync({});
       const res = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${loc.coords.latitude}&longitude=${loc.coords.longitude}&current_weather=true`
@@ -141,7 +145,7 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('Login')}>
-                <IcUser/>
+                <IcUser c="#fff"/>
               </TouchableOpacity>
             )}
           </View>

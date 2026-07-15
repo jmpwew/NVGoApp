@@ -21,15 +21,25 @@ export default function LoginPage() {
       const res = await axios.post(`${API}/api/auth/login`, { email, password });
       const { token, user } = res.data;
 
-      // Only allow admin users
-      if (user.role !== 'admin') {
-        setError('You do not have admin access.');
+      // Only staff roles may use this panel (not regular mobile app users)
+      const allowedRoles = ['admin', 'verifier', 'police', 'bfp', 'medical'];
+      if (!allowedRoles.includes(user.role)) {
+        setError('You do not have access to this system.');
         return;
       }
 
       localStorage.setItem('token', token);
       localStorage.setItem('admin', JSON.stringify(user));
-      navigate('/dashboard');
+
+      // Redirect based on role
+      if (user.role === 'admin') {
+        navigate('/dashboard');
+      } else if (user.role === 'verifier') {
+        navigate('/verifier');
+      } else {
+        // office roles: police | bfp | medical
+        navigate('/office');
+      }
 
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.');

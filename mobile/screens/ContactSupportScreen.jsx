@@ -4,14 +4,14 @@ import {
   ScrollView, TextInput, Alert, StatusBar,
   Platform, ActivityIndicator, Linking,
 } from 'react-native';
-import { Svg, Path, Circle, Rect } from 'react-native-svg';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { IcBack, IcPhone, IcMail, IcFB, IcUser, IcMsg, IcSend} from '../constants/icons';
 
 
 
-/* ─── Contact channel card ────────────────────────────────────── */
+// channel card
 function ChannelCard({ icon, label, value, onPress, iconBg, borderColor }) {
   return (
     <TouchableOpacity style={[s.channelCard, { borderLeftColor: borderColor }]} onPress={onPress} activeOpacity={0.8}>
@@ -27,7 +27,7 @@ function ChannelCard({ icon, label, value, onPress, iconBg, borderColor }) {
   );
 }
 
-/* ─── Form field ─────────────────────────────────────────────── */
+// field
 function Field({ icon, label, value, onChangeText, multiline, keyboardType, placeholder }) {
   return (
     <View style={f.wrap}>
@@ -55,9 +55,6 @@ const f = StyleSheet.create({
   input:    { flex: 1, fontSize: 14, color: C.text, paddingVertical: 10 },
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════════ */
 export default function ContactSupportScreen({ navigation }) {
   const [senderName, setSenderName] = useState('');
   const [message, setMessage]       = useState('');
@@ -226,7 +223,7 @@ export default function ContactSupportScreen({ navigation }) {
   );
 }
 
-/* ─── Styles ─────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
   scroll:       { flex: 1 },

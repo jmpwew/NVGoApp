@@ -4,10 +4,10 @@ import axios from 'axios';
 const API = 'http://localhost:5000';
 
 const TYPE_OPTIONS = [
-  { value: 'info',   label: 'ℹ️  Info'   },
-  { value: 'alert',  label: '⚠️  Alert'  },
-  { value: 'update', label: '✅  Update' },
-  { value: 'report', label: '📋  Report' },
+  { value: 'info',   label: 'Info'   },
+  { value: 'alert',  label: 'Alert'  },
+  { value: 'update', label: 'Update' },
+  { value: 'report', label: 'Report' },
 ];
 
 const TYPE_BADGE = {
@@ -17,6 +17,8 @@ const TYPE_BADGE = {
   report: { bg: '#e8f4fd', color: '#1a73e8' },
 };
 
+const EMPTY_FORM = { title: '', body: '', type: 'info', user_id: '' };
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [users, setUsers]                 = useState([]);
@@ -24,13 +26,10 @@ export default function NotificationsPage() {
   const [sending, setSending]             = useState(false);
   const [successMsg, setSuccessMsg]       = useState('');
   const [errorMsg, setErrorMsg]           = useState('');
+  const [viewing, setViewing]             = useState(null); // notification currently shown in modal
+  const [editingId, setEditingId]         = useState(null); // notification id currently being edited, or null
 
-  const [form, setForm] = useState({
-    title:   '',
-    body:    '',
-    type:    'info',
-    user_id: '',   // empty = broadcast to all
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -60,6 +59,27 @@ export default function NotificationsPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  function startEdit(n) {
+    setViewing(null);
+    setEditingId(n.id);
+    setForm({
+      title:   n.title || '',
+      body:    n.body || '',
+      type:    n.type || 'info',
+      user_id: n.user_id || '',
+    });
+    setSuccessMsg('');
+    setErrorMsg('');
+    // scroll the form into view since it's above the table
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setErrorMsg('');
+  }
+
   async function handleSend(e) {
     e.preventDefault();
     if (!form.title.trim() || !form.body.trim()) {
@@ -76,17 +96,25 @@ export default function NotificationsPage() {
         type:    form.type,
         user_id: form.user_id || null,
       };
-      await axios.post(`${API}/api/admin/notifications`, payload, { headers });
-      setSuccessMsg(
-        payload.user_id
-          ? `Notification sent to user #${payload.user_id}.`
-          : 'Broadcast notification sent to all users.'
-      );
-      setForm({ title: '', body: '', type: 'info', user_id: '' });
+
+      if (editingId) {
+        await axios.put(`${API}/api/admin/notifications/${editingId}`, payload, { headers });
+        setSuccessMsg(`Notification #${editingId} updated.`);
+        setEditingId(null);
+      } else {
+        await axios.post(`${API}/api/admin/notifications`, payload, { headers });
+        setSuccessMsg(
+          payload.user_id
+            ? `Notification sent to user #${payload.user_id}.`
+            : 'Broadcast notification sent to all users.'
+        );
+      }
+
+      setForm(EMPTY_FORM);
       fetchAll();
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to send notification.');
+      setErrorMsg(editingId ? 'Failed to update notification.' : 'Failed to send notification.');
     } finally {
       setSending(false);
     }
@@ -97,6 +125,7 @@ export default function NotificationsPage() {
     try {
       await axios.delete(`${API}/api/admin/notifications/${id}`, { headers });
       setNotifications(prev => prev.filter(n => n.id !== id));
+      if (editingId === id) cancelEdit(); // don't leave a stale edit form open
     } catch (err) {
       console.error(err);
       alert('Failed to delete notification.');
@@ -109,6 +138,11 @@ export default function NotificationsPage() {
     return u ? `${u.firstname} ${u.lastname}` : `User #${userId}`;
   }
 
+  function truncate(str, maxLen) {
+    if (!str) return '';
+    return str.length > maxLen ? `${str.slice(0, maxLen)}…` : str;
+  }
+
   return (
     <div className="page">
       <h1>Notifications</h1>
@@ -116,11 +150,18 @@ export default function NotificationsPage() {
         Send announcements, alerts, or updates to all users or a specific user.
       </p>
 
-      {/* ── Send Form ── */}
+      {/* ── Send / Edit Form ── */}
       <div style={formCardStyle}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 18, color: '#111' }}>
-          Send a Notification
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', margin: 0 }}>
+            {editingId ? `Edit Notification #${editingId}` : 'Send a Notification'}
+          </h2>
+          {editingId && (
+            <button type="button" onClick={cancelEdit} style={cancelEditBtnStyle}>
+              Cancel edit
+            </button>
+          )}
+        </div>
 
         {successMsg && (
           <div style={alertStyle('#dcfce7', '#16a34a')}>{successMsg}</div>
@@ -140,7 +181,7 @@ export default function NotificationsPage() {
                 onChange={handleChange}
                 style={inputStyle}
               >
-                <option value="">📢 All Users (Broadcast)</option>
+                <option value="">All Users (Broadcast)</option>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>
                     {u.firstname} {u.lastname} ({u.email})
@@ -191,13 +232,22 @@ export default function NotificationsPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={sending}
-            style={sendBtnStyle(sending)}
-          >
-            {sending ? 'Sending…' : '🔔 Send Notification'}
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              type="submit"
+              disabled={sending}
+              style={sendBtnStyle(sending)}
+            >
+              {sending
+                ? (editingId ? 'Saving…' : 'Sending…')
+                : (editingId ? 'Save Changes' : 'Send Notification')}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit} style={secondaryBtnStyle}>
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
@@ -211,45 +261,116 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <p style={{ color: '#6b7280' }}>No notifications sent yet.</p>
       ) : (
-        <table>
+        <table style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Title</th>
+              <th style={{ width: 50 }}>ID</th>
+              <th style={{ width: 80 }}>Type</th>
+              <th style={{ width: 150 }}>Title</th>
               <th>Message</th>
-              <th>Recipient</th>
-              <th>Sent At</th>
-              <th>Actions</th>
+              <th style={{ width: 170 }}>Recipient</th>
+              <th style={{ width: 150 }}>Sent At</th>
+              <th style={{ width: 130 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {notifications.map(n => {
               const tb = TYPE_BADGE[n.type] ?? TYPE_BADGE.info;
               return (
-                <tr key={n.id}>
+                <tr
+                  key={n.id}
+                  onClick={() => setViewing(n)}
+                  style={{ cursor: 'pointer', background: editingId === n.id ? '#f1f8f4' : undefined }}
+                  title="Click to view full notification"
+                >
                   <td>#{n.id}</td>
                   <td>
                     <span style={badgeStyle(tb.bg, tb.color)}>
                       {n.type}
                     </span>
                   </td>
-                  <td style={{ fontWeight: 600 }}>{n.title}</td>
-                  <td style={{ maxWidth: 280, whiteSpace: 'pre-wrap', fontSize: 13, color: '#374151' }}>
-                    {n.body}
+                  <td style={cellClampStyle(600)}>{truncate(n.title, 40)}</td>
+                  <td style={cellClampStyle(400, '#374151')}>
+                    {truncate(n.body, 80)}
                   </td>
-                  <td>{getUserName(n.user_id)}</td>
+                  <td style={cellClampStyle(400)}>{getUserName(n.user_id)}</td>
                   <td>{new Date(n.created_at).toLocaleString()}</td>
                   <td>
-                    <button className="btn-red" onClick={() => handleDelete(n.id)}>
-                      Delete
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="btn-blue"
+                        style={editBtnStyle}
+                        onClick={(e) => { e.stopPropagation(); startEdit(n); }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn-red"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+      )}
+
+      {/* ── Full Notification Modal ── */}
+      {viewing && (
+        <div style={modalOverlayStyle} onClick={() => setViewing(null)}>
+          <div style={modalCardStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+              <span style={badgeStyle(
+                (TYPE_BADGE[viewing.type] ?? TYPE_BADGE.info).bg,
+                (TYPE_BADGE[viewing.type] ?? TYPE_BADGE.info).color
+              )}>
+                {viewing.type}
+              </span>
+              <button
+                onClick={() => setViewing(null)}
+                aria-label="Close"
+                style={modalCloseBtnStyle}
+              >
+                ✕
+              </button>
+            </div>
+
+            <h3 style={{ margin: '14px 0 4px', fontSize: 18, color: '#111', wordBreak: 'break-word' }}>
+              {viewing.title}
+            </h3>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 16 }}>
+              {new Date(viewing.created_at).toLocaleString()} · To: {' '}
+              {viewing.user_id
+                ? (users.find(u => u.id === viewing.user_id)
+                    ? `${users.find(u => u.id === viewing.user_id).firstname} ${users.find(u => u.id === viewing.user_id).lastname}`
+                    : `User #${viewing.user_id}`)
+                : 'All Users (Broadcast)'}
+            </div>
+
+            <div style={modalBodyTextStyle}>
+              {viewing.body}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button
+                style={{ ...sendBtnStyle(false), flex: 'none' }}
+                onClick={() => startEdit(viewing)}
+              >
+                Edit
+              </button>
+              <button
+                style={secondaryBtnStyle}
+                onClick={() => setViewing(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -288,6 +409,36 @@ const sendBtnStyle = (disabled) => ({
   fontSize: 14,
   cursor: disabled ? 'not-allowed' : 'pointer',
 });
+const secondaryBtnStyle = {
+  marginTop: 4,
+  padding: '9px 20px',
+  background: '#fff',
+  color: '#374151',
+  border: '1px solid #d1d5db',
+  borderRadius: 7,
+  fontWeight: 600,
+  fontSize: 14,
+  cursor: 'pointer',
+};
+const cancelEditBtnStyle = {
+  background: 'none',
+  border: 'none',
+  color: '#6b7280',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+  padding: 0,
+};
+const editBtnStyle = {
+  background: '#e8f4fd',
+  color: '#1a73e8',
+  border: 'none',
+  borderRadius: 6,
+  padding: '5px 10px',
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
 function alertStyle(bg, color) {
   return {
     background: bg, color, border: `1px solid ${color}33`,
@@ -303,3 +454,57 @@ function badgeStyle(bg, color) {
     display: 'inline-block',
   };
 }
+
+// single-line ellipsis cell — pairs with the truncate() helper so long
+// unbroken strings never spill into neighboring columns
+function cellClampStyle(fontWeight = 400, color = '#111') {
+  return {
+    fontWeight,
+    color,
+    fontSize: 13,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  };
+}
+
+const modalOverlayStyle = {
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0,0,0,0.45)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 100,
+  padding: 20,
+};
+
+const modalCardStyle = {
+  background: '#fff',
+  borderRadius: 12,
+  padding: '22px 26px',
+  width: '100%',
+  maxWidth: 480,
+  maxHeight: '80vh',
+  overflowY: 'auto',
+  boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+};
+
+const modalCloseBtnStyle = {
+  background: 'none',
+  border: 'none',
+  fontSize: 16,
+  color: '#9ca3af',
+  cursor: 'pointer',
+  lineHeight: 1,
+  padding: 4,
+};
+
+const modalBodyTextStyle = {
+  fontSize: 14,
+  color: '#374151',
+  whiteSpace: 'pre-wrap',
+  overflowWrap: 'anywhere',
+  wordBreak: 'break-word',
+  lineHeight: 1.5,
+};

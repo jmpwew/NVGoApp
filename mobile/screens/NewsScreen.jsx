@@ -3,26 +3,25 @@ import { View, Text, FlatList, TouchableOpacity,
   StyleSheet, Image, TextInput,
   StatusBar, Platform, RefreshControl, ScrollView
 } from 'react-native';
-import { Svg, Path, Rect, Circle } from 'react-native-svg';
 import api_url from '../utils/api';
+import Svg, { Path } from 'react-native-svg';
 import { IcSearch, IcClock, IcEye, IcChevron, IcEmpty} from '../constants/icons';
 
 
 
-/*  Colours */
 import {C} from '../constants/colors';
 
-/* Category config  */
+
 const CATS = {
-  all:          { label: 'All',          color: C.green,   bg: C.greenLt  },
-  announcement: { label: 'Announcement', color: C.skyDk,   bg: C.skyBg    },
-  traffic:      { label: 'Traffic',      color: C.yellowDk,bg: C.yellowBg },
-  weather:      { label: 'Weather',      color: '#0277BD', bg: '#E3F2FD'  },
-  crime:        { label: 'Crime',        color: C.red,     bg: C.redBg    },
+  all: { label: 'All', color: C.green, bg: C.greenLt  },
+  announcement:{ label: 'Announcement', color: C.skyDk, bg: C.skyBg },
+  traffic: { label: 'Traffic', color: C.yellowDk,bg: C.yellowBg },
+  weather:  { label: 'Weather', color: '#0277BD', bg: '#E3F2FD'},
+  crime: { label: 'Crime', color: C.red, bg: C.redBg},
 };
 
 
-/* Format date */
+// format date
 const formatDate = (dateStr) => {
   const diff = Math.floor((new Date() - new Date(dateStr)) / 60000);
   if (diff < 1)    return 'Just now';
@@ -31,7 +30,7 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-/* Featured Card  */
+// featured
 const FeaturedCard = ({ item, onPress, catConfig }) => (
   <TouchableOpacity style={s.featCard} onPress={onPress} activeOpacity={0.9}>
     {item.image
@@ -71,7 +70,7 @@ const FeaturedCard = ({ item, onPress, catConfig }) => (
   </TouchableOpacity>
 );
 
-/*  News Row Card*/
+// news row card
 const NewsCard = ({ item, onPress, catConfig }) => (
   <TouchableOpacity style={s.newsCard} onPress={onPress} activeOpacity={0.82}>
     {/* left: text */}
@@ -117,7 +116,7 @@ const NewsCard = ({ item, onPress, catConfig }) => (
   </TouchableOpacity>
 );
 
-/*  Empty state*/
+// empty
 const EmptyState = ({ category }) => (
   <View style={s.empty}>
     <IcEmpty/>
@@ -207,7 +206,7 @@ export default function NewsScreen({ navigation }) {
       <View style={s.header}>
         <View style={s.headerRow}>
           <View>
-            <Text style={s.headerSup}>NUEVA VALENCIA</Text>
+        
             <Text style={s.headerTitle}>News &amp; Updates</Text>
           </View>
           <TouchableOpacity style={s.searchBtn} onPress={() => { setSearchVisible(v => !v); setSearchQuery(''); }}>

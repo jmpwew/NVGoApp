@@ -1,9 +1,43 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 
-// register user
+// In-memory pending-registration store: { email: { otp, expiresAt, data } }
+const pendingRegistrations = {};
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const sendRegisterOtpEmail = async (email, firstname, otp) => {
+  await transporter.sendMail({
+    from: `"NVGo App" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Verify your NVGo account',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color: #2e7d32;">Welcome to NVGo</h2>
+        <p>Hi ${firstname},</p>
+        <p>Use the code below to verify your email and finish creating your account. It expires in <strong>10 minutes</strong>.</p>
+        <div style="background: #f1f8e9; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #2e7d32;">${otp}</span>
+        </div>
+        <p style="color: #888; font-size: 13px;">If you did not create an account, you can safely ignore this email.</p>
+        <p style="color: #888; font-size: 13px;">— Municipality of Nueva Valencia, Guimaras</p>
+      </div>
+    `,
+  });
+};
+
+// register user (step 1) - validates, stashes the signup, emails an OTP
 exports.register = async (req, res) => {
   try {
     const { firstname, lastname, email, password, contact, address } = req.body;
@@ -22,19 +56,92 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = generateOtp();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    pendingRegistrations[email] = {
+      otp,
+      expiresAt,
+      data: { firstname, lastname, email, password: hashedPassword, contact, address },
+    };
+
+    await sendRegisterOtpEmail(email, firstname, otp);
+
+    res.json({ message: 'OTP sent to your email.', email });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Register error' });
+  }
+};
+
+// verify registration OTP (step 2) - creates the account
+exports.verifyRegisterOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required.' });
+    }
+
+    const entry = pendingRegistrations[email];
+    if (!entry) {
+      return res.status(400).json({ message: 'No pending registration found. Please sign up again.' });
+    }
+    if (Date.now() > entry.expiresAt) {
+      delete pendingRegistrations[email];
+      return res.status(400).json({ message: 'OTP has expired. Please sign up again.' });
+    }
+    if (entry.otp !== otp) {
+      return res.status(400).json({ message: 'Incorrect OTP. Please try again.' });
+    }
+
+    // double-check no one else registered this email while OTP was pending
+    const check = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (check.rows.length > 0) {
+      delete pendingRegistrations[email];
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    const { firstname, lastname, password, contact, address } = entry.data;
 
     const result = await pool.query(
       `INSERT INTO users (firstname, lastname, email, password, contact, address)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, firstname, lastname, email, contact, address, role, image`,
-      [firstname, lastname, email, hashedPassword, contact, address]
+      [firstname, lastname, email, password, contact, address]
     );
+
+    delete pendingRegistrations[email];
 
     res.json(result.rows[0]);
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Register error' });
+    res.status(500).json({ message: 'OTP verification failed' });
+  }
+};
+
+// resend registration OTP
+exports.resendRegisterOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required.' });
+
+    const entry = pendingRegistrations[email];
+    if (!entry) {
+      return res.status(400).json({ message: 'No pending registration found. Please sign up again.' });
+    }
+
+    const otp = generateOtp();
+    entry.otp = otp;
+    entry.expiresAt = Date.now() + 10 * 60 * 1000;
+
+    await sendRegisterOtpEmail(email, entry.data.firstname, otp);
+
+    res.json({ message: 'OTP resent to your email.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to resend OTP.' });
   }
 };
 

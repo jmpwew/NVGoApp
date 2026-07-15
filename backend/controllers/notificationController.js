@@ -1,13 +1,16 @@
 const pool = require('../config/db');
 
 // Returns notifications for the logged-in user:
-// their own (user_id = me) + broadcasts (user_id IS NULL)
+// their own (user_id = me) + broadcasts (user_id IS NULL) sent on or after
+// they registered, so new accounts don't inherit old admin broadcasts.
 exports.getNotifications = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM notifications
-       WHERE user_id = $1 OR user_id IS NULL
-       ORDER BY created_at DESC
+      `SELECT n.* FROM notifications n
+       JOIN users u ON u.id = $1
+       WHERE n.user_id = $1
+          OR (n.user_id IS NULL AND n.created_at >= u.created_at)
+       ORDER BY n.created_at DESC
        LIMIT 50`,
       [req.user.id]
     );
@@ -35,8 +38,11 @@ exports.markNotificationRead = async (req, res) => {
 exports.markAllNotificationsRead = async (req, res) => {
   try {
     await pool.query(
-      `UPDATE notifications SET is_read = TRUE
-       WHERE user_id = $1 OR user_id IS NULL`,
+      `UPDATE notifications n SET is_read = TRUE
+       FROM users u
+       WHERE u.id = $1
+         AND (n.user_id = $1
+              OR (n.user_id IS NULL AND n.created_at >= u.created_at))`,
       [req.user.id]
     );
     res.json({ success: true });

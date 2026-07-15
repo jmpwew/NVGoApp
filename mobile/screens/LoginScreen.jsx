@@ -139,6 +139,14 @@ export default function LoginScreen({ navigation }) {
           />
 
           <TouchableOpacity
+            style={s.forgotBtn}
+            onPress={() => navigation.navigate('ForgotPassword')}
+            activeOpacity={0.7}
+          >
+            <Text style={s.forgotTxt}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={[s.loginBtn, loading && { opacity: 0.75 }]}
             onPress={handleLogin}
             disabled={loading}
@@ -193,6 +201,10 @@ const s = StyleSheet.create({
   card:         { backgroundColor: C.card, borderRadius: 24, borderWidth: 1, borderColor: C.border, padding: 24, shadowColor: C.green, shadowOpacity: 0.06, shadowRadius: 20, elevation: 3 },
   cardTitle:    { fontSize: 20, fontWeight: '800', color: C.text },
   cardSub:      { fontSize: 13, color: C.muted, marginTop: 2 },
+
+  /* Forgot password */
+  forgotBtn:    { alignSelf: 'flex-end', marginBottom: 16, marginTop: -4 },
+  forgotTxt:    { fontSize: 13, color: C.green, fontWeight: '600' },
 
   /* Login button */
   loginBtn:     { backgroundColor: C.green, borderRadius: 14, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: 4, shadowColor: C.green, shadowOpacity: 0.3, shadowRadius: 10, elevation: 4 },

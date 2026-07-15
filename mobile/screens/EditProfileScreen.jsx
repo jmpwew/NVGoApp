@@ -17,10 +17,11 @@ import {C} from '../constants/colors';
 
 
 const BARANGAYS = [
-  "Poblacion","Cabalagnan","Calaya","Canhawan","Concordia Sur","Dolores",
-  "Guiwanon","Igang","Igdarapdap","La Paz","Lanipe","Lucmayan",
-  "Magamay","Napandong","Oracon Sur","Pandaraonan","Panobolon",
-  "Salvacion","San Antonio","San Roque","Santo Domingo","Tando",
+  'Cabalagnan', 'Calaya', 'Canhawan', 'Concordia Sur', 'Dolores',
+  'Guiwanon', 'Igang', 'Igdarapdap', 'La Paz', 'Lanipe',
+  'Lucmayan', 'Magamay', 'Napandong', 'Oracon Sur', 'Pandaraonan',
+  'Panobolon', 'Poblacion', 'Salvacion', 'San Antonio', 'San Roque',
+  'Santo Domingo', 'Tando',
 ];
 
 /*Fields*/
@@ -82,26 +83,34 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const saveProfile = async () => {
-    if (!userId) { Alert.alert('Error', 'User ID missing.'); return; }
-    try {
-      setSaving(true);
-      const formData = new FormData();
-      formData.append('firstname', firstname);
-      formData.append('lastname', lastname);
-      formData.append('email', email);
-      formData.append('contact', contact);
-      formData.append('address', address);
-      formData.append('user_id', userId);
+  if (!userId) { Alert.alert('Error', 'User ID missing.'); return; }
+  try {
+    setSaving(true);
 
-      if (image) {
-        formData.append('image', {
-          uri:  image.uri,
-          name: `profile_${Date.now()}.jpg`,
-          type: 'image/jpeg',
-        });
-      }
+    const token = await AsyncStorage.getItem('token');
 
-      const res  = await fetch(`${api_url}/api/profile`, { method: 'PUT', body: formData });
+    const formData = new FormData();
+    formData.append('firstname', firstname);
+    formData.append('lastname', lastname);
+    formData.append('email', email);
+    formData.append('contact', contact);
+    formData.append('address', address);
+    formData.append('user_id', userId);
+
+    if (image) {
+      formData.append('image', {
+        uri:  image.uri,
+        name: `profile_${Date.now()}.jpg`,
+        type: 'image/jpeg',
+      });
+    }
+
+    const res = await fetch(`${api_url}/api/profile`, {
+      method: 'PUT',
+     
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
       const data = await res.json();
 
       if (!res.ok) { Alert.alert('Error', data.message || 'Update failed.'); return; }

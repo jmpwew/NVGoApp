@@ -42,7 +42,7 @@ export default function NewsPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      // Use FormData because we are sending a file
+     
       const formData = new FormData();
       formData.append('title', form.title);
       formData.append('content', form.content);

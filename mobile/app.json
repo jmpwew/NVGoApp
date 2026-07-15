@@ -23,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
-      "package": "com.nvgo.app"
+      "package": "com.nvgo.app",
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,13 +35,18 @@
         {
           "color": "#0B7A75"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "NVGo uses your location to show local weather updates and help responders locate you faster when you submit an emergency report."
+        }
       ]
-    ], 
+    ],
     "extra": {
-  "eas": {
-    "projectId": "c4e07936-f152-4af8-9b6b-d179b12205ab"
-  }
-}
-   
+      "eas": {
+        "projectId": "c4e07936-f152-4af8-9b6b-d179b12205ab"
+      }
+    }
   }
 }
