@@ -17,9 +17,12 @@
         "buildType": "apk"
       }
     },
-    "production": {
-      "autoIncrement": true
-    }
+   "production": {
+    "autoIncrement": true,
+    "env": {
+     "EXPO_PUBLIC_API_URL": "https://nvgo.onrender.com"
+  }
+}
   },
   "submit": {
     "production": {}
