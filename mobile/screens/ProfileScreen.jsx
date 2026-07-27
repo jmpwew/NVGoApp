@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Image, Alert, StatusBar, Platform, ScrollView,
+  Image, StatusBar, Platform, ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield, IcLock, IcTrash } from '../constants/icons';
 
 import {C} from '../constants/colors';
+import ConfirmModal from '../utils/ConfirmModal';
+import AlertModal from '../utils/AlertModal';
 
 
 const MenuItem = ({ icon, label, iconBg, onPress, danger, last }) => (
@@ -26,6 +28,10 @@ const MenuItem = ({ icon, label, iconBg, onPress, danger, last }) => (
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone } | null
+
+  const notify = (title, message, tone = 'info') => setAlertInfo({ title, message, tone });
 
   useEffect(() => {
     loadUser();
@@ -40,7 +46,7 @@ export default function ProfileScreen({ navigation }) {
 
   const requireLogin = (callback) => {
     if (!user) {
-      Alert.alert('Login Required', 'Please log in first.');
+      notify('Login Required', 'Please log in first.', 'info');
       navigation.navigate('Login');
       return;
     }
@@ -48,21 +54,14 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout', style: 'destructive',
-        onPress: async () => {
-         
-          await AsyncStorage.removeItem('user');
-          await AsyncStorage.removeItem('token');
-          setUser(null);
+    setConfirmLogout(true);
+  };
 
-      
-          
-        },
-      },
-    ]);
+  const doLogout = async () => {
+    setConfirmLogout(false);
+    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('token');
+    setUser(null);
   };
 
 
@@ -168,13 +167,13 @@ export default function ProfileScreen({ navigation }) {
             icon={<IcInfo/>}
             iconBg={C.skyBg}
             label="FAQs / How to Use"
-            onPress={() => Alert.alert('Coming Soon', 'FAQs will be available soon.')}
+            onPress={() => notify('Coming Soon', 'FAQs will be available soon.', 'info')}
           />
           <MenuItem
             icon={<IcInfo/>}
             iconBg={C.skyBg}
             label="About NVGo"
-            onPress={() => Alert.alert('NVGo', 'Nueva Valencia Go s\nVersion 1.0.0')}
+            onPress={() => notify('NVGo', 'Nueva Valencia Go\nVersion 1.0.0', 'info')}
             last
           />
         </View>
@@ -224,6 +223,24 @@ export default function ProfileScreen({ navigation }) {
         <Text style={s.version}>NVGo · Nueva Valencia, Guimaras</Text>
 
       </ScrollView>
+
+      <ConfirmModal
+        visible={confirmLogout}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        confirmLabel="Logout"
+        tone="danger"
+        onConfirm={doLogout}
+        onCancel={() => setConfirmLogout(false)}
+      />
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => setAlertInfo(null)}
+      />
     </View>
   );
 }

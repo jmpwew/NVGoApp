@@ -57,7 +57,6 @@ export default function UsersPage() {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Contact</th>
@@ -73,7 +72,6 @@ export default function UsersPage() {
           ) : (
             filtered.map(u => (
               <tr key={u.id}>
-                <td>#{u.id}</td>
                 <td>{u.firstname} {u.lastname}</td>
                 <td>{u.email}</td>
                 <td>{u.contact || '—'}</td>

@@ -1,3 +1,9 @@
+
+.verifier-metric-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+  justify-content: flex-start;
+}
+
 /* ── Office picker (verify modal) ─────────────────────── */
 .office-picker {
   display: grid;
@@ -37,11 +43,16 @@
   font-size: 18px;
 }
 
-.office-option-police .office-option-icon { background-color: #dbe7ff; color: #1d4ed8; }
-.office-option-police.selected { border-color: #1d4ed8; background-color: #eef4ff; }
+.office-option-police .office-option-icon { background-color: var(--office-police-bg); color: var(--office-police); }
+.office-option-police.selected { border-color: var(--office-police); background-color: #eef4ff; }
 
-.office-option-bfp .office-option-icon { background-color: #ffe1d6; color: #c2410c; }
-.office-option-bfp.selected { border-color: #c2410c; background-color: #fff3ee; }
+.office-option-bfp .office-option-icon { background-color: var(--office-bfp-bg); color: var(--office-bfp); }
+.office-option-bfp.selected { border-color: var(--office-bfp); background-color: #fff3ee; }
 
-.office-option-medical .office-option-icon { background-color: #ffd9e3; color: #be123c; }
-.office-option-medical.selected { border-color: #be123c; background-color: #fff0f4; }
+/* Medical uses a white + red identity (like a medical cross) rather than a filled tint */
+.office-option-medical .office-option-icon {
+  background-color: var(--office-medical-bg);
+  color: var(--office-medical);
+  border: 1.5px solid var(--office-medical);
+}
+.office-option-medical.selected { border-color: var(--office-medical); background-color: #fff5f7; }

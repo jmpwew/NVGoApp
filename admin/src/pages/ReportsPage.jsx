@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
-import { ShieldIcon, FlameIcon, CrossIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
 import './ReportsPage.css';
 
 const API = 'http://localhost:5000';
@@ -12,7 +13,14 @@ const OFFICE_META = {
   medical: { label: 'Medical / Ambulance', Icon: CrossIcon },
 };
 
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
+}
+
 export default function ReportsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reports, setReports]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('all');  // all | pending | ongoing | resolved
@@ -24,11 +32,28 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReports();
+    const interval = setInterval(() => fetchReports(true), 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Uses the full trail endpoint: each report includes verifier + assignments
-  async function fetchReports() {
-    setLoading(true);
+  // Coming from Dashboard's "Recent reports" -> /reports?reportId=123 opens
+  // that specific report's detail modal directly instead of just the list.
+  useEffect(() => {
+    const reportId = searchParams.get('reportId');
+    if (!reportId || reports.length === 0) return;
+
+    const match = reports.find(r => String(r.id) === reportId);
+    if (match) {
+      setSelectedReport(match);
+      // clear the query param so refreshing/closing doesn't reopen it
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, reports]);
+
+  // Uses the full trail endpoint: each report includes verifier + assignments.
+  // silent=true skips the loading-skeleton flash on background polls.
+  async function fetchReports(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await axios.get(`${API}/api/admin/reports/trail`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -36,9 +61,9 @@ export default function ReportsPage() {
       setReports(res.data);
     } catch (err) {
       console.log(err);
-      setToast({ type: 'error', text: 'Failed to load reports.' });
+      if (!silent) setToast({ type: 'error', text: 'Failed to load reports.' });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -85,141 +110,125 @@ export default function ReportsPage() {
 
   return (
     <div className="page">
-      <h1>Reports</h1>
-      <p className="page-subtitle">Full trail: reporter → verifier → office action, in one place.</p>
 
-      {/* Filter bar */}
-      <div className="filter-bar">
-        <input
-          type="text"
-          placeholder="Search by name or description..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ width: '260px' }}
-        />
-        <select value={filter} onChange={e => setFilter(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="resolved">Resolved</option>
-        </select>
-        <span style={{ fontSize: '13px', color: '#888' }}>
-          {filtered.length} report(s)
-        </span>
+      <div className="page-header-row">
+        <div>
+          <h1>Reports</h1>
+          <p className="page-subtitle">Full trail: reporter → verifier → office action, in one place.</p>
+        </div>
+        <div className="live-chip">
+          <span className={`live-chip-dot ${reports.filter(r => r.status === 'pending').length === 0 ? 'calm' : ''}`} />
+          {loading ? 'Loading…' : `${reports.filter(r => r.status === 'pending').length} pending`}
+        </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Contact</th>
-            <th>Description</th>
-            <th>Location Note</th>
-            <th>Location Map</th>
-            <th>Images</th>
-            <th>Status</th>
-            <th>Turnover</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            [...Array(5)].map((_, i) => (
-              <tr key={i} className="skeleton-row">
-                <td colSpan="10"><div className="skeleton-bar" /></td>
-              </tr>
-            ))
-          ) : filtered.length === 0 ? (
-            <tr>
-              <td colSpan="10">
-                <div className="empty-state">
-                  <div className="empty-state-icon">📄</div>
-                  <div className="empty-state-title">No reports found</div>
-                  <div className="empty-state-text">Try a different search or filter.</div>
-                </div>
-              </td>
-            </tr>
-          ) : (
-            filtered.map(r => (
-              <tr key={r.id} className="report-row" onClick={() => setSelectedReport(r)}>
-                <td>{r.name || '—'}</td>
-                <td>{r.contact || '—'}</td>
-                <td className="report-description-cell">{r.description}</td>
-                <td>{r.location_note || '—'}</td>
-                <td onClick={e => e.stopPropagation()}>
-                  {r.latitude && r.longitude ? (
-                    <div
-                      className="report-map"
-                      onClick={() => setExpandedMap({ lat: r.latitude, lng: r.longitude })}
-                      title="Click to view larger map"
-                    >
-                      <iframe
-                        title={`report-${r.id}-map`}
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${r.longitude - 0.004}%2C${r.latitude - 0.004}%2C${Number(r.longitude) + 0.004}%2C${Number(r.latitude) + 0.004}&layer=mapnik&marker=${r.latitude}%2C${r.longitude}`}
-                        loading="lazy"
-                        style={{ pointerEvents: 'none' }}
-                      />
-                    </div>
-                  ) : '—'}
-                </td>
-                <td onClick={e => e.stopPropagation()}>
-                  {r.images && r.images.length > 0 ? (
-                    <div className="report-images">
-                      {r.images.map((img, i) => (
-                        <a key={i} href={`${API}/uploads/${img}`} target="_blank" rel="noreferrer">
-                          <img src={`${API}/uploads/${img}`} alt="report" />
-                        </a>
-                      ))}
-                    </div>
-                  ) : '—'}
-                </td>
-                <td>
+      <div className="filter-pill-bar">
+        {[
+          { value: 'all',      label: 'All' },
+          { value: 'pending',  label: 'Pending' },
+          { value: 'ongoing',  label: 'Ongoing' },
+          { value: 'resolved', label: 'Resolved' },
+        ].map(opt => (
+          <button
+            key={opt.value}
+            className={`filter-pill ${filter === opt.value ? 'active' : ''}`}
+            onClick={() => setFilter(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <div className="search-input-wrap">
+          <input
+            type="text"
+            placeholder="Search by name or description..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="filter-pill-count">{filtered.length} report(s)</span>
+      </div>
+
+      {loading ? (
+        <div className="case-card-list">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="skeleton-row"><div className="skeleton-bar" /></div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📄</div>
+          <div className="empty-state-title">No reports found</div>
+          <div className="empty-state-text">Try a different search or filter.</div>
+        </div>
+      ) : (
+        <div className="case-card-list">
+          {filtered.map(r => (
+            <div
+              key={r.id}
+              className={`case-card ${r.status === 'resolved' ? 'is-resolved' : ''}`}
+              onClick={() => setSelectedReport(r)}
+            >
+              <div className={`case-card-stripe status-${r.status}`} />
+              <div className="avatar-circle">{initials(r.name)}</div>
+              <div className="case-card-body">
+                <div className="case-card-top">
+                  <span className="case-card-name">{r.name || 'Anonymous'}</span>
+                  {r.contact && <span className="case-card-time">{r.contact}</span>}
                   <span className={`badge badge-${r.status}`}>{r.status}</span>
-                </td>
-                <td className="trail-cell" onClick={e => e.stopPropagation()}>
+                </div>
+                <div className="case-card-desc">{r.description}</div>
+                <div className="case-card-meta">
+                  {r.location_note && (
+                    <span
+                      className="case-card-meta-item"
+                      onClick={e => { if (r.latitude && r.longitude) { e.stopPropagation(); setExpandedMap({ lat: r.latitude, lng: r.longitude }); } }}
+                      style={r.latitude && r.longitude ? { cursor: 'pointer' } : undefined}
+                      title={r.latitude && r.longitude ? 'Click to view map' : undefined}
+                    >
+                      <MapPinIcon width={13} height={13} />{r.location_note}
+                    </span>
+                  )}
+                  {r.images && r.images.length > 0 && (
+                    <span className="case-card-meta-item"><PhotoIcon width={13} height={13} />{r.images.length}</span>
+                  )}
+                  {r.videos && r.videos.length > 0 && (
+                    <span className="case-card-meta-item"><VideoIcon width={13} height={13} />{r.videos.length}</span>
+                  )}
+                  <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="case-card-trail">
                   {r.verifier ? (
                     <>
-                      <div className="trail-verifier-line">
-                        Verified by <strong>{r.verifier.firstname} {r.verifier.lastname}</strong>
-                      </div>
-                      {r.assignments && r.assignments.length > 0 ? (
-                        r.assignments.map(a => {
-                          const om = OFFICE_META[a.office_role];
-                          return (
-                            <div key={a.id} className="trail-assignment-row">
-                              <span className={`badge badge-office-${a.office_role}`}>
-                                {om ? om.label : a.office_role}
-                              </span>
-                              <span className={`badge badge-${a.status}`}>{a.status}</span>
-                              {a.action_note && <span className="trail-assignment-note" title={a.action_note}>{a.action_note}</span>}
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="trail-none">No office assigned yet</div>
-                      )}
+                      <span className="case-card-trail-label">
+                        Verified by Verifier
+                      </span>
+                      {r.assignments && r.assignments.length > 0 && r.assignments.map(a => {
+                        const om = OFFICE_META[a.office_role];
+                        return (
+                          <span key={a.id} className="case-card-trail-office-group">
+                            <span className={`badge badge-office-${a.office_role}`}>
+                              {om ? om.label : a.office_role} · {a.status}
+                            </span>
+                            {a.action_note && (
+                              <span className="case-card-office-note">{a.action_note}</span>
+                            )}
+                          </span>
+                        );
+                      })}
                     </>
                   ) : (
-                    <div className="trail-none">Awaiting verifier</div>
+                    <span className="case-card-trail-label">Awaiting verifier</span>
                   )}
-                </td>
-                <td>{new Date(r.created_at).toLocaleDateString()} {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                <td onClick={e => e.stopPropagation()}>
-                  <div className="action-buttons">
-                    <button className="btn-gray" onClick={() => setSelectedReport(r)}>
-                      View
-                    </button>
-                    <button className="btn-red" onClick={() => deleteReport(r.id)}>
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                </div>
+              </div>
+              <div className="action-buttons case-card-action" onClick={e => e.stopPropagation()}>
+                <button className="btn-gray" onClick={() => setSelectedReport(r)}>View</button>
+                <button className="btn-red" onClick={() => deleteReport(r.id)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {expandedMap && (
         <div className="map-modal-overlay" onClick={() => setExpandedMap(null)}>
@@ -294,11 +303,22 @@ export default function ReportsPage() {
               </>
             )}
 
+            {selectedReport.videos && selectedReport.videos.length > 0 && (
+              <>
+                <div className="detail-label">Videos</div>
+                <div className="report-videos">
+                  {selectedReport.videos.map((vid, i) => (
+                    <video key={i} src={`${API}/uploads/${vid}`} controls preload="metadata" />
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="trail-section">
               <div className="detail-label" style={{ marginTop: 0 }}>Turnover Trail</div>
               {selectedReport.verifier ? (
                 <div className="trail-verifier-line" style={{ fontSize: 13 }}>
-                  Verified by <strong>{selectedReport.verifier.firstname} {selectedReport.verifier.lastname}</strong>{' '}
+                  Verified by <strong>Verifier</strong>{' '}
                   on {new Date(selectedReport.verifier.verified_at).toLocaleString()}
                 </div>
               ) : (

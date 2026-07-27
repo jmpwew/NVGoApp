@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert,
+  View, Text, TextInput, TouchableOpacity,
   StyleSheet, StatusBar, Platform, ActivityIndicator,
   KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcMail } from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 // 6 individual OTP digit boxes
 function OtpInput({ value, onChange }) {
@@ -63,6 +64,10 @@ export default function VerifyRegisterOtpScreen({ navigation, route }) {
   const [code, setCode]         = useState('');
   const [loading, setLoading]   = useState(false);
   const [resendCd, setResendCd] = useState(0);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone, onOk } | null
+
+  const notify = (title, message, tone = 'error', onOk) =>
+    setAlertInfo({ title, message, tone, onOk });
 
   // Resend cooldown timer
   const startCooldown = () => {
@@ -77,7 +82,7 @@ export default function VerifyRegisterOtpScreen({ navigation, route }) {
 
   const handleVerify = async () => {
     if (code.length < 6) {
-      Alert.alert('Required', 'Please enter the 6-digit code.');
+      notify('Required', 'Please enter the 6-digit code.', 'error');
       return;
     }
     try {
@@ -89,14 +94,14 @@ export default function VerifyRegisterOtpScreen({ navigation, route }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        Alert.alert('Error', data.message || 'Invalid OTP.');
+        notify('Error', data.message || 'Invalid OTP.', 'error');
         return;
       }
-      Alert.alert('Account created!', 'You can now sign in.', [
-        { text: 'Sign In', onPress: () => navigation.navigate('Login') },
-      ]);
+      notify('Account created!', 'You can now sign in.', 'success', () =>
+        navigation.navigate('Login')
+      );
     } catch {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      notify('Error', 'Something went wrong. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -113,14 +118,14 @@ export default function VerifyRegisterOtpScreen({ navigation, route }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        Alert.alert('Error', data.message || 'Could not resend.');
+        notify('Error', data.message || 'Could not resend.', 'error');
         return;
       }
-      Alert.alert('Sent', 'A new code has been sent to your email.');
+      notify('Sent', 'A new code has been sent to your email.', 'success');
       setCode('');
       startCooldown();
     } catch {
-      Alert.alert('Error', 'Could not resend. Try again.');
+      notify('Error', 'Could not resend. Try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -185,6 +190,18 @@ export default function VerifyRegisterOtpScreen({ navigation, route }) {
 
         <Text style={s.footer}>Municipality of Nueva Valencia, Guimaras</Text>
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => {
+          const cb = alertInfo?.onOk;
+          setAlertInfo(null);
+          if (cb) cb();
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

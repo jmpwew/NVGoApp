@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Toast from '../components/Toast';
-import { ShieldIcon, FlameIcon, CrossIcon, CheckCircleIcon, ClockIcon } from '../components/Icons';
+import ConfirmModal from '../components/ConfirmModal';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon } from '../components/Icons';
 import './OfficeDashboard.css';
-import './ReportsPage.css'; // reuse table/badge/modal styles
-
+import './ReportsPage.css'; 
 const API = 'http://localhost:5000';
 
 const OFFICE_META = {
@@ -13,14 +13,34 @@ const OFFICE_META = {
   medical: { label: 'Medical / Ambulance',   Icon: CrossIcon,  className: 'medical' },
 };
 
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
+}
+
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 export default function OfficeDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState('all'); // all | ongoing | resolved
+  const [page, setPage]               = useState(1);
+  const PAGE_SIZE = 10;
   const [selected, setSelected]       = useState(null);
   const [note, setNote]               = useState('');
   const [saving, setSaving]           = useState(false);
   const [toast, setToast]             = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); 
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   const token = localStorage.getItem('token');
   const admin = JSON.parse(localStorage.getItem('admin') || '{}');
@@ -28,10 +48,17 @@ export default function OfficeDashboard() {
 
   useEffect(() => {
     fetchAssignments();
+
+    const interval = setInterval(() => fetchAssignments(true), 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  async function fetchAssignments() {
-    setLoading(true);
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  async function fetchAssignments(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await axios.get(`${API}/api/office/assignments`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -39,9 +66,9 @@ export default function OfficeDashboard() {
       setAssignments(res.data);
     } catch (err) {
       console.log(err);
-      setToast({ type: 'error', text: 'Failed to load assigned reports.' });
+      if (!silent) setToast({ type: 'error', text: 'Failed to load assigned reports.' });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -50,7 +77,7 @@ export default function OfficeDashboard() {
     setNote(a.action_note || '');
   }
 
-  async function updateStatus(assignmentId, status) {
+  async function performUpdateStatus(assignmentId, status) {
     try {
       const res = await axios.put(
         `${API}/api/office/assignments/${assignmentId}`,
@@ -68,6 +95,19 @@ export default function OfficeDashboard() {
       console.log(err);
       setToast({ type: 'error', text: 'Failed to update status.' });
     }
+  }
+
+  function updateStatus(assignmentId, status) {
+  
+    setConfirmAction({ assignmentId, status });
+  }
+
+  async function handleConfirmStatusChange() {
+    if (!confirmAction) return;
+    setStatusUpdating(true);
+    await performUpdateStatus(confirmAction.assignmentId, confirmAction.status);
+    setStatusUpdating(false);
+    setConfirmAction(null);
   }
 
   async function saveNote(assignmentId) {
@@ -97,6 +137,10 @@ export default function OfficeDashboard() {
   const ongoingCount  = assignments.filter(a => a.assignment_status === 'ongoing').length;
   const resolvedCount = assignments.filter(a => a.assignment_status === 'resolved').length;
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <div className="page">
       <div className="office-header">
@@ -104,103 +148,116 @@ export default function OfficeDashboard() {
           <meta.Icon width={22} height={22} />
         </div>
         <div>
-          <h1>{meta.label} — Assigned Reports</h1>
-          <div className="office-header-subtitle">Reports turned over to your office by the verifier.</div>
+          <h1>{meta.label} — response console</h1>
+          
         </div>
       </div>
 
-      <div className="office-stats-grid">
-        <div className="stat-card">
-          <h3>Total Assigned</h3>
-          <div className="number">{assignments.length}</div>
+      <div className="metric-grid">
+        <div className="metric-card">
+          <div className="metric-card-label">Total assigned</div>
+          <div className="metric-card-value">{assignments.length}</div>
         </div>
-        <div className="stat-card pending">
-          <h3>Ongoing</h3>
-          <div className="number">{ongoingCount}</div>
+        <div className={`metric-card office-metric-ongoing-${meta.className}`}>
+          <div className="metric-card-label">Ongoing</div>
+          <div className="metric-card-value">{ongoingCount}</div>
         </div>
-        <div className="stat-card">
-          <h3>Resolved</h3>
-          <div className="number">{resolvedCount}</div>
+        <div className="metric-card">
+          <div className="metric-card-label">Resolved</div>
+          <div className="metric-card-value">{resolvedCount}</div>
         </div>
       </div>
 
-      <div className="filter-bar">
-        <select value={filter} onChange={e => setFilter(e.target.value)}>
-          <option value="all">All Status</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="resolved">Resolved</option>
-        </select>
-        <span style={{ fontSize: '13px', color: '#888' }}>
-          {filtered.length} report(s)
-        </span>
+      <div className="filter-pill-bar">
+        {[
+          { value: 'all',      label: 'All' },
+          { value: 'ongoing',  label: 'Ongoing' },
+          { value: 'resolved', label: 'Resolved' },
+        ].map(opt => (
+          <button
+            key={opt.value}
+            className={`filter-pill ${filter === opt.value ? 'active' : ''}`}
+            onClick={() => setFilter(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <span className="filter-pill-count">{filtered.length} report(s)</span>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Location Note</th>
-            <th>Images</th>
-            <th>Status</th>
-            <th>Date Assigned</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            [...Array(4)].map((_, i) => (
-              <tr key={i} className="skeleton-row">
-                <td colSpan="7"><div className="skeleton-bar" /></td>
-              </tr>
-            ))
-          ) : filtered.length === 0 ? (
-            <tr>
-              <td colSpan="7">
-                <div className="empty-state">
-                  <div className="empty-state-icon">📋</div>
-                  <div className="empty-state-title">No reports assigned</div>
-                  <div className="empty-state-text">Reports the verifier sends to your office will appear here.</div>
+      {loading ? (
+        <div className="case-card-list">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton-row"><div className="skeleton-bar" /></div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <div className="empty-state-title">No reports assigned</div>
+          <div className="empty-state-text">Reports the verifier sends to your office will appear here.</div>
+        </div>
+      ) : (
+        <div className="case-card-list">
+          {paginated.map(a => (
+            <div
+              key={a.assignment_id}
+              className={`case-card ${a.assignment_status === 'resolved' ? 'is-resolved' : ''}`}
+              onClick={() => openAssignment(a)}
+            >
+              <div className={`case-card-stripe status-${a.assignment_status}`} />
+              <div className="avatar-circle">{initials(a.name)}</div>
+              <div className="case-card-body">
+                <div className="case-card-top">
+                  <span className="case-card-name">{a.name || 'Anonymous'}</span>
+                  <span className={`badge badge-${a.assignment_status}`}>{a.assignment_status}</span>
                 </div>
-              </td>
-            </tr>
-          ) : (
-            filtered.map(a => (
-              <tr key={a.assignment_id} className="report-row" onClick={() => openAssignment(a)}>
-                <td>{a.name || '—'}</td>
-                <td className="report-description-cell">{a.description}</td>
-                <td>{a.location_note || '—'}</td>
-                <td onClick={e => e.stopPropagation()}>
-                  {a.images && a.images.length > 0 ? (
-                    <div className="report-images">
-                      {a.images.map((img, i) => (
-                        <a key={i} href={`${API}/uploads/${img}`} target="_blank" rel="noreferrer">
-                          <img src={`${API}/uploads/${img}`} alt="report" />
-                        </a>
-                      ))}
-                    </div>
-                  ) : '—'}
-                </td>
-                <td><span className={`badge badge-${a.assignment_status}`}>{a.assignment_status}</span></td>
-                <td>{new Date(a.assigned_at).toLocaleDateString()} {new Date(a.assigned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                <td onClick={e => e.stopPropagation()}>
-                  <div className="action-buttons">
-                    {a.assignment_status === 'ongoing' ? (
-                      <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'resolved')}>
-                        Resolve
-                      </button>
-                    ) : (
-                      <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'ongoing')}>
-                        Cancel Resolve
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                <div className="case-card-desc">{a.description}</div>
+                <div className="case-card-meta">
+                  {a.location_note && (
+                    <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />{a.location_note}</span>
+                  )}
+                  {a.action_note && (
+                    <span className="case-card-meta-item"><ClockIcon width={13} height={13} />{a.action_note}</span>
+                  )}
+                </div>
+              </div>
+              <span className="case-card-time">{timeAgo(a.assigned_at)}</span>
+              <div className="case-card-action" onClick={e => e.stopPropagation()}>
+                {a.assignment_status === 'ongoing' ? (
+                  <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'resolved')}>
+                    Resolve
+                  </button>
+                ) : (
+                  <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'ongoing')}>
+                    Cancel resolve
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && filtered.length > 0 && totalPages > 1 && (
+        <div className="pagination-bar">
+          <button
+            className="btn-gray pagination-btn"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          <span className="pagination-status">Page {currentPage} of {totalPages}</span>
+          <button
+            className="btn-gray pagination-btn"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {selected && (
         <div className="detail-modal-overlay" onClick={() => setSelected(null)}>
@@ -245,6 +302,17 @@ export default function OfficeDashboard() {
               </>
             )}
 
+            {selected.videos && selected.videos.length > 0 && (
+              <>
+                <div className="detail-label">Videos</div>
+                <div className="report-videos">
+                  {selected.videos.map((vid, i) => (
+                    <video key={i} src={`${API}/uploads/${vid}`} controls preload="metadata" />
+                  ))}
+                </div>
+              </>
+            )}
+
             {selected.latitude && selected.longitude && (
               <>
                 <div className="detail-label">Location</div>
@@ -284,6 +352,17 @@ export default function OfficeDashboard() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmAction}
+        title={confirmAction?.status === 'resolved'
+          ? 'Mark this report as resolved?'
+          : 'Mark this report as ongoing?'}
+        confirmLabel={confirmAction?.status === 'resolved' ? 'Resolve' : 'Yes, revert'}
+        loading={statusUpdating}
+        onConfirm={handleConfirmStatusChange}
+        onCancel={() => setConfirmAction(null)}
+      />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>

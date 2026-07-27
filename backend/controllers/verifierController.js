@@ -2,7 +2,7 @@ const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 
 // Reports that still need to be reviewed by a verifier
-// (never verified yet, i.e. verified_by IS NULL)
+
 exports.getPendingReports = async (req, res) => {
   try {
     const result = await pool.query(
@@ -23,10 +23,16 @@ exports.getPendingReports = async (req, res) => {
 exports.getVerifiedReports = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT r.*, u.firstname, u.lastname
+      `SELECT r.*, u.firstname, u.lastname,
+              COALESCE(
+                array_agg(DISTINCT ra.office_role) FILTER (WHERE ra.office_role IS NOT NULL),
+                '{}'
+              ) AS office_roles
        FROM reports r
        LEFT JOIN users u ON r.user_id = u.id
+       LEFT JOIN report_assignments ra ON ra.report_id = r.id
        WHERE r.verified_by = $1
+       GROUP BY r.id, u.firstname, u.lastname
        ORDER BY r.verified_at DESC`,
       [req.user.id]
     );
@@ -38,7 +44,7 @@ exports.getVerifiedReports = async (req, res) => {
 };
 
 // Verify a report and assign it to one or more offices in one action.
-// body: { officeRoles: ['police', 'medical'] }
+
 exports.verifyAndAssign = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -55,7 +61,7 @@ exports.verifyAndAssign = async (req, res) => {
 
     await client.query('BEGIN');
 
-    // mark report as verified + move to "ongoing"
+    // mark report as verified move to ongoing
     const reportResult = await client.query(
       `UPDATE reports
        SET verified_by = $1, verified_at = NOW(), status = 'ongoing'

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, TextInput, Alert, StatusBar,
+  ScrollView, TextInput, StatusBar,
   Platform, ActivityIndicator, Linking,
 } from 'react-native';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { IcBack, IcPhone, IcMail, IcFB, IcUser, IcMsg, IcSend} from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 
 
@@ -60,14 +61,17 @@ export default function ContactSupportScreen({ navigation }) {
   const [message, setMessage]       = useState('');
   const [sending, setSending]       = useState(false);
   const [sent, setSent]             = useState(false);
+  const [alertInfo, setAlertInfo]   = useState(null); // { title, message } | null
+
+  const notify = (title, message) => setAlertInfo({ title, message });
 
   const handleSend = async () => {
     if (!senderName.trim()) {
-      Alert.alert('Required', 'Please enter your name.');
+      notify('Required', 'Please enter your name.');
       return;
     }
     if (!message.trim()) {
-      Alert.alert('Required', 'Please enter a message.');
+      notify('Required', 'Please enter a message.');
       return;
     }
 
@@ -91,7 +95,7 @@ export default function ContactSupportScreen({ navigation }) {
       setMessage('');
     } catch (err) {
       console.log(err);
-      Alert.alert('Error', 'Failed to send message. Please try again.');
+      notify('Error', 'Failed to send message. Please try again.');
     } finally {
       setSending(false);
     }
@@ -219,6 +223,14 @@ export default function ContactSupportScreen({ navigation }) {
         </View>
 
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone="error"
+        onClose={() => setAlertInfo(null)}
+      />
     </View>
   );
 }

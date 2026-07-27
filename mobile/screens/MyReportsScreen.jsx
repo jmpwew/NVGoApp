@@ -10,11 +10,13 @@ import {
   RefreshControl,
   Platform,
   StatusBar,
+  Linking,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import { IcVideo, IcPlay } from '../constants/icons';
 
 const STATUS_STYLE = {
   pending: { bg: '#FFF3CD', text: '#856404', label: 'Pending' },
@@ -206,6 +208,28 @@ export default function MyReportsScreen({ navigation }) {
                   )}
                 />
               )}
+
+              {/* Videos */}
+              {item.videos && item.videos.length > 0 && (
+                <FlatList
+                  horizontal
+                  data={item.videos}
+                  keyExtractor={(vid, index) => index.toString()}
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.imageList}
+                  renderItem={({ item: vid, index }) => (
+                    <TouchableOpacity
+                      style={styles.videoChip}
+                      activeOpacity={0.85}
+                      onPress={() => Linking.openURL(`${api_url}/uploads/${vid}`)}
+                    >
+                      <IcVideo s={16} c="#fff" />
+                      <Text style={styles.videoChipText}>Video {index + 1}</Text>
+                      <IcPlay s={16} />
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
             </View>
           );
         }}
@@ -348,6 +372,21 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 10,
     marginRight: 8,
+  },
+  videoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1b1b1b',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginRight: 8,
+  },
+  videoChipText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   /* States */

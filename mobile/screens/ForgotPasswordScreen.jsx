@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert,
+  View, Text, TextInput, TouchableOpacity,
   StyleSheet, StatusBar, Platform, ActivityIndicator,
   KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcMail } from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 function InputField({ icon, placeholder, value, onChangeText, keyboardType }) {
   const [focused, setFocused] = useState(false);
@@ -37,10 +38,13 @@ const inp = StyleSheet.create({
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
+
+  const notify = (title, message) => setAlertInfo({ title, message });
 
   const handleSendOtp = async () => {
     if (!email.trim()) {
-      Alert.alert('Required', 'Please enter your email address.');
+      notify('Required', 'Please enter your email address.');
       return;
     }
     try {
@@ -52,12 +56,12 @@ export default function ForgotPasswordScreen({ navigation }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        Alert.alert('Error', data.message || 'Failed to send OTP.');
+        notify('Error', data.message || 'Failed to send OTP.');
         return;
       }
       navigation.navigate('VerifyOtp', { email: email.trim() });
     } catch (err) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      notify('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -121,6 +125,14 @@ export default function ForgotPasswordScreen({ navigation }) {
 
         <Text style={s.footer}>Municipality of Nueva Valencia, Guimaras</Text>
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone="error"
+        onClose={() => setAlertInfo(null)}
+      />
     </KeyboardAvoidingView>
   );
 }

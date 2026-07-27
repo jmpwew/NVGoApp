@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, Image, ScrollView,
+  StyleSheet, Image, ScrollView,
   StatusBar, Platform, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import api_url from '../utils/api';
 import { IcBack, IcCamera, IcSave, IcLock, IcChevron} from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 
 import {C} from '../constants/colors';
@@ -51,6 +52,9 @@ export default function EditProfileScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone } | null
+
+  const notify = (title, message, tone = 'error') => setAlertInfo({ title, message, tone });
  
 
   useEffect(() => { loadUser(); }, []);
@@ -83,7 +87,7 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const saveProfile = async () => {
-  if (!userId) { Alert.alert('Error', 'User ID missing.'); return; }
+  if (!userId) { notify('Error', 'User ID missing.', 'error'); return; }
   try {
     setSaving(true);
 
@@ -113,15 +117,15 @@ export default function EditProfileScreen({ navigation }) {
     });
       const data = await res.json();
 
-      if (!res.ok) { Alert.alert('Error', data.message || 'Update failed.'); return; }
-      if (!data.user) { Alert.alert('Error', 'No user data returned.'); return; }
+      if (!res.ok) { notify('Error', data.message || 'Update failed.', 'error'); return; }
+      if (!data.user) { notify('Error', 'No user data returned.', 'error'); return; }
 
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
-      Alert.alert('Success', 'Profile updated!');
+      notify('Success', 'Profile updated!', 'success');
       navigation.goBack();
     } catch (err) {
       console.log('UPDATE ERROR:', err);
-      Alert.alert('Error', 'Update failed.');
+      notify('Error', 'Update failed.', 'error');
     } finally {
       setSaving(false);
     }
@@ -253,6 +257,14 @@ export default function EditProfileScreen({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => setAlertInfo(null)}
+      />
     </View>
   );
 }

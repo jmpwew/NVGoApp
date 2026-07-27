@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import UserGrowthChart from '../components/UserGrowthChart';
 import './DashboardPage.css';
 
 const API = 'http://localhost:5000';
 
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
+}
+
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [stats, setStats]     = useState(null);
   const [reports, setReports] = useState([]);
   const [growth, setGrowth]   = useState(null);
@@ -15,6 +23,15 @@ export default function DashboardPage() {
     fetchStats();
     fetchRecentReports();
     fetchUserGrowth();
+
+    // Keep the metric cards and recent-reports list fresh without a manual
+    // refresh, same 5s cadence as ReportsPage/App.jsx. Growth chart is left
+    // out - monthly signup counts don't need second-by-second freshness.
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchRecentReports();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   async function fetchStats() {
@@ -53,42 +70,52 @@ export default function DashboardPage() {
 
   return (
     <div className="page">
-      <h1>Dashboard</h1>
 
-      {/* Stats cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total Reports</h3>
-          <div className="number">{stats ? stats.totalReports : '...'}</div>
+      <div className="page-header-row">
+        <div>
+          <h1>Dashboard</h1>
+          
         </div>
-        <div className="stat-card pending">
-          <h3>Pending</h3>
-          <div className="number">{stats ? stats.pendingReports : '...'}</div>
+        <div className="live-chip">
+          <span className={`live-chip-dot ${!stats || stats.pendingReports === 0 ? 'calm' : ''}`} />
+          {stats ? `${stats.pendingReports} pending` : 'Loading…'}
         </div>
-        <div className="stat-card resolved">
-          <h3>Resolved</h3>
-          <div className="number">{stats ? stats.resolvedReports : '...'}</div>
+      </div>
+
+      {/* Metric cards */}
+      <div className="metric-grid">
+        <div className="metric-card">
+          <div className="metric-card-label">Total reports</div>
+          <div className="metric-card-value">{stats ? stats.totalReports : '—'}</div>
         </div>
-        <div className="stat-card users">
-          <h3>Total Users</h3>
-          <div className="number">{stats ? stats.totalUsers : '...'}</div>
+        <div className={`metric-card ${stats && stats.pendingReports > 0 ? 'accent' : ''}`}>
+          <div className="metric-card-label">Pending</div>
+          <div className="metric-card-value">{stats ? stats.pendingReports : '—'}</div>
         </div>
-        <div className="stat-card news">
-          <h3>News Posts</h3>
-          <div className="number">{stats ? stats.totalNews : '...'}</div>
+        <div className="metric-card metric-card-resolved">
+          <div className="metric-card-label">Resolved</div>
+          <div className="metric-card-value">{stats ? stats.resolvedReports : '—'}</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-card-label">Total users</div>
+          <div className="metric-card-value">{stats ? stats.totalUsers : '—'}</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-card-label">News posts</div>
+          <div className="metric-card-value">{stats ? stats.totalNews : '—'}</div>
         </div>
       </div>
 
       {/* User growth chart */}
       <div className="chart-section">
-        <h2>User Growth</h2>
+        <h2>User growth</h2>
         <div className="chart-subtitle">
           New users per month{growth ? ` — ${growth.year}` : ''}
         </div>
         {growth ? (
           <UserGrowthChart months={growth.months} counts={growth.counts} />
         ) : (
-          <div style={{ padding: '40px 0', textAlign: 'center', color: '#999', fontSize: 13 }}>
+          <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
             Loading chart...
           </div>
         )}
@@ -96,33 +123,44 @@ export default function DashboardPage() {
 
       {/* Recent reports */}
       <div className="recent-section">
-        <h2>Recent Reports</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reports.length === 0 ? (
-              <tr><td colSpan="4">No reports yet.</td></tr>
-            ) : (
-              reports.map(r => (
-                <tr key={r.id}>
-                  <td>{r.name}</td>
-                  <td>{r.description.substring(0, 60)}...</td>
-                  <td>
+        <div className="page-header-row" style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>Recent reports</h2>
+          <button
+            className="btn-gray"
+            onClick={() => navigate('/reports')}
+          >
+            See more
+          </button>
+        </div>
+        {reports.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📋</div>
+            <div className="empty-state-title">No reports yet</div>
+            <div className="empty-state-text">New reports will show up here as they come in.</div>
+          </div>
+        ) : (
+          <div className="case-card-list">
+            {reports.map(r => (
+              <div
+                key={r.id}
+                className={`case-card ${r.status === 'resolved' ? 'is-resolved' : ''}`}
+                onClick={() => navigate(`/reports?reportId=${r.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={`case-card-stripe status-${r.status}`} />
+                <div className="avatar-circle">{initials(r.name)}</div>
+                <div className="case-card-body">
+                  <div className="case-card-top">
+                    <span className="case-card-name">{r.name || 'Anonymous'}</span>
                     <span className={`badge badge-${r.status}`}>{r.status}</span>
-                  </td>
-                  <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </div>
+                  <div className="case-card-desc">{r.description}</div>
+                </div>
+                <span className="case-card-time">{new Date(r.created_at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

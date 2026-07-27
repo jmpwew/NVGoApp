@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert,
+  View, Text, TextInput, TouchableOpacity,
   StyleSheet, StatusBar, Platform, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Modal, FlatList,
 } from 'react-native';
@@ -8,6 +8,7 @@ import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import Svg, { Path } from 'react-native-svg';
 import {IcBack, IcUser, IcMail, IcLock, IcPhone, IcMap, IcChevron, IcEye, IcCheck} from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 
 
@@ -137,32 +138,35 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
+
+  const notify = (title, message) => setAlertInfo({ title, message });
 
   const goNext = () => {
-  if (!firstname.trim() || !lastname.trim()) { Alert.alert('Required', 'Please enter your full name.'); return; }
-  if (!contact.trim()) { Alert.alert('Required', 'Please enter your contact number.'); return; }
+  if (!firstname.trim() || !lastname.trim()) { notify('Required', 'Please enter your full name.'); return; }
+  if (!contact.trim()) { notify('Required', 'Please enter your contact number.'); return; }
 
  
   const phoneRegex = /^(09|\+639)\d{9}$/;
   if (!phoneRegex.test(contact.trim())) {
-    Alert.alert('Invalid Number', 'Please enter a valid contact number (e.g. 09123456789).');
+    notify('Invalid Number', 'Please enter a valid contact number (e.g. 09123456789).');
     return;
   }
 
-  if (!address) { Alert.alert('Required', 'Please select your barangay.'); return; }
+  if (!address) { notify('Required', 'Please select your barangay.'); return; }
   setPage(1);
 };
 
   const register = async () => {
-  if (!email.trim()) { Alert.alert('Required', 'Please enter your email.'); return; }
+  if (!email.trim()) { notify('Required', 'Please enter your email.'); return; }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) {
-    Alert.alert('Invalid Email', 'Please enter a valid email address (e.g. juan@gmail.com).');
+    notify('Invalid Email', 'Please enter a valid email address (e.g. juan@gmail.com).');
     return;
   }
 
-  if (!password || password.length < 6) { Alert.alert('Weak password', 'Password must be at least 6 characters.'); return; }
+  if (!password || password.length < 6) { notify('Weak password', 'Password must be at least 6 characters.'); return; }
 
   try {
     setLoading(true);
@@ -173,13 +177,13 @@ export default function RegisterScreen({ navigation }) {
     });
     const data = await res.json();
     if (!res.ok) {
-      Alert.alert('Registration failed', data.message || 'Please try again.');
+      notify('Registration failed', data.message || 'Please try again.');
       return;
     }
     navigation.navigate('VerifyRegisterOtp', { email: email.trim() });
   } catch (err) {
     console.log('REGISTER ERROR:', err);
-    Alert.alert('Error', 'Registration failed. Please try again.');
+    notify('Error', 'Registration failed. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -306,6 +310,14 @@ export default function RegisterScreen({ navigation }) {
           <Text style={s.loginLinkTxt}>Already have an account? <Text style={{ color: C.green, fontWeight: '700' }}>Sign In</Text></Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone="error"
+        onClose={() => setAlertInfo(null)}
+      />
     </KeyboardAvoidingView>
   );
 }

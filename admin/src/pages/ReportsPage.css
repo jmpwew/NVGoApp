@@ -13,67 +13,24 @@
   border: 1px solid #ddd;
 }
 
-.filter-bar {
+.report-videos {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
 }
 
-.filter-bar select,
-.filter-bar input {
-  padding: 8px 10px;
-  border: 1px solid #ccc;
+.report-videos video {
+  width: 200px;
+  max-width: 100%;
   border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-}
-
-.filter-bar select:focus,
-.filter-bar input:focus {
-  border-color: #1B8A4C;
+  border: 1px solid #ddd;
+  background: #000;
 }
 
 .action-buttons {
   display: flex;
   gap: 6px;
-}
-
-.report-row {
-  cursor: pointer;
-}
-
-.report-row:hover td {
-  background-color: #f4f9f6;
-}
-
-.report-description-cell {
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.report-map {
-  width: 200px;
-  height: 140px;
-  overflow: hidden;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.report-map:hover {
-  border-color: #1B8A4C;
-}
-
-.report-map iframe {
-  width: 200px;
-  height: 192px;
-  border: none;
-  display: block;
-  margin-top: -6px;
 }
 
 .map-modal-overlay {
@@ -205,11 +162,7 @@
   border-top: 1px solid #eee;
 }
 
-/* ── Turnover trail (table cell + detail modal) ─────────── */
-.trail-cell {
-  min-width: 200px;
-}
-
+/* ── Turnover trail (detail modal) ────────────────────── */
 .trail-verifier-line {
   font-size: 12px;
   color: #999;
@@ -218,22 +171,6 @@
 
 .trail-verifier-line strong {
   color: #666;
-}
-
-.trail-assignment-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  margin-top: 3px;
-}
-
-.trail-assignment-note {
-  color: #999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 140px;
 }
 
 .trail-none {

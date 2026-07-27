@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  ScrollView, Image, Alert, StyleSheet,
+  ScrollView, Image, StyleSheet,
   StatusBar, Platform, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {IcPhone, IcUser, IcDesc, IcNote, IcCamera, IcGPS, IcTrash, IcSend, IcEdit} from '../constants/icons';
+import {IcPhone, IcUser, IcDesc, IcNote, IcCamera, IcGPS, IcTrash, IcSend, IcEdit, IcVideo, IcPlay} from '../constants/icons';
 
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
+import ConfirmModal from '../utils/ConfirmModal';
+import AlertModal from '../utils/AlertModal';
 
 export default function ReportScreen() {
   const [name, setName] = useState('');
@@ -20,12 +22,18 @@ export default function ReportScreen() {
   const [location, setLocation] = useState(null);
   const [locationNote, setLocationNote] = useState('');
   const [images, setImages] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
   const [editingName, setEditingName] = useState(false);
   const [editingContact, setEditingContact] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone, onOk } | null
+
+  const notify = (title, message, tone = 'error', onOk) =>
+    setAlertInfo({ title, message, tone, onOk });
 
   useEffect(() => {
     getLocation();
@@ -53,7 +61,7 @@ export default function ReportScreen() {
       setLocLoading(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Location is required to submit a report.');
+        notify('Permission denied', 'Location is required to submit a report.', 'error');
         return;
       }
       const lastKnown = await Location.getLastKnownPositionAsync();
@@ -72,20 +80,29 @@ export default function ReportScreen() {
     setRefreshing(false);
   };
 
-  const pickImage = async () => {
+  const pickMedia = async () => {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert('Permission required', 'Allow access to your photos.');
+        notify('Permission required', 'Allow access to your photos and videos.', 'error');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images', 'videos'],
         allowsMultipleSelection: true,
         quality: 0.7,
+        videoMaxDuration: 60,
       });
       if (!result.canceled) {
-        setImages(result.assets.map(a => a.uri));
+        const pickedImages = result.assets.filter(a => a.type !== 'video').map(a => a.uri);
+        const pickedVideos = result.assets.filter(a => a.type === 'video').map(a => a.uri);
+
+        if (pickedImages.length) {
+          setImages(prev => [...prev, ...pickedImages].slice(0, 5));
+        }
+        if (pickedVideos.length) {
+          setVideos(prev => [...prev, ...pickedVideos].slice(0, 2));
+        }
       }
     } catch (err) { console.log(err); }
   };
@@ -94,24 +111,32 @@ export default function ReportScreen() {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const submitReport = async () => {
+  const removeVideo = (index) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const submitReport = () => {
     if (!location) {
-      Alert.alert('Error', 'Location not ready. Tap Get My Location first.');
+      notify('Error', 'Location not ready. Tap Get My Location first.', 'error');
       return;
     }
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your full name.');
+      notify('Error', 'Please enter your full name.', 'error');
       return;
     }
     if (!contact.trim()) {
-      Alert.alert('Error', 'Please enter your contact number.');
+      notify('Error', 'Please enter your contact number.', 'error');
       return;
     }
     if (!description.trim()) {
-      Alert.alert('Error', 'Please add a description.');
+      notify('Error', 'Please add a description.', 'error');
       return;
     }
+    setConfirmSubmit(true);
+  };
 
+  const doSubmit = async () => {
+    setConfirmSubmit(false);
     try {
       setSubmitting(true);
       const token = await AsyncStorage.getItem('token');
@@ -130,6 +155,14 @@ export default function ReportScreen() {
           type: 'image/jpeg',
         });
       });
+      videos.forEach((vid, i) => {
+        const ext = vid.split('.').pop()?.split('?')[0] || 'mp4';
+        formData.append('videos', {
+          uri: vid,
+          name: `report_video_${i}.${ext}`,
+          type: `video/${ext === 'mov' ? 'quicktime' : ext}`,
+        });
+      });
 
       const res = await fetch(`${api_url}/api/reports`, {
         method: 'POST',
@@ -141,21 +174,22 @@ export default function ReportScreen() {
       try { data = await res.json(); } catch (e) { console.log(e); }
 
       if (!res.ok) {
-        Alert.alert('Error', data?.message || 'Failed to submit report. Please try again.');
+        notify('Error', data?.message || 'Failed to submit report. Please try again.', 'error');
         return;
       }
 
-      Alert.alert('Success', 'Report submitted successfully!');
+      notify('Success', 'Report submitted successfully!', 'success');
       setDescription('');
       setLocationNote('');
       setImages([]);
+      setVideos([]);
       setEditingName(false);
       setEditingContact(false);
       if (!userId) { setName(''); setContact(''); }
 
     } catch (err) {
       console.log(err);
-      Alert.alert('Error', 'Failed to submit report');
+      notify('Error', 'Failed to submit report', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -290,22 +324,36 @@ export default function ReportScreen() {
           <Field icon={<IcNote/>} placeholder="Landmark or description (e.g. near barangay hall)" value={locationNote} onChangeText={setLocationNote}/>
         </View>
 
-        <Text style={s.secLabel}>PHOTOS (optional)</Text>
+        <Text style={s.secLabel}>PHOTOS & VIDEOS (optional)</Text>
         <View style={s.card}>
-          <TouchableOpacity style={s.photoBtn} onPress={pickImage} activeOpacity={0.8}>
+          <TouchableOpacity style={s.photoBtn} onPress={pickMedia} activeOpacity={0.8}>
             <View style={s.photoBtnIcon}><IcCamera/></View>
             <View>
-              <Text style={s.photoBtnTitle}>Select Photos</Text>
-              <Text style={s.photoBtnSub}>Up to 5 images</Text>
+              <Text style={s.photoBtnTitle}>Select Photos or Videos</Text>
+              <Text style={s.photoBtnSub}>Up to 5 images and 2 videos (max 60s each)</Text>
             </View>
           </TouchableOpacity>
 
-          {images.length > 0 && (
+          {(images.length > 0 || videos.length > 0) && (
             <View style={s.imgGrid}>
               {images.map((img, i) => (
-                <View key={i} style={s.imgWrap}>
+                <View key={`img-${i}`} style={s.imgWrap}>
                   <Image source={{ uri: img }} style={s.imgThumb} resizeMode="cover"/>
                   <TouchableOpacity style={s.imgDel} onPress={() => removeImage(i)}>
+                    <IcTrash/>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              {videos.map((vid, i) => (
+                <View key={`vid-${i}`} style={s.imgWrap}>
+                  <View style={[s.imgThumb, s.videoThumb]}>
+                    <IcVideo s={22} c="#fff"/>
+                    <Text style={s.videoThumbLabel}>Video {i + 1}</Text>
+                  </View>
+                  <View style={s.videoBadge} pointerEvents="none">
+                    <IcPlay s={20}/>
+                  </View>
+                  <TouchableOpacity style={s.imgDel} onPress={() => removeVideo(i)}>
                     <IcTrash/>
                   </TouchableOpacity>
                 </View>
@@ -335,6 +383,27 @@ export default function ReportScreen() {
           All information is kept confidential.
         </Text>
       </ScrollView>
+
+      <ConfirmModal
+        visible={confirmSubmit}
+        title="Submit this report?"
+        message="Please make sure the details and location are accurate before sending."
+        confirmLabel="Submit"
+        onConfirm={doSubmit}
+        onCancel={() => setConfirmSubmit(false)}
+      />
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => {
+          const cb = alertInfo?.onOk;
+          setAlertInfo(null);
+          if (cb) cb();
+        }}
+      />
     </View>
   );
 }
@@ -393,6 +462,9 @@ const s = StyleSheet.create({
   imgGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 6 },
   imgWrap:      { position: 'relative' },
   imgThumb:     { width: 90, height: 90, borderRadius: 10 },
+  videoThumb:   { backgroundColor: '#1b1b1b', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  videoThumbLabel: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  videoBadge:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   imgDel:       { position: 'absolute', top: 5, right: 5, width: 24, height: 24, borderRadius: 8, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
   submitBtn:    { backgroundColor: C.green, borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14, shadowColor: C.green, shadowOpacity: 0.35, shadowRadius: 10, elevation: 4 },
   submitTxt:    { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },

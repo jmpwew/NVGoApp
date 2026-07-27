@@ -204,7 +204,7 @@ export default function NewsPage() {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <th>News # </th>
             <th>Image</th>
             <th>Title</th>
             <th>Category</th>
@@ -218,7 +218,7 @@ export default function NewsPage() {
           ) : (
             newsList.map(n => (
               <tr key={n.id}>
-                <td>#{n.id}</td>
+                <td>{n.id}</td>
                 <td>
                   {n.image ? (
                     <img

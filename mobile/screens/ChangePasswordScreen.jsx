@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView,
+  StyleSheet, ScrollView,
   StatusBar, Platform, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 import { C } from '../constants/colors';
 import { IcBack, IcEye, IcCheck, IcLock } from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 
 
 /* Password field  */
@@ -50,21 +51,24 @@ export default function ChangePasswordScreen({ navigation }) {
   const [showNew,    setShowNew]    = useState(false);
   const [showConfirm,setShowConfirm]= useState(false);
   const [saving,     setSaving]     = useState(false);
+  const [alertInfo,  setAlertInfo]  = useState(null); // { title, message, tone } | null
+
+  const notify = (title, message, tone = 'error') => setAlertInfo({ title, message, tone });
 
   const strength = getStrength(newPw);
 
   /*  Validation */
   const validate = () => {
     if (!currentPw) {
-      Alert.alert('Error', 'Please enter your current password.');
+      notify('Error', 'Please enter your current password.', 'error');
       return false;
     }
     if (newPw.length < 6) {
-      Alert.alert('Error', 'New password must be at least 6 characters.');
+      notify('Error', 'New password must be at least 6 characters.', 'error');
       return false;
     }
     if (newPw !== confirmPw) {
-      Alert.alert('Error', 'Passwords do not match.');
+      notify('Error', 'Passwords do not match.', 'error');
       return false;
     }
     return true;
@@ -77,7 +81,7 @@ export default function ChangePasswordScreen({ navigation }) {
     try {
       setSaving(true);
       const stored = await AsyncStorage.getItem('user');
-      if (!stored) { Alert.alert('Error', 'No user found.'); return; }
+      if (!stored) { notify('Error', 'No user found.', 'error'); return; }
 
       const user = JSON.parse(stored);
 
@@ -94,15 +98,15 @@ export default function ChangePasswordScreen({ navigation }) {
       const data = await res.json();
 
       if (!res.ok) {
-        Alert.alert('Error', data.message || 'Failed to change password.');
+        notify('Error', data.message || 'Failed to change password.', 'error');
         return;
       }
 
-      Alert.alert('Success', 'Password changed successfully!');
+      notify('Success', 'Password changed successfully!', 'success');
       navigation.goBack();
     } catch (err) {
       console.log('CHANGE PW ERROR:', err);
-      Alert.alert('Error', 'Something went wrong.');
+      notify('Error', 'Something went wrong.', 'error');
     } finally {
       setSaving(false);
     }
@@ -250,6 +254,14 @@ export default function ChangePasswordScreen({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => setAlertInfo(null)}
+      />
     </View>
   );
 }

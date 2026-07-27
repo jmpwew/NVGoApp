@@ -264,7 +264,7 @@ export default function NotificationsPage() {
         <table style={{ tableLayout: 'fixed', width: '100%' }}>
           <thead>
             <tr>
-              <th style={{ width: 50 }}>ID</th>
+             
               <th style={{ width: 80 }}>Type</th>
               <th style={{ width: 150 }}>Title</th>
               <th>Message</th>
@@ -283,7 +283,7 @@ export default function NotificationsPage() {
                   style={{ cursor: 'pointer', background: editingId === n.id ? '#f1f8f4' : undefined }}
                   title="Click to view full notification"
                 >
-                  <td>#{n.id}</td>
+                 
                   <td>
                     <span style={badgeStyle(tb.bg, tb.color)}>
                       {n.type}

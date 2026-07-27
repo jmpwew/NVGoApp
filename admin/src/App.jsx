@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage         from './pages/LoginPage';
-import DashboardPage     from './pages/DashboardPage';
-import ReportsPage       from './pages/ReportsPage';
-import UsersPage         from './pages/UsersPage';
-import NewsPage          from './pages/NewsPage';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import ReportsPage from './pages/ReportsPage';
+import UsersPage from './pages/UsersPage';
+import NewsPage from './pages/NewsPage';
 import NotificationsPage from './pages/NotificationsPage';
-import SupportPage       from './pages/SupportPage';
-import HotlinesPage      from './pages/HotlinesPage';
-import ProfilePage       from './pages/ProfilePage';
+import SupportPage from './pages/SupportPage';
+import HotlinesPage from './pages/HotlinesPage';
+import ProfilePage from './pages/ProfilePage';
 import VerifierDashboard from './pages/VerifierDashboard';
-import OfficeDashboard   from './pages/OfficeDashboard';
-import Header            from './components/Header';
-import Sidebar           from './components/Sidebar';
+import OfficeDashboard  from './pages/OfficeDashboard';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import './index.css';
 
 const API = 'http://localhost:5000';
@@ -26,7 +26,7 @@ function getStoredRole() {
   }
 }
 
-// Where each role should land after login / on an unauthorized route
+
 function homeRouteForRole(role) {
   if (role === 'admin') return '/dashboard';
   if (role === 'verifier') return '/verifier';
@@ -40,7 +40,7 @@ function Layout({ children }) {
   const role = getStoredRole();
 
   useEffect(() => {
-    // stats/badges endpoint is admin-only; skip it for other roles
+  
     if (role !== 'admin') return;
 
     let cancelled = false;
@@ -63,7 +63,7 @@ function Layout({ children }) {
     }
 
     fetchBadges();
-    const interval = setInterval(fetchBadges, 20000);
+    const interval = setInterval(fetchBadges, 5000);
     return () => { cancelled = true; clearInterval(interval); };
   }, [role]);
 

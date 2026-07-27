@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert,
+  View, Text, TextInput, TouchableOpacity,
   StyleSheet, StatusBar, Platform, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Image,
 } from 'react-native';
@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcMail, IcLock, IcEye} from '../constants/icons';
+import AlertModal from '../utils/AlertModal';
 import { registerPushToken } from '../utils/registerPushToken';
 
 
@@ -56,10 +57,13 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
+
+  const notify = (title, message) => setAlertInfo({ title, message });
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Required', 'Please enter your email and password.');
+      notify('Required', 'Please enter your email and password.');
       return;
     }
     try {
@@ -71,7 +75,7 @@ export default function LoginScreen({ navigation }) {
       });
       const data = await response.json();
       if (!response.ok) {
-        Alert.alert('Login failed', data.message || 'Invalid credentials.');
+        notify('Login failed', data.message || 'Invalid credentials.');
         return;
       }
       await AsyncStorage.setItem('token', data.token);
@@ -80,7 +84,7 @@ export default function LoginScreen({ navigation }) {
       navigation.replace('Main');
     } catch (err) {
       console.log(err);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      notify('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -178,6 +182,14 @@ export default function LoginScreen({ navigation }) {
           Municipality of Nueva Valencia, Guimaras
         </Text>
       </ScrollView>
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone="error"
+        onClose={() => setAlertInfo(null)}
+      />
     </KeyboardAvoidingView>
   );
 }

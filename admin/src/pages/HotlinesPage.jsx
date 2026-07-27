@@ -148,7 +148,7 @@ export default function HotlinesPage() {
       <table>
         <thead>
           <tr>
-            <th>#</th>
+          
             <th>Name</th>
             <th>Number</th>
             <th>Category</th>
@@ -164,7 +164,7 @@ export default function HotlinesPage() {
               const cc = categoryColors[h.category] || categoryColors.General;
               return (
                 <tr key={h.id}>
-                  <td>#{h.id}</td>
+                 
                   <td style={{ fontWeight: 600 }}>{h.name}</td>
                   <td style={{ fontFamily: 'monospace', fontSize: 14 }}>{h.number}</td>
                   <td>

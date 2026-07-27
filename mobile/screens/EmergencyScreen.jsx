@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  StatusBar, Platform, Linking, Alert, RefreshControl, ActivityIndicator
+  StatusBar, Platform, Linking, RefreshControl, ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcPhone } from '../constants/icons';
+import ConfirmModal from '../utils/ConfirmModal';
+import AlertModal from '../utils/AlertModal';
 
 const categoryStyle = {
   Emergency: { bg: C.greenLt, ic: C.green, label: 'Emergency' },
@@ -25,6 +27,8 @@ export default function EmergencyScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   // true when what's on screen came from cache, not a fresh fetch
   const [isOffline, setIsOffline]   = useState(false);
+  const [confirmCall, setConfirmCall] = useState(null); // { name, number } | null
+  const [offlineAlert, setOfflineAlert] = useState(false);
 
   const loadCachedHotlines = async () => {
     try {
@@ -58,10 +62,7 @@ export default function EmergencyScreen({ navigation }) {
       const hadCache = await loadCachedHotlines();
       setIsOffline(true);
       if (!hadCache) {
-        Alert.alert(
-          'No connection',
-          "Couldn't load hotlines and no saved copy was found. Please check your connection."
-        );
+        setOfflineAlert(true);
       }
     } finally {
       setLoading(false);
@@ -77,14 +78,7 @@ export default function EmergencyScreen({ navigation }) {
   }, []);
 
   const handleCall = (name, number) => {
-    Alert.alert(
-      `Call ${name}`,
-      `You are about to call ${number}.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Call Now', style: 'destructive', onPress: () => Linking.openURL(`tel:${number}`) },
-      ]
-    );
+    setConfirmCall({ name, number });
   };
 
   const grouped = hotlines.reduce((acc, h) => {
@@ -171,6 +165,27 @@ export default function EmergencyScreen({ navigation }) {
           <Text style={s.footer}>Keep these numbers handy — every second counts.</Text>
         </ScrollView>
       )}
+
+      <ConfirmModal
+        visible={!!confirmCall}
+        title={`Call ${confirmCall?.name}`}
+        message={`You are about to call ${confirmCall?.number}.`}
+        confirmLabel="Call Now"
+        tone="danger"
+        onConfirm={() => {
+          Linking.openURL(`tel:${confirmCall.number}`);
+          setConfirmCall(null);
+        }}
+        onCancel={() => setConfirmCall(null)}
+      />
+
+      <AlertModal
+        visible={offlineAlert}
+        title="No connection"
+        message="Couldn't load hotlines and no saved copy was found. Please check your connection."
+        tone="error"
+        onClose={() => setOfflineAlert(false)}
+      />
     </View>
   );
 }

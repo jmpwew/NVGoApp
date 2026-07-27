@@ -1,79 +1,77 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, Alert, ScrollView,
+  StyleSheet, ScrollView,
   StatusBar, Platform, ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 import { C } from '../constants/colors';
 import { IcBack, IcTrash, IcEye } from '../constants/icons';
+import ConfirmModal from '../utils/ConfirmModal';
+import AlertModal from '../utils/AlertModal';
 
 export default function DeleteAccountScreen({ navigation }) {
-  const [password, setPassword]   = useState('');
-  const [showPw, setShowPw]       = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [deleting, setDeleting]   = useState(false);
+  const [password, setPassword]     = useState('');
+  const [showPw, setShowPw]         = useState(false);
+  const [confirmed, setConfirmed]   = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [alertInfo, setAlertInfo]   = useState(null); // { title, message, tone, onOk } | null
 
-  const handleDelete = async () => {
+  const notify = (title, message, tone = 'error', onOk) =>
+    setAlertInfo({ title, message, tone, onOk });
+
+  const handleDelete = () => {
     if (!password) {
-      Alert.alert('Required', 'Please enter your password to confirm.');
+      notify('Required', 'Please enter your password to confirm.');
       return;
     }
     if (!confirmed) {
-      Alert.alert('Required', 'Please check the confirmation box.');
+      notify('Required', 'Please check the confirmation box.');
       return;
     }
+    setConfirmDelete(true);
+  };
 
-    Alert.alert(
-      'Final Warning',
-      'This will permanently delete your account and all your data. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete My Account',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleting(true);
-              const stored = await AsyncStorage.getItem('user');
-              const token  = await AsyncStorage.getItem('token');
-              if (!stored || !token) return;
+  const doDelete = async () => {
+    setConfirmDelete(false);
+    try {
+      setDeleting(true);
+      const stored = await AsyncStorage.getItem('user');
+      const token  = await AsyncStorage.getItem('token');
+      if (!stored || !token) return;
 
-              const user = JSON.parse(stored);
+      const user = JSON.parse(stored);
 
-              const res = await fetch(`${api_url}/api/auth/delete-account`, {
-                method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ user_id: user.id, password }),
-              });
-
-              const data = await res.json();
-
-              if (!res.ok) {
-                Alert.alert('Error', data.message || 'Failed to delete account.');
-                return;
-              }
-
-              await AsyncStorage.removeItem('user');
-              await AsyncStorage.removeItem('token');
-
-              Alert.alert('Account Deleted', 'Your account has been permanently deleted.', [
-                { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Login' }] }) },
-              ]);
-            } catch (err) {
-              console.log(err);
-              Alert.alert('Error', 'Something went wrong. Please try again.');
-            } finally {
-              setDeleting(false);
-            }
-          },
+      const res = await fetch(`${api_url}/api/auth/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+        body: JSON.stringify({ user_id: user.id, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify('Error', data.message || 'Failed to delete account.', 'error');
+        return;
+      }
+
+      await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('token');
+
+      notify('Account Deleted', 'Your account has been permanently deleted.', 'success', () =>
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+      );
+    } catch (err) {
+      console.log(err);
+      notify('Error', 'Something went wrong. Please try again.', 'error');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -169,6 +167,28 @@ export default function DeleteAccountScreen({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <ConfirmModal
+        visible={confirmDelete}
+        title="Final Warning"
+        message="This will permanently delete your account and all your data. This cannot be undone."
+        confirmLabel="Delete My Account"
+        tone="danger"
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
+
+      <AlertModal
+        visible={!!alertInfo}
+        title={alertInfo?.title}
+        message={alertInfo?.message}
+        tone={alertInfo?.tone}
+        onClose={() => {
+          const cb = alertInfo?.onOk;
+          setAlertInfo(null);
+          if (cb) cb();
+        }}
+      />
     </View>
   );
 }

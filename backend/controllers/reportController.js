@@ -7,15 +7,18 @@ exports.createReport = async (req, res) => {
     const user_id = req.user?.id || null;
     const { name, contact, description, latitude, longitude, location_note } = req.body;
 
-    const images = req.files
-      ? req.files.map(file => file.filename)
+    const images = req.files?.images
+      ? req.files.images.map(file => file.filename)
+      : [];
+    const videos = req.files?.videos
+      ? req.files.videos.map(file => file.filename)
       : [];
 
     const result = await pool.query(
-      `INSERT INTO reports (user_id, name, contact, description, latitude, longitude, images, location_note)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO reports (user_id, name, contact, description, latitude, longitude, images, videos, location_note)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [user_id, name, contact, description, latitude, longitude, images, location_note]
+      [user_id, name, contact, description, latitude, longitude, images, videos, location_note]
     );
 
     const newReport = result.rows[0];

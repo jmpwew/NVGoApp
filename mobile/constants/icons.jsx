@@ -95,6 +95,21 @@ export const IcCamera = ({ s = 18, c = '#136835' }) => (
   </Svg>
 );
 
+export const IcVideo = ({ s = 18, c = '#136835' }) => (
+  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
+    <Rect x="2.5" y="5.5" width="12" height="11" rx="2.5" stroke={c} strokeWidth="1.4"/>
+    <Path d="M14.5 9.5l4.5-2.5v9l-4.5-2.5" stroke={c} strokeWidth="1.4"
+      strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+export const IcPlay = ({ s = 22, c = '#fff' }) => (
+  <Svg width={s} height={s} viewBox="0 0 22 22" fill="none">
+    <Circle cx="11" cy="11" r="10" fill="rgba(0,0,0,0.45)"/>
+    <Path d="M9 7.5l6 3.5-6 3.5v-7z" fill={c}/>
+  </Svg>
+);
+
 export const IcTrash = ({ c = C.red }) => (
   <Svg width={16} height={16} viewBox="0 0 16 16" fill="none">
     <Path d="M2 4h12M5 4V2.5a.5.5 0 01.5-.5h5a.5.5 0 01.5.5V4M6 7v5M10 7v5"
@@ -227,16 +242,23 @@ export const IcBell2 = ({ s = 17, c = '#29ABE2' }) => (
     <Path d="M7 14a2 2 0 004 0" stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
   </Svg>
 );
-export const IcAlert = ({ c = C.yellowDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
+export const IcAlert = ({ s = 18, c = C.yellowDk }) => (
+  <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
     <Path d="M9 1.5L1.5 15.5h15L9 1.5z" stroke={c} strokeWidth="1.4" strokeLinejoin="round"/>
     <Rect x="8.3" y="7" width="1.4" height="4.5" rx="0.7" fill={c}/>
     <Circle cx="9" cy="13" r="0.9" fill={c}/>
   </Svg>
 );
 
-export const IcInfo = ({ c = C.skyDk }) => (
-  <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
+export const IcX = ({ s = 18, c = C.red }) => (
+  <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
+    <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
+    <Path d="M6.5 6.5l5 5M11.5 6.5l-5 5" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
+  </Svg>
+);
+
+export const IcInfo = ({ s = 18, c = C.skyDk }) => (
+  <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
     <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
     <Path d="M9 8v5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
     <Circle cx="9" cy="5.5" r="1" fill={c}/>

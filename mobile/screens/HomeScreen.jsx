@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, StatusBar, Dimensions, Platform,
-  Linking, Alert,  RefreshControl
+  Linking, RefreshControl
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
@@ -15,6 +15,7 @@ const { width } = Dimensions.get('window');
 
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
+import ConfirmModal from '../utils/ConfirmModal';
 
 // Weather code 
 import { weatherInfo} from '../utils/weather.js';
@@ -27,6 +28,7 @@ export default function HomeScreen({ navigation }) {
   const [latestNews, setLatestNews] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmEmergencyCall, setConfirmEmergencyCall] = useState(false);
 
   useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews();
 
@@ -92,22 +94,8 @@ export default function HomeScreen({ navigation }) {
   const wInfo = weather ? weatherInfo(weather.weathercode) : null;
   
   const handleEmergencyCall = () => {
-  Alert.alert(
-    'Emergency Call',
-    'You are about to call 911 emergency services.',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Call 911',
-        style: 'destructive',
-        onPress: () => Linking.openURL('tel:911'),
-      },
-    ]
-  );
-};
+    setConfirmEmergencyCall(true);
+  };
 
   //render
   return (
@@ -331,6 +319,19 @@ export default function HomeScreen({ navigation }) {
   </View>
 </TouchableOpacity>
 </ScrollView>
+
+      <ConfirmModal
+        visible={confirmEmergencyCall}
+        title="Emergency Call"
+        message="You are about to call 911 emergency services."
+        confirmLabel="Call 911"
+        tone="danger"
+        onConfirm={() => {
+          setConfirmEmergencyCall(false);
+          Linking.openURL('tel:911');
+        }}
+        onCancel={() => setConfirmEmergencyCall(false)}
+      />
     </View>
   );
 }

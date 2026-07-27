@@ -115,8 +115,7 @@ export default function App() {
 
           <Stack.Screen
             name="MoreFeatures"
-            component={MoreFeaturesScreen}
-            options={{ headerShown: false }}
+            component={MoreFeaturesScreen} options={{ headerShown: false }}
           />
 
           <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ headerShown: false }} />
