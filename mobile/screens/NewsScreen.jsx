@@ -4,6 +4,7 @@ import { View, Text, FlatList, TouchableOpacity,
   StatusBar, Platform, RefreshControl, ScrollView
 } from 'react-native';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import Svg, { Path } from 'react-native-svg';
 import { IcSearch, IcClock, IcEye, IcChevron, IcEmpty} from '../constants/icons';
 
@@ -34,7 +35,7 @@ const formatDate = (dateStr) => {
 const FeaturedCard = ({ item, onPress, catConfig }) => (
   <TouchableOpacity style={s.featCard} onPress={onPress} activeOpacity={0.9}>
     {item.image
-      ? <Image source={{ uri: `${api_url}/uploads/${item.image}` }} style={s.featImg} resizeMode="cover"/>
+      ? <Image source={{ uri: getImageUrl(item.image) }} style={s.featImg} resizeMode="cover"/>
       : <View style={[s.featImg, { backgroundColor: C.greenDk }]}/>
     }
     <View style={s.featOverlay}/>
@@ -100,7 +101,7 @@ const NewsCard = ({ item, onPress, catConfig }) => (
     <View style={s.newsRight}>
       {item.image ? (
         <Image
-          source={{ uri: `${api_url}/uploads/${item.image}` }}
+          source={{ uri: getImageUrl(item.image) }}
           style={s.newsThumb}
           resizeMode="cover"
         />

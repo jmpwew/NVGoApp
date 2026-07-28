@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import { IcEdit, IcBack} from '../constants/icons';
 
 
@@ -35,7 +36,7 @@ export default function ProfileScreen({ navigation }) {
     if (stored) setUser(JSON.parse(stored));
   };
 
-  const imageUrl = user?.image ? `${api_url}/uploads/${user.image}` : null;
+  const imageUrl = getImageUrl(user?.image);
 
   return (
     <View style={s.root}>

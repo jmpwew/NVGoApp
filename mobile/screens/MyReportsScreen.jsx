@@ -16,6 +16,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import { IcVideo, IcPlay } from '../constants/icons';
 
 const STATUS_STYLE = {
@@ -202,7 +203,7 @@ export default function MyReportsScreen({ navigation }) {
                   style={styles.imageList}
                   renderItem={({ item: img }) => (
                     <Image
-                      source={{ uri: `${api_url}/uploads/${img}` }}
+                      source={{ uri: getImageUrl(img) }}
                       style={styles.image}
                     />
                   )}
@@ -221,7 +222,7 @@ export default function MyReportsScreen({ navigation }) {
                     <TouchableOpacity
                       style={styles.videoChip}
                       activeOpacity={0.85}
-                      onPress={() => Linking.openURL(`${api_url}/uploads/${vid}`)}
+                      onPress={() => Linking.openURL(getImageUrl(vid))}
                     >
                       <IcVideo s={16} c="#fff" />
                       <Text style={styles.videoChipText}>Video {index + 1}</Text>

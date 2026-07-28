@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield, IcLock, IcTrash } from '../constants/icons';
 
 import {C} from '../constants/colors';
@@ -68,7 +69,7 @@ export default function ProfileScreen({ navigation }) {
    
 
 
-  const imageUrl = user?.image ? `${api_url}/uploads/${user.image}?t=${Date.now()}` : null;
+  const imageUrl = getImageUrl(user?.image, true);
 
   return (
     <View style={s.root}>

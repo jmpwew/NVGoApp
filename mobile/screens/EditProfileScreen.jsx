@@ -9,6 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import { IcBack, IcCamera, IcSave, IcLock, IcChevron} from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
 
@@ -134,7 +135,7 @@ export default function EditProfileScreen({ navigation }) {
   const avatarSource = image
     ? { uri: image.uri }
     : currentImage
-      ? { uri: `${api_url}/uploads/${currentImage}?t=${Date.now()}` }
+      ? { uri: getImageUrl(currentImage, true) }
       : require('../assets/default-avatar.png');
 
   /* rednerr */

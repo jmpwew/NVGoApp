@@ -15,6 +15,7 @@ const { width } = Dimensions.get('window');
 
 import {C} from '../constants/colors';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import ConfirmModal from '../utils/ConfirmModal';
 
 // Weather code 
@@ -125,7 +126,7 @@ export default function HomeScreen({ navigation }) {
                 <Image
                   source={
                     user?.image
-                      ? { uri: `${api_url}/uploads/${user.image}` }
+                      ? { uri: getImageUrl(user.image) }
                       : require('../assets/default-avatar.png')
                   }
                   style={s.avatar}
@@ -262,7 +263,7 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity style={s.featured} activeOpacity={0.9}
               onPress={() => navigation.navigate('NewsDetail', { news: latestNews[0] })}>
               {latestNews[0].image
-                ? <Image source={{ uri:`${api_url}/uploads/${latestNews[0].image}` }} style={s.featuredImg}/>
+                ? <Image source={{ uri: getImageUrl(latestNews[0].image) }} style={s.featuredImg}/>
                 : <View style={[s.featuredImg, { backgroundColor: C.greenDk }]}/>}
               <View style={s.featuredOverlay}/>
               <View style={s.featuredContent}>
@@ -279,7 +280,7 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity key={item.id} style={s.newsRow} activeOpacity={0.8}
                 onPress={() => navigation.navigate('NewsDetail', { news: item })}>
                 {item.image
-                  ? <Image source={{ uri:`${api_url}/uploads/${item.image}` }} style={s.newsThumb}/>
+                  ? <Image source={{ uri: getImageUrl(item.image) }} style={s.newsThumb}/>
                   : <View style={[s.newsThumb, s.newsThumbEmpty]}><IcNews s={20} c={C.skyDk}/></View>}
                 <View style={s.newsBody}>
                   <View style={s.newsTagWrap}><Text style={s.newsTagTxt}>NEWS</Text></View>

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 import { IcBack, IcClock, IcTag} from '../constants/icons';
 
 
@@ -36,7 +37,7 @@ export default function NewsDetailScreen({ route, navigation }) {
         {/* Image */}
         {news.image ? (
           <Image
-            source={{ uri: `${api_url}/uploads/${news.image}` }}
+            source={{ uri: getImageUrl(news.image) }}
             style={s.image}
             resizeMode="cover"
           />
