@@ -1,17 +1,9 @@
 const bcrypt = require('bcrypt');
 const pool = require('../config/db');
-const nodemailer = require('nodemailer');
+const sendEmail = require('../utils/sendEmail');
 
 // In-memory OTP store: { email: { otp, expiresAt } }
 const otpStore = {};
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 // POST /api/auth/forgot-password
 exports.sendOtp = async (req, res) => {
@@ -30,9 +22,9 @@ exports.sendOtp = async (req, res) => {
 
     otpStore[email] = { otp, expiresAt };
 
-    await transporter.sendMail({
-      from: `"NVGo App" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to: email,
+      toName: user.firstname,
       subject: 'Your NVGo Password Reset Code',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">

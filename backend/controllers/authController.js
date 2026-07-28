@@ -1,26 +1,18 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
+const sendEmail = require('../utils/sendEmail');
 
 // In-memory pending-registration store: { email: { otp, expiresAt, data } }
 const pendingRegistrations = {};
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendRegisterOtpEmail = async (email, firstname, otp) => {
-  await transporter.sendMail({
-    from: `"NVGo App" <${process.env.EMAIL_USER}>`,
+  await sendEmail({
     to: email,
+    toName: firstname,
     subject: 'Verify your NVGo account',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
