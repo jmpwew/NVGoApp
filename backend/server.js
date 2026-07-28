@@ -50,8 +50,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/auth/password', changePasswordRoute);
 app.use('/api/hotlines', hotlineRoutes);
 
-/* STATIC FILES */
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 
 
@@ -61,7 +60,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* TEST */
 app.get('/', (req, res) => {
-  res.send('NVGo API is running');
+  res.send('NVGo is running');
 });
 
 const PORT = process.env.PORT || 5000;

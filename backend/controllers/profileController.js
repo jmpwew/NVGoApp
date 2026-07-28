@@ -1,11 +1,14 @@
 const pool = require('../config/db');
+const { uploadToFirebase } = require('../utils/uploadToFirebase');
 
 exports.updateProfile = async (req, res) => {
   try {
-    const user_id = req.user.id; // ← from token, not body
+    const user_id = req.user.id;
     const { firstname, lastname, email, contact, address } = req.body;
 
-    const filename = req.file ? req.file.filename : null;
+    const imageUrl = req.file
+      ? await uploadToFirebase(req.file, 'profile-images')
+      : null;
 
     const result = await pool.query(
       `UPDATE users
@@ -17,7 +20,7 @@ exports.updateProfile = async (req, res) => {
            image     = COALESCE($6, image)
        WHERE id = $7
        RETURNING id, firstname, lastname, email, contact, address, role, image`,
-      [firstname, lastname, email, contact, address, filename, user_id]
+      [firstname, lastname, email, contact, address, imageUrl, user_id]
     );
 
     if (result.rows.length === 0) {

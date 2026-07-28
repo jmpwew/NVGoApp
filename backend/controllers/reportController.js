@@ -1,18 +1,15 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { createAlert } = require('./alertController');
+const { uploadManyToFirebase } = require('../utils/uploadToFirebase');
 
 exports.createReport = async (req, res) => {
   try {
     const user_id = req.user?.id || null;
     const { name, contact, description, latitude, longitude, location_note } = req.body;
 
-    const images = req.files?.images
-      ? req.files.images.map(file => file.filename)
-      : [];
-    const videos = req.files?.videos
-      ? req.files.videos.map(file => file.filename)
-      : [];
+    const images = await uploadManyToFirebase(req.files?.images, 'report-images');
+    const videos = await uploadManyToFirebase(req.files?.videos, 'report-videos');
 
     const result = await pool.query(
       `INSERT INTO reports (user_id, name, contact, description, latitude, longitude, images, videos, location_note)
@@ -23,7 +20,7 @@ exports.createReport = async (req, res) => {
 
     const newReport = result.rows[0];
 
-    // fire-and-forget: don't let a bell-notification failure break report submission
+    
     createAlert({
       type: 'report',
       related_id: newReport.id,
@@ -53,7 +50,7 @@ exports.createReport = async (req, res) => {
       if (pushToken) {
         await sendPushNotification(
           [pushToken],
-          '✅ Report Submitted',
+          'Report Submitted',
           'Your report has been received. We will review it shortly.'
         );
       }

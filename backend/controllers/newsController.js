@@ -1,12 +1,12 @@
 const pool = require('../config/db');
+const { uploadToFirebase } = require('../utils/uploadToFirebase');
 
 exports.createNews = async (req, res) => {
   try {
-    console.log('BODY:', req.body);
-    console.log('FILE:', req.file);
-
     const { title, content, category } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const image = req.file
+      ? await uploadToFirebase(req.file, 'news-images')
+      : null;
 
     const result = await pool.query(
       `INSERT INTO news (title, content, category, image)

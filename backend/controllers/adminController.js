@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
+const { uploadToFirebase } = require('../utils/uploadToFirebase');
 
 // dashboard
 exports.getStats = async (req, res) => {
@@ -99,7 +100,7 @@ exports.getRecentActivity = async (req, res) => {
   }
 };
 
-// ── Reports ────────────────────────────────────────────────────
+//  Reports 
 
 exports.getAllReports = async (req, res) => {
   try {
@@ -116,9 +117,7 @@ exports.getAllReports = async (req, res) => {
   }
 };
 
-// Full trail for the main admin: reporter -> verifier -> every office's assignment/action.
-// Each report includes a `verifier` object (null if not yet verified) and an
-// `assignments` array (one entry per office it was turned over to).
+
 exports.getFullReportTrail = async (req, res) => {
   try {
     const reportsResult = await pool.query(
@@ -249,7 +248,9 @@ exports.getAllNews = async (req, res) => {
 exports.createNews = async (req, res) => {
   try {
     const { title, content, category } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const image = req.file
+      ? await uploadToFirebase(req.file, 'news-images')
+      : null;
     const result = await pool.query(
       `INSERT INTO news (title, content, category, image, created_by)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -279,7 +280,9 @@ exports.createNews = async (req, res) => {
 exports.updateNews = async (req, res) => {
   try {
     const { title, content, category } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const image = req.file
+      ? await uploadToFirebase(req.file, 'news-images')
+      : null;
 
     const result = image
       ? await pool.query(
