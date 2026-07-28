@@ -1,15 +1,15 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { createAlert } = require('./alertController');
-const { uploadManyToFirebase } = require('../utils/uploadToFirebase');
+const { uploadManyToSupabase } = require('../utils/uploadToSupabase');
 
 exports.createReport = async (req, res) => {
   try {
     const user_id = req.user?.id || null;
     const { name, contact, description, latitude, longitude, location_note } = req.body;
 
-    const images = await uploadManyToFirebase(req.files?.images, 'report-images');
-    const videos = await uploadManyToFirebase(req.files?.videos, 'report-videos');
+    const images = await uploadManyToSupabase(req.files?.images, 'report-images');
+    const videos = await uploadManyToSupabase(req.files?.videos, 'report-videos');
 
     const result = await pool.query(
       `INSERT INTO reports (user_id, name, contact, description, latitude, longitude, images, videos, location_note)

@@ -1,5 +1,5 @@
 const pool = require('../config/db');
-const { uploadToFirebase } = require('../utils/uploadToFirebase');
+const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -7,7 +7,7 @@ exports.updateProfile = async (req, res) => {
     const { firstname, lastname, email, contact, address } = req.body;
 
     const imageUrl = req.file
-      ? await uploadToFirebase(req.file, 'profile-images')
+      ? await uploadToSupabase(req.file, 'profile-images')
       : null;
 
     const result = await pool.query(

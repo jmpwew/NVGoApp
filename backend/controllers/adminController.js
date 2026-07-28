@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
-const { uploadToFirebase } = require('../utils/uploadToFirebase');
+const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
 // dashboard
 exports.getStats = async (req, res) => {
@@ -249,7 +249,7 @@ exports.createNews = async (req, res) => {
   try {
     const { title, content, category } = req.body;
     const image = req.file
-      ? await uploadToFirebase(req.file, 'news-images')
+      ? await uploadToSupabase(req.file, 'news-images')
       : null;
     const result = await pool.query(
       `INSERT INTO news (title, content, category, image, created_by)
@@ -281,7 +281,7 @@ exports.updateNews = async (req, res) => {
   try {
     const { title, content, category } = req.body;
     const image = req.file
-      ? await uploadToFirebase(req.file, 'news-images')
+      ? await uploadToSupabase(req.file, 'news-images')
       : null;
 
     const result = image
