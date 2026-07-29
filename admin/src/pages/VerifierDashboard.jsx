@@ -23,6 +23,7 @@ function timeAgo(dateStr) {
 }
 
 import { API } from '../config';
+import { getImageUrl } from '../getImageUrl';
 
 const OFFICE_OPTIONS = [
   { value: 'police',  label: 'Police',               Icon: ShieldIcon },
@@ -283,8 +284,8 @@ export default function VerifierDashboard() {
                 <div className="detail-label">Images</div>
                 <div className="report-images">
                   {selected.images.map((img, i) => (
-                    <a key={i} href={`${API}/uploads/${img}`} target="_blank" rel="noreferrer">
-                      <img src={`${API}/uploads/${img}`} alt="report" />
+                    <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                      <img src={getImageUrl(img)} alt="report" />
                     </a>
                   ))}
                 </div>
@@ -296,7 +297,7 @@ export default function VerifierDashboard() {
                 <div className="detail-label">Videos</div>
                 <div className="report-videos">
                   {selected.videos.map((vid, i) => (
-                    <video key={i} src={`${API}/uploads/${vid}`} controls preload="metadata" />
+                    <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
                   ))}
                 </div>
               </>

@@ -6,6 +6,7 @@ import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } fr
 import './ReportsPage.css';
 
 import { API } from '../config';
+import { getImageUrl } from '../getImageUrl';
 
 const OFFICE_META = {
   police:  { label: 'Police',             Icon: ShieldIcon },
@@ -295,8 +296,8 @@ export default function ReportsPage() {
                 <div className="detail-label">Images</div>
                 <div className="report-images">
                   {selectedReport.images.map((img, i) => (
-                    <a key={i} href={`${API}/uploads/${img}`} target="_blank" rel="noreferrer">
-                      <img src={`${API}/uploads/${img}`} alt="report" />
+                    <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                      <img src={getImageUrl(img)} alt="report" />
                     </a>
                   ))}
                 </div>
@@ -308,7 +309,7 @@ export default function ReportsPage() {
                 <div className="detail-label">Videos</div>
                 <div className="report-videos">
                   {selectedReport.videos.map((vid, i) => (
-                    <video key={i} src={`${API}/uploads/${vid}`} controls preload="metadata" />
+                    <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
                   ))}
                 </div>
               </>

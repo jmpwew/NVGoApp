@@ -3,6 +3,7 @@ import axios from 'axios';
 import './NewsPage.css';
 
 import { API } from '../config';
+import { getImageUrl } from '../getImageUrl';
 
 const emptyForm = { title: '', content: '', category: 'announcement' };
 
@@ -183,7 +184,7 @@ export default function NewsPage() {
               {!preview && currentImage && (
                 <div style={{ marginTop: '10px' }}>
                   <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Current image:</p>
-                  <img src={`${API}/uploads/${currentImage}`} alt="current" className="image-preview" />
+                  <img src={getImageUrl(currentImage)} alt="current" className="image-preview" />
                 </div>
               )}
             </div>
@@ -222,7 +223,7 @@ export default function NewsPage() {
                 <td>
                   {n.image ? (
                     <img
-                      src={`${API}/uploads/${n.image}`}
+                      src={getImageUrl(n.image)}
                       alt="news"
                       className="table-thumbnail"
                     />

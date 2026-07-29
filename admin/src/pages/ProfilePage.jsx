@@ -3,6 +3,7 @@ import axios from 'axios';
 import './ProfilePage.css';
 
 import { API } from '../config';
+import { getImageUrl } from '../getImageUrl';
 
 const ROLE_LABELS = {
   admin:    'Administrator',
@@ -90,7 +91,7 @@ export default function ProfilePage() {
           {preview ? (
             <img src={preview} alt="preview" className="profile-avatar-lg" />
           ) : currentImage ? (
-            <img src={`${API}/uploads/${currentImage}`} alt="profile" className="profile-avatar-lg" />
+            <img src={getImageUrl(currentImage)} alt="profile" className="profile-avatar-lg" />
           ) : (
             <div className="profile-avatar-lg profile-avatar-fallback">{initials}</div>
           )}
