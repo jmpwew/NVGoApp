@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import './HotlinesPage.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 const emptyForm = { name: '', number: '', category: 'General' };
 

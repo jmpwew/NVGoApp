@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import './ProfilePage.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 const ROLE_LABELS = {
   admin:    'Administrator',

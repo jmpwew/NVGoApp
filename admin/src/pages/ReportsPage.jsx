@@ -5,7 +5,7 @@ import Toast from '../components/Toast';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
 import './ReportsPage.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 const OFFICE_META = {
   police:  { label: 'Police',             Icon: ShieldIcon },

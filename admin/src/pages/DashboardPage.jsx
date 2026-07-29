@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import UserGrowthChart from '../components/UserGrowthChart';
 import './DashboardPage.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 function initials(name) {
   if (!name) return '?';

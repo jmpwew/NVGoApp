@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 export default function UsersPage() {
   const [users, setUsers]   = useState([]);

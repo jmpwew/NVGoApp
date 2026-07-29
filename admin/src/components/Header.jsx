@@ -4,7 +4,7 @@ import axios from 'axios';
 import { MenuIcon, SearchIcon, BellIcon, ChevronDownIcon, UserIcon, LogoutIcon } from './Icons';
 import './Header.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 const POLL_MS = 15000;
 
 export default function Header({ onToggleNav }) {

@@ -16,7 +16,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import './index.css';
 
-const API = 'http://localhost:5000';
+import { API } from './config';
 
 function getStoredRole() {
   try {

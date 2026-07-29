@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import './NewsPage.css';
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 const emptyForm = { title: '', content: '', category: 'announcement' };
 

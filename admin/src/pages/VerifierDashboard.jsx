@@ -22,7 +22,7 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString();
 }
 
-const API = 'http://localhost:5000';
+import { API } from '../config';
 
 const OFFICE_OPTIONS = [
   { value: 'police',  label: 'Police',               Icon: ShieldIcon },
