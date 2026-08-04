@@ -88,8 +88,8 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Session expired. Please start over.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    if (newPassword.length < 8 || !/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters and include a letter and a number.' });
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);

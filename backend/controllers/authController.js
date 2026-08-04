@@ -38,6 +38,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters and include a letter and a number.' });
+    }
+
     const check = await pool.query(
       'SELECT * FROM users WHERE email = $1',
       [email]
