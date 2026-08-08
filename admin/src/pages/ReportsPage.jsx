@@ -14,6 +14,13 @@ const OFFICE_META = {
   medical: { label: 'Medical / Ambulance', Icon: CrossIcon },
 };
 
+const STATUS_LABELS = {
+  pending:    'Pending',
+  ongoing:    'Ongoing',
+  dispatched: 'Unit Dispatched',
+  resolved:   'Resolved',
+};
+
 function initials(name) {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -175,7 +182,7 @@ export default function ReportsPage() {
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
                   {r.contact && <span className="case-card-time">{r.contact}</span>}
-                  <span className={`badge badge-${r.status}`}>{r.status}</span>
+                  <span className={`badge badge-${r.status}`}>{STATUS_LABELS[r.status] || r.status}</span>
                 </div>
                 <div className="case-card-desc">{r.description}</div>
                 <div className="case-card-meta">
@@ -208,7 +215,7 @@ export default function ReportsPage() {
                         return (
                           <span key={a.id} className="case-card-trail-office-group">
                             <span className={`badge badge-office-${a.office_role}`}>
-                              {om ? om.label : a.office_role} · {a.status}
+                              {om ? om.label : a.office_role} · {STATUS_LABELS[a.status] || a.status}
                             </span>
                             {a.action_note && (
                               <span className="case-card-office-note">{a.action_note}</span>
@@ -335,7 +342,7 @@ export default function ReportsPage() {
                       <div key={a.id} className="trail-assignment-card">
                         {Icon && <Icon width={16} height={16} />}
                         <span className={`badge badge-office-${a.office_role}`}>{om ? om.label : a.office_role}</span>
-                        <span className={`badge badge-${a.status}`}>{a.status}</span>
+                        <span className={`badge badge-${a.status}`}>{STATUS_LABELS[a.status] || a.status}</span>
                         <span className="trail-assignment-card-note">{a.action_note || '—'}</span>
                       </div>
                     );
