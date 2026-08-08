@@ -256,6 +256,10 @@
   background-color: #2f80ed;
 }
 
+.notif-dot-office {
+  background-color: #f0b545;
+}
+
 .notif-dot-hidden {
   background-color: transparent;
 }

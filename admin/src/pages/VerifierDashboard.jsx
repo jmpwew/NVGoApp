@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Toast from '../components/Toast';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
 import './ReportsPage.css';
+import playNotificationSound from '../playNotificationSound';
 
 function initials(name) {
   if (!name) return '?';
@@ -44,6 +45,7 @@ export default function VerifierDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]         = useState(null);
   const token = localStorage.getItem('token');
+  const prevPendingCount = useRef(null); // null = not fetched yet, so we don't ding on first load
 
   useEffect(() => {
     fetchPending();
@@ -65,6 +67,10 @@ export default function VerifierDashboard() {
       const res = await axios.get(`${API}/api/verifier/reports/pending`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (prevPendingCount.current !== null && res.data.length > prevPendingCount.current) {
+        playNotificationSound();
+      }
+      prevPendingCount.current = res.data.length;
       setPending(res.data);
     } catch (err) {
       console.log(err);

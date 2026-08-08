@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { MenuIcon, SearchIcon, BellIcon, ChevronDownIcon, UserIcon, LogoutIcon } from './Icons';
 import './Header.css';
+import playNotificationSound from '../playNotificationSound';
 
 import { API } from '../config';
 const POLL_MS = 15000;
@@ -17,6 +18,7 @@ export default function Header({ onToggleNav }) {
   const [markingAll, setMarkingAll]        = useState(false);
   const profileRef = useRef(null);
   const notifRef   = useRef(null);
+  const prevUnreadCount = useRef(null); // null = not fetched yet, so we don't ding on first load
 
   const admin = (() => {
     try { return JSON.parse(localStorage.getItem('admin')) || {}; }
@@ -36,7 +38,12 @@ export default function Header({ onToggleNav }) {
   async function fetchUnreadCount() {
     try {
       const res = await axios.get(`${API}/api/admin/alerts/unread-count`, { headers });
-      setUnreadCount(res.data.count || 0);
+      const newCount = res.data.count || 0;
+      if (prevUnreadCount.current !== null && newCount > prevUnreadCount.current) {
+        playNotificationSound();
+      }
+      prevUnreadCount.current = newCount;
+      setUnreadCount(newCount);
     } catch (err) {
       console.log(err);
     }
@@ -52,7 +59,9 @@ export default function Header({ onToggleNav }) {
   }
 
   // poll for new notifications / updated unread count in the background
+  // (this feed is admin-only server-side, so skip it entirely for verifier/office roles)
   useEffect(() => {
+    if (admin.role !== 'admin') return;
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, POLL_MS);
     return () => clearInterval(interval);
@@ -60,7 +69,7 @@ export default function Header({ onToggleNav }) {
 
   // only load the full list when the dropdown is actually opened
   useEffect(() => {
-    if (notifOpen) fetchFeed();
+    if (notifOpen && admin.role === 'admin') fetchFeed();
   }, [notifOpen]);
 
   useEffect(() => {
@@ -111,7 +120,7 @@ export default function Header({ onToggleNav }) {
   async function handleNotificationClick(item) {
     setNotifOpen(false);
     await markOneRead(item);
-    navigate(item.type === 'report' ? '/reports' : '/support');
+    navigate(item.type === 'support' ? '/support' : '/reports');
   }
 
   async function handleMarkAllRead() {

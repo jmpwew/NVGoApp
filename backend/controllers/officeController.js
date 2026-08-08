@@ -1,5 +1,9 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
+const { createAlert } = require('./alertController');
+
+const OFFICE_LABELS = { police: 'Police', bfp: 'BFP (Fire)', medical: 'Medical / Ambulance' };
+const STATUS_LABELS = { ongoing: 'Ongoing', dispatched: 'Unit Dispatched', resolved: 'Resolved' };
 
 // Reports assigned to the logged-in office (req.user.role = 'police' | 'bfp' | 'medical')
 exports.getMyAssignments = async (req, res) => {
@@ -54,6 +58,23 @@ exports.updateAssignment = async (req, res) => {
     }
 
     const assignment = result.rows[0];
+
+    // let the main Admin know this office touched their assignment on this report
+    const officeLabel = OFFICE_LABELS[req.user.role] || req.user.role;
+    let updateDetail;
+    if (status && action_note) {
+      updateDetail = `Status: ${STATUS_LABELS[status] || status} — note updated`;
+    } else if (status) {
+      updateDetail = `Status changed to ${STATUS_LABELS[status] || status}`;
+    } else if (action_note) {
+      updateDetail = 'Action note updated';
+    }
+    createAlert({
+      type: 'office',
+      related_id: assignment.report_id,
+      title: `${officeLabel} updated a report`,
+      detail: updateDetail,
+    }).catch(err => console.error('createAlert (office) failed:', err));
 
     // if ALL offices assigned to this report are now resolved, mark the report itself resolved
     const remaining = await pool.query(
