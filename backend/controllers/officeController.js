@@ -35,7 +35,7 @@ exports.updateAssignment = async (req, res) => {
     const { assignmentId } = req.params;
     const { status, action_note } = req.body;
 
-    if (status && !['ongoing', 'resolved'].includes(status)) {
+    if (status && !['ongoing', 'dispatched', 'resolved'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status.' });
     }
 

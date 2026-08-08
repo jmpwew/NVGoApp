@@ -14,6 +14,12 @@ const OFFICE_META = {
   medical: { label: 'Medical / Ambulance',   Icon: CrossIcon,  className: 'medical' },
 };
 
+const STATUS_LABELS = {
+  ongoing:    'Ongoing',
+  dispatched: 'Unit Dispatched',
+  resolved:   'Resolved',
+};
+
 function initials(name) {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
@@ -91,7 +97,14 @@ export default function OfficeDashboard() {
       if (selected?.assignment_id === assignmentId) {
         setSelected(prev => ({ ...prev, assignment_status: res.data.status }));
       }
-      setToast({ type: 'success', text: status === 'resolved' ? 'Marked as resolved.' : 'Cancel Resolved.' });
+      setToast({
+        type: 'success',
+        text: status === 'resolved'
+          ? 'Marked as resolved.'
+          : status === 'dispatched'
+            ? 'Reverted to Unit Dispatched.'
+            : 'Status updated.'
+      });
     } catch (err) {
       console.log(err);
       setToast({ type: 'error', text: 'Failed to update status.' });
@@ -109,6 +122,31 @@ export default function OfficeDashboard() {
     await performUpdateStatus(confirmAction.assignmentId, confirmAction.status);
     setStatusUpdating(false);
     setConfirmAction(null);
+  }
+
+  // Saves the action note AND advances the status to 'dispatched' in a single request.
+  // Used by the "Dispatch Unit" button, which only appears while status is 'ongoing'.
+  async function dispatchUnit(assignmentId) {
+    setSaving(true);
+    try {
+      const res = await axios.put(
+        `${API}/api/office/assignments/${assignmentId}`,
+        { action_note: note, status: 'dispatched' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAssignments(prev =>
+        prev.map(a => a.assignment_id === assignmentId
+          ? { ...a, action_note: res.data.action_note, assignment_status: res.data.status }
+          : a)
+      );
+      setSelected(null);
+      setToast({ type: 'success', text: 'Unit dispatched.' });
+    } catch (err) {
+      console.log(err);
+      setToast({ type: 'error', text: 'Failed to dispatch unit.' });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function saveNote(assignmentId) {
@@ -135,8 +173,9 @@ export default function OfficeDashboard() {
   const filtered = assignments.filter(a =>
     filter === 'all' || a.assignment_status === filter
   );
-  const ongoingCount  = assignments.filter(a => a.assignment_status === 'ongoing').length;
-  const resolvedCount = assignments.filter(a => a.assignment_status === 'resolved').length;
+  const ongoingCount    = assignments.filter(a => a.assignment_status === 'ongoing').length;
+  const dispatchedCount = assignments.filter(a => a.assignment_status === 'dispatched').length;
+  const resolvedCount   = assignments.filter(a => a.assignment_status === 'resolved').length;
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -164,6 +203,10 @@ export default function OfficeDashboard() {
           <div className="metric-card-value">{ongoingCount}</div>
         </div>
         <div className="metric-card">
+          <div className="metric-card-label">Unit Dispatched</div>
+          <div className="metric-card-value">{dispatchedCount}</div>
+        </div>
+        <div className="metric-card">
           <div className="metric-card-label">Resolved</div>
           <div className="metric-card-value">{resolvedCount}</div>
         </div>
@@ -171,9 +214,10 @@ export default function OfficeDashboard() {
 
       <div className="filter-pill-bar">
         {[
-          { value: 'all',      label: 'All' },
-          { value: 'ongoing',  label: 'Ongoing' },
-          { value: 'resolved', label: 'Resolved' },
+          { value: 'all',        label: 'All' },
+          { value: 'ongoing',    label: 'Ongoing' },
+          { value: 'dispatched', label: 'Unit Dispatched' },
+          { value: 'resolved',   label: 'Resolved' },
         ].map(opt => (
           <button
             key={opt.value}
@@ -211,7 +255,7 @@ export default function OfficeDashboard() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{a.name || 'Anonymous'}</span>
-                  <span className={`badge badge-${a.assignment_status}`}>{a.assignment_status}</span>
+                  <span className={`badge badge-${a.assignment_status}`}>{STATUS_LABELS[a.assignment_status] || a.assignment_status}</span>
                 </div>
                 <div className="case-card-desc">{a.description}</div>
                 <div className="case-card-meta">
@@ -225,15 +269,15 @@ export default function OfficeDashboard() {
               </div>
               <span className="case-card-time">{timeAgo(a.assigned_at)}</span>
               <div className="case-card-action" onClick={e => e.stopPropagation()}>
-                {a.assignment_status === 'ongoing' ? (
+                {a.assignment_status === 'dispatched' ? (
                   <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'resolved')}>
                     Resolve
                   </button>
-                ) : (
-                  <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'ongoing')}>
+                ) : a.assignment_status === 'resolved' ? (
+                  <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'dispatched')}>
                     Cancel resolve
                   </button>
-                )}
+                ) : null /* 'ongoing' — open the card to dispatch with a note */}
               </div>
             </div>
           ))}
@@ -266,7 +310,7 @@ export default function OfficeDashboard() {
             <button className="map-modal-close" onClick={() => setSelected(null)}>✕</button>
 
             <h2 className="detail-modal-title">Report Details</h2>
-            <span className={`badge badge-${selected.assignment_status}`}>{selected.assignment_status}</span>
+            <span className={`badge badge-${selected.assignment_status}`}>{STATUS_LABELS[selected.assignment_status] || selected.assignment_status}</span>
 
             <div className="detail-grid">
               <div>
@@ -337,15 +381,22 @@ export default function OfficeDashboard() {
             <div className="office-note-hint">Short status update the Main Admin will see in the report trail.</div>
 
             <div className="action-buttons detail-modal-actions">
-              <button className="btn-green" onClick={() => saveNote(selected.assignment_id)} disabled={saving}>
-                {saving ? <><span className="spinner" /> Saving...</> : 'Save Note'}
-              </button>
               {selected.assignment_status === 'ongoing' ? (
+                <button className="btn-green" onClick={() => dispatchUnit(selected.assignment_id)} disabled={saving}>
+                  {saving ? <><span className="spinner" /> Dispatching...</> : 'Dispatch Unit'}
+                </button>
+              ) : (
+                <button className="btn-green" onClick={() => saveNote(selected.assignment_id)} disabled={saving}>
+                  {saving ? <><span className="spinner" /> Saving...</> : 'Save Note'}
+                </button>
+              )}
+              {selected.assignment_status === 'dispatched' && (
                 <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'resolved')}>
                   Mark Resolved
                 </button>
-              ) : (
-                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'ongoing')}>
+              )}
+              {selected.assignment_status === 'resolved' && (
+                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'dispatched')}>
                   Cancel Resolve
                 </button>
               )}
@@ -358,7 +409,9 @@ export default function OfficeDashboard() {
         open={!!confirmAction}
         title={confirmAction?.status === 'resolved'
           ? 'Mark this report as resolved?'
-          : 'Mark this report as ongoing?'}
+          : confirmAction?.status === 'dispatched'
+            ? 'Revert this report to Unit Dispatched?'
+            : 'Mark this report as ongoing?'}
         confirmLabel={confirmAction?.status === 'resolved' ? 'Resolve' : 'Yes, revert'}
         loading={statusUpdating}
         onConfirm={handleConfirmStatusChange}
