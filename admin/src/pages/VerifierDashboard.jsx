@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
 import './VerifierDashboard.css';
@@ -34,6 +35,7 @@ const OFFICE_OPTIONS = [
 const OFFICE_LABELS = Object.fromEntries(OFFICE_OPTIONS.map(o => [o.value, o.label]));
 
 export default function VerifierDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pending, setPending]     = useState([]);
   const [verified, setVerified]   = useState([]);
   const [view, setView]           = useState('pending'); // 'pending' | 'verified'
@@ -58,6 +60,25 @@ export default function VerifierDashboard() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Coming from a bell notification -> /verifier?reportId=123 opens that
+  // specific report directly instead of just landing on the list.
+  useEffect(() => {
+    const reportId = searchParams.get('reportId');
+    if (!reportId || (pending.length === 0 && verified.length === 0)) return;
+
+    const inPending = pending.find(r => String(r.id) === reportId);
+    if (inPending) {
+      openReview(inPending);
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    const inVerified = verified.find(r => String(r.id) === reportId);
+    if (inVerified) {
+      openReview(inVerified, true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, pending, verified]);
 
   async function fetchPending(silent = false) {
     if (!silent) setLoading(true);

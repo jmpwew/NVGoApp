@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon } from '../components/Icons';
@@ -37,6 +38,7 @@ function timeAgo(dateStr) {
 }
 
 export default function OfficeDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState('all'); // all | ongoing | resolved
@@ -63,6 +65,19 @@ export default function OfficeDashboard() {
   useEffect(() => {
     setPage(1);
   }, [filter]);
+
+  // Coming from a bell notification -> /office?reportId=123 opens that
+  // specific assignment directly instead of just landing on the list.
+  useEffect(() => {
+    const reportId = searchParams.get('reportId');
+    if (!reportId || assignments.length === 0) return;
+
+    const match = assignments.find(a => String(a.id) === reportId);
+    if (match) {
+      openAssignment(match);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, assignments]);
 
   async function fetchAssignments(silent = false) {
     if (!silent) setLoading(true);

@@ -119,12 +119,17 @@ export default function Header({ onToggleNav }) {
   async function handleNotificationClick(item) {
     setNotifOpen(false);
     await markOneRead(item);
+    const reportId = item.related_id;
     if (admin.role === 'admin') {
-      navigate(item.type === 'support' ? '/support' : '/reports');
+      if (item.type === 'support') {
+        navigate('/support');
+      } else {
+        navigate(reportId ? `/reports?reportId=${reportId}` : '/reports');
+      }
     } else if (admin.role === 'verifier') {
-      navigate('/verifier');
+      navigate(reportId ? `/verifier?reportId=${reportId}` : '/verifier');
     } else {
-      navigate('/office');
+      navigate(reportId ? `/office?reportId=${reportId}` : '/office');
     }
   }
 
