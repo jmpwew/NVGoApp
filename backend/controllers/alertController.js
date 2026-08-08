@@ -1,16 +1,18 @@
 const pool = require('../config/db');
 
 // GET /api/admin/alerts
-// Latest notifications for the admin bell dropdown (read + unread), newest first.
+// Latest notifications for the caller's OWN role's bell dropdown
+// (read + unread), newest first.
 exports.getFeed = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 30, 100);
     const result = await pool.query(
       `SELECT id, type, related_id, title, detail, is_read, created_at
        FROM admin_notifications
+       WHERE target_role = $1
        ORDER BY created_at DESC
-       LIMIT $1`,
-      [limit]
+       LIMIT $2`,
+      [req.user.role, limit]
     );
     res.json(result.rows);
   } catch (err) {
@@ -23,7 +25,8 @@ exports.getFeed = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT COUNT(*) FROM admin_notifications WHERE is_read = FALSE`
+      `SELECT COUNT(*) FROM admin_notifications WHERE target_role = $1 AND is_read = FALSE`,
+      [req.user.role]
     );
     res.json({ count: parseInt(result.rows[0].count) });
   } catch (err) {
@@ -36,8 +39,8 @@ exports.getUnreadCount = async (req, res) => {
 exports.markRead = async (req, res) => {
   try {
     const result = await pool.query(
-      `UPDATE admin_notifications SET is_read = TRUE WHERE id = $1 RETURNING *`,
-      [req.params.id]
+      `UPDATE admin_notifications SET is_read = TRUE WHERE id = $1 AND target_role = $2 RETURNING *`,
+      [req.params.id, req.user.role]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Alert not found' });
     res.json(result.rows[0]);
@@ -50,7 +53,10 @@ exports.markRead = async (req, res) => {
 // PATCH /api/admin/alerts/read-all
 exports.markAllRead = async (req, res) => {
   try {
-    await pool.query(`UPDATE admin_notifications SET is_read = TRUE WHERE is_read = FALSE`);
+    await pool.query(
+      `UPDATE admin_notifications SET is_read = TRUE WHERE is_read = FALSE AND target_role = $1`,
+      [req.user.role]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -61,7 +67,10 @@ exports.markAllRead = async (req, res) => {
 // DELETE /api/admin/alerts/:id
 exports.deleteAlert = async (req, res) => {
   try {
-    await pool.query(`DELETE FROM admin_notifications WHERE id = $1`, [req.params.id]);
+    await pool.query(
+      `DELETE FROM admin_notifications WHERE id = $1 AND target_role = $2`,
+      [req.params.id, req.user.role]
+    );
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -71,10 +80,13 @@ exports.deleteAlert = async (req, res) => {
 
 // Helper used by other controllers to create a bell notification.
 // (Not an HTTP handler — imported directly.)
-exports.createAlert = async ({ type, related_id, title, detail }) => {
+// target_role: which role's bell this shows up in —
+// 'admin' | 'verifier' | 'police' | 'bfp' | 'medical'. Defaults to 'admin'
+// to match existing behavior for callers that don't specify one.
+exports.createAlert = async ({ type, related_id, title, detail, target_role = 'admin' }) => {
   await pool.query(
-    `INSERT INTO admin_notifications (type, related_id, title, detail)
-     VALUES ($1, $2, $3, $4)`,
-    [type, related_id || null, title, detail || null]
+    `INSERT INTO admin_notifications (type, related_id, title, detail, target_role)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [type, related_id || null, title, detail || null, target_role]
   );
 };

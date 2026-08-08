@@ -83,4 +83,26 @@ function verifyOffice(req, res, next) {
   }
 }
 
-module.exports = { verifyUser, verifyAdmin, verifyVerifier, verifyOffice, optionalAuth };
+// Verifies that the request carries a valid JWT for ANY staff role
+// (admin, verifier, or office) — used for endpoints shared across all
+// internal dashboards, like the notification bell.
+function verifyStaff(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ message: 'No token provided' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const staffRoles = ['admin', 'verifier', 'police', 'bfp', 'medical'];
+    if (!staffRoles.includes(decoded.role)) {
+      return res.status(403).json({ message: 'Staff access only' });
+    }
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+}
+
+module.exports = { verifyUser, verifyAdmin, verifyVerifier, verifyOffice, verifyStaff, optionalAuth };

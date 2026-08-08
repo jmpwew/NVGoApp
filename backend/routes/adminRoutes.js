@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { verifyAdmin } = require('../middleware/auth');
+const { verifyAdmin, verifyStaff } = require('../middleware/auth');
 const upload = require('../config/multer');
 const adminController = require('../controllers/adminController');
 const alertController = require('../controllers/alertController');
@@ -13,11 +13,13 @@ router.get('/users/growth', verifyAdmin, adminController.getUserGrowth);
 router.get('/activity', verifyAdmin, adminController.getRecentActivity);
 
 // Header bell (persistent read/unread notifications)
-router.get('/alerts', verifyAdmin, alertController.getFeed);
-router.get('/alerts/unread-count', verifyAdmin, alertController.getUnreadCount);
-router.patch('/alerts/read-all', verifyAdmin, alertController.markAllRead);
-router.patch('/alerts/:id/read', verifyAdmin, alertController.markRead);
-router.delete('/alerts/:id', verifyAdmin, alertController.deleteAlert);
+// Shared across all staff roles — each role only ever sees/affects
+// notifications targeted at their own role (enforced in alertController).
+router.get('/alerts', verifyStaff, alertController.getFeed);
+router.get('/alerts/unread-count', verifyStaff, alertController.getUnreadCount);
+router.patch('/alerts/read-all', verifyStaff, alertController.markAllRead);
+router.patch('/alerts/:id/read', verifyStaff, alertController.markRead);
+router.delete('/alerts/:id', verifyStaff, alertController.deleteAlert);
 
 // Reports
 router.get('/reports',verifyAdmin, adminController.getAllReports);

@@ -28,6 +28,14 @@ exports.createReport = async (req, res) => {
       detail: name ? `From ${name}` : (description ? description.slice(0, 60) : ''),
     }).catch(err => console.error('createAlert (report) failed:', err));
 
+    createAlert({
+      type: 'report',
+      related_id: newReport.id,
+      title: 'New report to verify',
+      detail: name ? `From ${name}` : (description ? description.slice(0, 60) : ''),
+      target_role: 'verifier',
+    }).catch(err => console.error('createAlert (report, verifier) failed:', err));
+
     // only send notification if logged-in user (guests have no push token)
     if (user_id) {
       // save to the user's in-app notification history

@@ -74,6 +74,7 @@ exports.updateAssignment = async (req, res) => {
       related_id: assignment.report_id,
       title: `${officeLabel} updated a report`,
       detail: updateDetail,
+      target_role: 'admin',
     }).catch(err => console.error('createAlert (office) failed:', err));
 
     // if ALL offices assigned to this report are now resolved, mark the report itself resolved

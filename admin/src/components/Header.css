@@ -260,6 +260,10 @@
   background-color: #f0b545;
 }
 
+.notif-dot-assignment {
+  background-color: #1B8A4C;
+}
+
 .notif-dot-hidden {
   background-color: transparent;
 }

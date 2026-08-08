@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -7,7 +7,6 @@ import './OfficeDashboard.css';
 import './ReportsPage.css'; 
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
-import playNotificationSound from '../playNotificationSound';
 
 const OFFICE_META = {
   police:  { label: 'Police',               Icon: ShieldIcon, className: 'police' },
@@ -49,7 +48,6 @@ export default function OfficeDashboard() {
   const [toast, setToast]             = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); 
   const [statusUpdating, setStatusUpdating] = useState(false);
-  const prevAssignmentCount = useRef(null); // null = not fetched yet, so we don't ding on first load
 
   const token = localStorage.getItem('token');
   const admin = JSON.parse(localStorage.getItem('admin') || '{}');
@@ -72,10 +70,6 @@ export default function OfficeDashboard() {
       const res = await axios.get(`${API}/api/office/assignments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (prevAssignmentCount.current !== null && res.data.length > prevAssignmentCount.current) {
-        playNotificationSound();
-      }
-      prevAssignmentCount.current = res.data.length;
       setAssignments(res.data);
     } catch (err) {
       console.log(err);

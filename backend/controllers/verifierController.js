@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
+const { createAlert } = require('./alertController');
 
 // Reports that still need to be reviewed by a verifier
 
@@ -88,6 +89,17 @@ exports.verifyAndAssign = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // let each assigned office know a new case has landed on their desk
+    for (const officeRole of officeRoles) {
+      createAlert({
+        type: 'assignment',
+        related_id: id,
+        title: 'New report assigned to your office',
+        detail: reportResult.rows[0].description ? reportResult.rows[0].description.slice(0, 60) : '',
+        target_role: officeRole,
+      }).catch(err => console.error('createAlert (assignment) failed:', err));
+    }
 
     // notify the reporter their report was verified/turned over
     const report = reportResult.rows[0];

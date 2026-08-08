@@ -6,7 +6,7 @@ import './Header.css';
 import playNotificationSound from '../playNotificationSound';
 
 import { API } from '../config';
-const POLL_MS = 15000;
+const POLL_MS = 5000;
 
 export default function Header({ onToggleNav }) {
   const navigate = useNavigate();
@@ -59,9 +59,8 @@ export default function Header({ onToggleNav }) {
   }
 
   // poll for new notifications / updated unread count in the background
-  // (this feed is admin-only server-side, so skip it entirely for verifier/office roles)
+  // (every staff role now gets its own scoped feed, filtered server-side)
   useEffect(() => {
-    if (admin.role !== 'admin') return;
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, POLL_MS);
     return () => clearInterval(interval);
@@ -69,7 +68,7 @@ export default function Header({ onToggleNav }) {
 
   // only load the full list when the dropdown is actually opened
   useEffect(() => {
-    if (notifOpen && admin.role === 'admin') fetchFeed();
+    if (notifOpen) fetchFeed();
   }, [notifOpen]);
 
   useEffect(() => {
@@ -120,7 +119,13 @@ export default function Header({ onToggleNav }) {
   async function handleNotificationClick(item) {
     setNotifOpen(false);
     await markOneRead(item);
-    navigate(item.type === 'support' ? '/support' : '/reports');
+    if (admin.role === 'admin') {
+      navigate(item.type === 'support' ? '/support' : '/reports');
+    } else if (admin.role === 'verifier') {
+      navigate('/verifier');
+    } else {
+      navigate('/office');
+    }
   }
 
   async function handleMarkAllRead() {
