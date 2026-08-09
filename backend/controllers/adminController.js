@@ -2,6 +2,17 @@ const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
+// Push notifications get cut off by the OS after a couple lines anyway, so
+// keep the body short and obviously truncated rather than dumping the whole
+// announcement/news text into the system tray.
+const PUSH_BODY_MAX_LEN = 150;
+function truncateForPush(text) {
+  if (!text) return '';
+  const clean = text.trim();
+  if (clean.length <= PUSH_BODY_MAX_LEN) return clean;
+  return clean.slice(0, PUSH_BODY_MAX_LEN).trimEnd() + '...';
+}
+
 // dashboard
 exports.getStats = async (req, res) => {
   try {
@@ -273,7 +284,7 @@ exports.createNews = async (req, res) => {
     );
     const pushTokens = tokens.rows.map(r => r.push_token);
     if (pushTokens.length > 0) {
-      await sendPushNotification(pushTokens, title, '', image);
+      await sendPushNotification(pushTokens, title, truncateForPush(content), image);
     }
 
     res.json(news);
@@ -361,7 +372,7 @@ exports.createAnnouncement = async (req, res) => {
       );
       const pushTokens = tokens.rows.map(r => r.push_token);
       if (pushTokens.length > 0) {
-        await sendPushNotification(pushTokens, title, '', image);
+        await sendPushNotification(pushTokens, title, truncateForPush(message), image);
       }
     }
 
