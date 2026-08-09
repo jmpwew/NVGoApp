@@ -34,6 +34,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const hotlineRoutes = require('./routes/hotlineRoutes');
 const deleteAccountRoute = require('./routes/deleteAccountRoute');
+const changeEmailRoute = require('./routes/changeEmailRoute');
 
 app.use('/api/auth', deleteAccountRoute);
 
@@ -50,6 +51,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/auth/password', changePasswordRoute);
+app.use('/api/profile/email', changeEmailRoute);
 app.use('/api/hotlines', hotlineRoutes);
 
 
