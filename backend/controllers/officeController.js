@@ -5,6 +5,25 @@ const { createAlert } = require('./alertController');
 const OFFICE_LABELS = { police: 'Police', bfp: 'BFP (Fire)', medical: 'Medical / Ambulance' };
 const STATUS_LABELS = { ongoing: 'Ongoing', dispatched: 'Unit Dispatched', resolved: 'Resolved' };
 
+// Inserts an in-app notification for the citizen and pushes it to their
+// device (if they have a push token on file). Used for both the
+// "unit dispatched" and "report resolved" moments below.
+async function notifyCitizen(user_id, title, body) {
+  if (!user_id) return;
+
+  await pool.query(
+    `INSERT INTO notifications (user_id, title, body, type)
+     VALUES ($1, $2, $3, $4)`,
+    [user_id, title, body, 'update']
+  ).catch(err => console.error(`insert notification (${title}) failed:`, err));
+
+  const tokenResult = await pool.query('SELECT push_token FROM users WHERE id = $1', [user_id]);
+  const pushToken = tokenResult.rows[0]?.push_token;
+  if (pushToken) {
+    await sendPushNotification([pushToken], title, body);
+  }
+}
+
 // Reports assigned to the logged-in office (req.user.role = 'police' | 'bfp' | 'medical')
 exports.getMyAssignments = async (req, res) => {
   try {
@@ -77,6 +96,21 @@ exports.updateAssignment = async (req, res) => {
       target_role: 'admin',
     }).catch(err => console.error('createAlert (office) failed:', err));
 
+    // Let the citizen know as soon as a unit is dispatched to their report —
+    // don't make them wait until every assigned office resolves.
+    if (status === 'dispatched') {
+      const reportResult = await pool.query(
+        'SELECT user_id FROM reports WHERE id = $1',
+        [assignment.report_id]
+      );
+      const reportUserId = reportResult.rows[0]?.user_id;
+      notifyCitizen(
+        reportUserId,
+        'Unit Dispatched',
+        `A ${officeLabel} unit has been dispatched to your report.`
+      ).catch(err => console.error('notifyCitizen (dispatched) failed:', err));
+    }
+
     // if ALL offices assigned to this report are now resolved, mark the report itself resolved
     const remaining = await pool.query(
       `SELECT COUNT(*) FROM report_assignments WHERE report_id = $1 AND status != 'resolved'`,
@@ -89,17 +123,11 @@ exports.updateAssignment = async (req, res) => {
       );
       const report = reportResult.rows[0];
       if (report?.user_id) {
-        await pool.query(
-          `INSERT INTO notifications (user_id, title, body, type)
-           VALUES ($1, $2, $3, $4)`,
-          [report.user_id, 'Report Resolved', 'Your report has been resolved. Thank you for helping keep the community safe.', 'update']
-        ).catch(err => console.error('insert notification (resolved) failed:', err));
-
-        const tokenResult = await pool.query('SELECT push_token FROM users WHERE id = $1', [report.user_id]);
-        const pushToken = tokenResult.rows[0]?.push_token;
-        if (pushToken) {
-          await sendPushNotification([pushToken], 'Report Resolved', 'Your report has been resolved.');
-        }
+        await notifyCitizen(
+          report.user_id,
+          'Report Resolved',
+          'Your report has been resolved. Thank you for helping keep the community safe.'
+        );
       }
     }
 
