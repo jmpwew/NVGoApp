@@ -256,21 +256,27 @@ exports.createNews = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [title, content, category || 'announcement', image, req.user.id]
     );
+    const news = result.rows[0];
 
-    // notify all users about new announcement
+    // record a broadcast notification so it shows up in every citizen's
+    // in-app notification list (with the full content + picture), not just
+    // as a push banner
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body, type, image, related_type, related_id)
+       VALUES (NULL, $1, $2, 'update', $3, 'news', $4)`,
+      [title, content, image, news.id]
+    );
+
+    // notify all users about new news
     const tokens = await pool.query(
       'SELECT push_token FROM users WHERE push_token IS NOT NULL'
     );
     const pushTokens = tokens.rows.map(r => r.push_token);
     if (pushTokens.length > 0) {
-      await sendPushNotification(
-        pushTokens,
-        'New Announcement',
-        title
-      );
+      await sendPushNotification(pushTokens, title, '', image);
     }
 
-    res.json(result.rows[0]);
+    res.json(news);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error creating news' });
@@ -313,12 +319,6 @@ exports.deleteNews = async (req, res) => {
 
 // Announcements
 
-const ANNOUNCEMENT_PUSH_TITLE = {
-  info: 'New Announcement',
-  warning: 'Warning',
-  emergency: 'Emergency Alert',
-};
-
 exports.getAllAnnouncements = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM announcements ORDER BY created_at DESC');
@@ -342,23 +342,30 @@ exports.createAnnouncement = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [title, message, image, urgency || 'info', active, req.user.id]
     );
+    const announcement = result.rows[0];
 
     // notify all users when a new, active announcement goes out
     if (active) {
+      // record a broadcast notification so it shows up in every citizen's
+      // in-app notification list (full message + picture), not just as a
+      // push banner
+      const notifType = (urgency === 'emergency' || urgency === 'warning') ? 'alert' : 'info';
+      await pool.query(
+        `INSERT INTO notifications (user_id, title, body, type, image, related_type, related_id)
+         VALUES (NULL, $1, $2, $3, $4, 'announcement', $5)`,
+        [title, message, notifType, image, announcement.id]
+      );
+
       const tokens = await pool.query(
         'SELECT push_token FROM users WHERE push_token IS NOT NULL'
       );
       const pushTokens = tokens.rows.map(r => r.push_token);
       if (pushTokens.length > 0) {
-        await sendPushNotification(
-          pushTokens,
-          ANNOUNCEMENT_PUSH_TITLE[urgency] || ANNOUNCEMENT_PUSH_TITLE.info,
-          title
-        );
+        await sendPushNotification(pushTokens, title, '', image);
       }
     }
 
-    res.json(result.rows[0]);
+    res.json(announcement);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error creating announcement' });

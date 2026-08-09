@@ -18,7 +18,7 @@ function chunk(arr, size) {
   return out;
 }
 
-async function sendPushNotification(expoPushTokens, title, body) {
+async function sendPushNotification(expoPushTokens, title, body, imageUrl = null) {
   if (!expoPushTokens || expoPushTokens.length === 0) return;
 
   // Drop anything that isn't actually a valid Expo push token (null,
@@ -32,6 +32,11 @@ async function sendPushNotification(expoPushTokens, title, body) {
     body,
     sound: 'default',
     priority: 'high',
+    // Shows the announcement/news picture in the notification itself.
+    // Android renders this automatically. iOS needs a Notification Service
+    // Extension in the native build to actually download and display it —
+    // without one, iOS silently ignores this field and just shows text.
+    ...(imageUrl ? { richContent: { image: imageUrl } } : {}),
   }));
 
   for (const batch of chunk(messages, 100)) {
