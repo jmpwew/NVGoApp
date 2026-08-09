@@ -315,8 +315,8 @@ exports.deleteNews = async (req, res) => {
 
 const ANNOUNCEMENT_PUSH_TITLE = {
   info: 'New Announcement',
-  warning: '⚠️ Warning',
-  emergency: '🚨 Emergency Alert',
+  warning: 'Warning',
+  emergency: 'Emergency Alert',
 };
 
 exports.getAllAnnouncements = async (req, res) => {

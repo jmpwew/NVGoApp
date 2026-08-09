@@ -16,9 +16,9 @@ const CARD_WIDTH = width * 0.82;
 const CARD_GAP = 12;
 
 const URGENCY_META = {
-  info:      { label: 'INFO',      color: C.skyDk,   bg: C.skyBg,   stripe: C.sky,   emoji: 'ℹ️' },
-  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC', stripe: C.yellow, emoji: '⚠️' },
-  emergency: { label: 'EMERGENCY', color: C.red,     bg: C.redBg,   stripe: C.red,   emoji: '🚨' },
+  info:      { label: 'INFO',      color: C.skyDk,   bg: C.skyBg,   stripe: C.sky },
+  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC', stripe: C.yellow },
+  emergency: { label: 'EMERGENCY', color: C.red,     bg: C.redBg,   stripe: C.red },
 };
 
 
@@ -262,13 +262,10 @@ export default function HomeScreen({ navigation }) {
                     {item.image ? (
                       <Image source={{ uri: getImageUrl(item.image) }} style={s.annImg}/>
                     ) : (
-                      <View style={[s.annImg, s.annImgEmpty, { backgroundColor: um.bg }]}>
-                        <Text style={{ fontSize: 30 }}>{um.emoji}</Text>
-                      </View>
+                      <View style={[s.annImg, s.annImgEmpty, { backgroundColor: um.bg }]}/>
                     )}
                     <View style={s.annBody}>
                       <View style={[s.annBadge, { backgroundColor: um.bg }]}>
-                        <Text style={{ fontSize: 10 }}>{um.emoji}</Text>
                         <Text style={[s.annBadgeTxt, { color: um.color }]}>{um.label}</Text>
                       </View>
                       <Text style={s.annTitle} numberOfLines={2}>{item.title}</Text>

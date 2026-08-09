@@ -7,9 +7,9 @@ import { getImageUrl } from '../utils/getImageUrl';
 import { IcBack } from '../constants/icons';
 
 const URGENCY_META = {
-  info:      { label: 'INFO',      color: C.skyDk, bg: C.skyBg,  emoji: 'ℹ️' },
-  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC', emoji: '⚠️' },
-  emergency: { label: 'EMERGENCY', color: '#fff', bg: C.red,     emoji: '🚨' },
+  info:      { label: 'INFO',      color: C.skyDk, bg: C.skyBg },
+  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC' },
+  emergency: { label: 'EMERGENCY', color: '#fff', bg: C.red },
 };
 
 export default function AnnouncementDetailScreen({ route, navigation }) {
@@ -45,15 +45,12 @@ export default function AnnouncementDetailScreen({ route, navigation }) {
             resizeMode="cover"
           />
         ) : (
-          <View style={[s.imagePlaceholder, { backgroundColor: um.bg }]}>
-            <Text style={s.imagePlaceholderTxt}>{um.emoji}</Text>
-          </View>
+          <View style={[s.imagePlaceholder, { backgroundColor: um.bg }]}/>
         )}
 
         <View style={s.card}>
           <View style={s.metaRow}>
             <View style={[s.urgencyBadge, { backgroundColor: um.bg }]}>
-              <Text style={{ fontSize: 11 }}>{um.emoji}</Text>
               <Text style={[s.urgencyTxt, { color: um.color === '#fff' ? C.red : um.color }]}>
                 {um.label}
               </Text>
