@@ -51,7 +51,7 @@ export default function AnnouncementDetailScreen({ route, navigation }) {
         <View style={s.card}>
           <View style={s.metaRow}>
             <View style={[s.urgencyBadge, { backgroundColor: um.bg }]}>
-              <Text style={[s.urgencyTxt, { color: um.color === '#fff' ? C.red : um.color }]}>
+              <Text style={[s.urgencyTxt, { color: um.color }]}>
                 {um.label}
               </Text>
             </View>

@@ -8,6 +8,22 @@ exports.createReport = async (req, res) => {
     const user_id = req.user?.id || null;
     const { name, contact, description, latitude, longitude, location_note } = req.body;
 
+    // Limit logged-in accounts to 5 reports per calendar day. Guest
+    // reports (no account) aren't limited here since there's no account
+    // identity to rate-limit against.
+    if (user_id) {
+      const todayCount = await pool.query(
+        `SELECT COUNT(*) FROM reports
+         WHERE user_id = $1 AND created_at >= date_trunc('day', NOW())`,
+        [user_id]
+      );
+      if (parseInt(todayCount.rows[0].count) >= 5) {
+        return res.status(429).json({
+          message: "You've reached the maximum of 5 reports for today. Please try again tomorrow."
+        });
+      }
+    }
+
     const images = await uploadManyToSupabase(req.files?.images, 'report-images');
     const videos = await uploadManyToSupabase(req.files?.videos, 'report-videos');
 

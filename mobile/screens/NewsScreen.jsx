@@ -6,7 +6,7 @@ import { View, Text, FlatList, TouchableOpacity,
 import api_url from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
 import Svg, { Path } from 'react-native-svg';
-import { IcSearch, IcClock, IcEye, IcChevron, IcEmpty} from '../constants/icons';
+import { IcSearch, IcEye, IcChevron, IcEmpty} from '../constants/icons';
 
 
 
@@ -57,7 +57,6 @@ const FeaturedCard = ({ item, onPress, catConfig }) => (
     <View style={s.featBottom}>
       <Text style={s.featTitle} numberOfLines={2}>{item.title}</Text>
       <View style={s.metaRow}>
-        <IcClock color="rgba(255,255,255,0.5)"/>
         <Text style={s.featMetaTxt}>{formatDate(item.created_at)}</Text>
         {item.views != null && (
           <>
@@ -85,7 +84,6 @@ const NewsCard = ({ item, onPress, catConfig }) => (
       <Text style={s.newsTitle} numberOfLines={2}>{item.title}</Text>
       <Text style={s.newsExcerpt} numberOfLines={2}>{item.content}</Text>
       <View style={s.metaRow}>
-        <IcClock/>
         <Text style={s.newsMetaTxt}>{formatDate(item.created_at)}</Text>
         {item.views != null && (
           <>

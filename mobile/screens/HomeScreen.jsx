@@ -236,7 +236,7 @@ export default function HomeScreen({ navigation }) {
        
         {/* Announcements */}
         {announcements.length > 0 && (
-          <View style={{ marginHorizontal: -16 }}>
+          <View style={{ marginHorizontal: -16, marginBottom: -8 }}>
             <Text style={[s.secTitle, { marginHorizontal: 16 }]}>Announcements</Text>
             <FlatList
               data={announcements}
@@ -286,20 +286,22 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {/* features  */}
-        <Text style={s.secTitle}>Features</Text>
-        <View style={s.qaGrid}>
-          {[
-            { label:'Report Issue',      icon:<IcReport/>,  bg:C.redBg,    bc:C.red+'20',    onPress:()=>navigation.navigate('Report') },
-            { label:'View News',         icon:<IcNews/>,    bg:C.skyBg,    bc:C.skyDk+'20',  onPress:()=>navigation.navigate('News') },
-            { label:'Emergency Hotline', icon:<IcPhone/>,   bg:C.greenLt,  bc:C.green+'20',  onPress:()=>navigation.navigate('Hotlines') },
-            { label:'More',              icon:<IcMore/>,    bg:'#F3EEF9',  bc:'#7B5EA720',   onPress:()=>navigation.navigate('MoreFeatures') },
-          ].map((q, i) => (
-            <TouchableOpacity key={i} style={[s.qaCard, { borderColor: q.bc }]}
-              onPress={q.onPress} activeOpacity={0.82}>
-              <View style={[s.qaIcWrap, { backgroundColor: q.bg }]}>{q.icon}</View>
-              <Text style={s.qaLbl}>{q.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View>
+          <Text style={s.secTitle}>Features</Text>
+          <View style={s.qaGrid}>
+            {[
+              { label:'Report Issue',      icon:<IcReport/>,  bg:C.redBg,    bc:C.red+'20',    onPress:()=>navigation.navigate('Report') },
+              { label:'View News',         icon:<IcNews/>,    bg:C.skyBg,    bc:C.skyDk+'20',  onPress:()=>navigation.navigate('News') },
+              { label:'Emergency Hotline', icon:<IcPhone/>,   bg:C.greenLt,  bc:C.green+'20',  onPress:()=>navigation.navigate('Hotlines') },
+              { label:'More',              icon:<IcMore/>,    bg:'#F3EEF9',  bc:'#7B5EA720',   onPress:()=>navigation.navigate('MoreFeatures') },
+            ].map((q, i) => (
+              <TouchableOpacity key={i} style={[s.qaCard, { borderColor: q.bc }]}
+                onPress={q.onPress} activeOpacity={0.82}>
+                <View style={[s.qaIcWrap, { backgroundColor: q.bg }]}>{q.icon}</View>
+                <Text style={s.qaLbl}>{q.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/*  Weather  */}
@@ -523,7 +525,7 @@ const s = StyleSheet.create({
   annBadgeTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   annTitle:    { fontSize: 13.5, fontWeight: '800', color: C.text, lineHeight: 18 },
   annMsg:      { fontSize: 11, color: C.sub, lineHeight: 16 },
-  annDots:     { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
+  annDots:     { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 4 },
   annDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: C.border },
   annDotActive:{ width: 16, backgroundColor: C.green },
 });
