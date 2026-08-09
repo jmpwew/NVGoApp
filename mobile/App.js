@@ -9,6 +9,7 @@ import EmergencyScreen from './screens/EmergencyScreen';
 import LoginScreen from './screens/LoginScreen';
 import NewsScreen from './screens/NewsScreen';
 import NewsDetailScreen from './screens/NewsDetailScreen';
+import AnnouncementDetailScreen from './screens/AnnouncementDetailScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import EditProfileScreen from './screens/EditProfileScreen';
@@ -92,6 +93,12 @@ export default function App() {
           <Stack.Screen
             name="NewsDetail"
             component={NewsDetailScreen}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="AnnouncementDetail"
+            component={AnnouncementDetailScreen}
             options={{ headerShown: false }}
           />
 

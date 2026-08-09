@@ -9,6 +9,15 @@ import api_url from '../utils/api';
 import Svg, { Path } from 'react-native-svg';
 import {IcBack, IcUser, IcMail, IcLock, IcPhone, IcMap, IcChevron, IcEye, IcCheck} from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
+
+// Password policy: 8+ chars, at least one letter and one number.
+const PASSWORD_RULES = [
+  { id: 'len',  label: 'At least 8 characters', test: (pw) => pw.length >= 8 },
+  { id: 'letter', label: 'At least one letter', test: (pw) => /[a-zA-Z]/.test(pw) },
+  { id: 'num', label: 'At least one number', test: (pw) => /[0-9]/.test(pw) },
+];
+const isPasswordValid = (pw) => PASSWORD_RULES.every(r => r.test(pw));
 
 
 
@@ -138,6 +147,7 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
 
   const notify = (title, message) => setAlertInfo({ title, message });
@@ -166,15 +176,23 @@ export default function RegisterScreen({ navigation }) {
     return;
   }
 
-  if (!password || password.length < 6) { notify('Weak password', 'Password must be at least 6 characters.'); return; }
+  if (!isPasswordValid(password)) {
+    notify('Weak password', 'Password must be at least 8 characters and include a letter and a number.');
+    return;
+  }
 
   try {
     setLoading(true);
-    const res = await fetch(`${api_url}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firstname, lastname, email: email.trim(), password, contact, address }),
-    });
+    setSlowNotice(false);
+    const res = await fetchWithTimeout(
+      `${api_url}/api/auth/register`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstname, lastname, email: email.trim(), password, contact, address }),
+      },
+      { onSlow: () => setSlowNotice(true) }
+    );
     const data = await res.json();
     if (!res.ok) {
       notify('Registration failed', data.message || 'Please try again.');
@@ -183,9 +201,10 @@ export default function RegisterScreen({ navigation }) {
     navigation.navigate('VerifyRegisterOtp', { email: email.trim() });
   } catch (err) {
     console.log('REGISTER ERROR:', err);
-    notify('Error', 'Registration failed. Please try again.');
+    notify('Error', err.isTimeout ? err.message : 'Registration failed. Please try again.');
   } finally {
     setLoading(false);
+    setSlowNotice(false);
   }
 };
   return (
@@ -270,7 +289,7 @@ export default function RegisterScreen({ navigation }) {
             <Text style={s.fieldLabel}>PASSWORD</Text>
             <InputField
               icon={<IcLock/>}
-              placeholder="At least 6 characters"
+              placeholder="Create a password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPw}
@@ -281,16 +300,24 @@ export default function RegisterScreen({ navigation }) {
               }
             />
 
-            {/* Password strength hint */}
-            {password.length > 0 && (
-              <View style={s.pwHint}>
-                <View style={[s.pwBar, { flex: Math.min(password.length, 6), backgroundColor: password.length < 6 ? C.yellowDk : C.green }]}/>
-                <View style={[s.pwBar, { flex: Math.max(6 - password.length, 0), backgroundColor: C.border }]}/>
-                <Text style={[s.pwLabel, { color: password.length < 6 ? C.yellowDk : C.green }]}>
-                  {password.length < 6 ? 'Too short' : password.length < 10 ? 'Good' : 'Strong'}
-                </Text>
-              </View>
-            )}
+            {/* Password requirements checklist — shown up front, updates live */}
+            <View style={s.pwChecklist}>
+              {PASSWORD_RULES.map(rule => {
+                const met = rule.test(password);
+                return (
+                  <View key={rule.id} style={s.pwRuleRow}>
+                    <View style={[s.pwDot, met && s.pwDotMet]}>
+                      {met && (
+                        <Svg width={8} height={8} viewBox="0 0 10 10" fill="none">
+                          <Path d="M2 5l2.5 2.5 3.5-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </Svg>
+                      )}
+                    </View>
+                    <Text style={[s.pwRuleTxt, met && s.pwRuleTxtMet]}>{rule.label}</Text>
+                  </View>
+                );
+              })}
+            </View>
 
             <TouchableOpacity
               style={[s.primaryBtn, loading && { opacity: 0.75 }, { marginTop: 20 }]}
@@ -303,6 +330,10 @@ export default function RegisterScreen({ navigation }) {
                 : <Text style={s.primaryBtnTxt}>Create Account</Text>
               }
             </TouchableOpacity>
+
+            {slowNotice && (
+              <Text style={s.slowTxt}>Still working — the server may be waking up, this can take up to a minute.</Text>
+            )}
           </View>
         )}
 
@@ -349,10 +380,14 @@ const s = StyleSheet.create({
   primaryBtn:     { backgroundColor: C.green, borderRadius: 14, height: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, shadowColor: C.green, shadowOpacity: 0.3, shadowRadius: 10, elevation: 4 },
   primaryBtnTxt:  { color: '#fff', fontSize: 16, fontWeight: '800' },
 
-  /* Password strength */
-  pwHint:         { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: -6, marginBottom: 10, height: 4 },
-  pwBar:          { height: 4, borderRadius: 2 },
-  pwLabel:        { fontSize: 11, fontWeight: '700', marginLeft: 4 },
+  /* Password requirements checklist */
+  pwChecklist:    { marginTop: -2, marginBottom: 6, gap: 6 },
+  pwRuleRow:      { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pwDot:          { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center' },
+  pwDotMet:       { backgroundColor: C.green, borderColor: C.green },
+  pwRuleTxt:      { fontSize: 12, color: C.muted },
+  pwRuleTxtMet:   { color: C.green, fontWeight: '600' },
+  slowTxt:        { textAlign: 'center', fontSize: 12, color: C.muted, marginTop: 12, lineHeight: 17 },
 
   /* Login link */
   loginLink:      { alignItems: 'center', paddingVertical: 12 },

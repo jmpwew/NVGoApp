@@ -48,7 +48,7 @@ export default function MoreFeaturesScreen({ navigation }) {
           <IcClock />
           <Text style={s.comingSoonTitle}>More features coming soon</Text>
           <Text style={s.comingSoonSub}>
-            We're working on new services to make NVGo even better. Stay tuned! 💚
+            We're working on new services to make NVGo even better. Stay tuned! 
           </Text>
         </View>
       </ScrollView>

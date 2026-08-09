@@ -38,6 +38,9 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
               <NavLink to="/news"          onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span>News</span>
               </NavLink>
+              <NavLink to="/announcements" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Announcements</span>
+              </NavLink>
               <NavLink to="/notifications" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span>Notifications</span>
               </NavLink>

@@ -8,6 +8,7 @@ import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import { IcMail } from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 
 function InputField({ icon, placeholder, value, onChangeText, keyboardType }) {
   const [focused, setFocused] = useState(false);
@@ -38,6 +39,7 @@ const inp = StyleSheet.create({
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
 
   const notify = (title, message) => setAlertInfo({ title, message });
@@ -49,21 +51,28 @@ export default function ForgotPasswordScreen({ navigation }) {
     }
     try {
       setLoading(true);
-      const res = await fetch(`${api_url}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      });
+      setSlowNotice(false);
+      const res = await fetchWithTimeout(
+        `${api_url}/api/auth/forgot-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() }),
+        },
+        { onSlow: () => setSlowNotice(true) }
+      );
       const data = await res.json();
       if (!res.ok) {
+        // e.g. 404 "No account found with that email." is shown here
         notify('Error', data.message || 'Failed to send OTP.');
         return;
       }
       navigation.navigate('VerifyOtp', { email: email.trim() });
     } catch (err) {
-      notify('Error', 'Something went wrong. Please try again.');
+      notify('Error', err.isTimeout ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+      setSlowNotice(false);
     }
   };
 
@@ -121,6 +130,10 @@ export default function ForgotPasswordScreen({ navigation }) {
               : <Text style={s.btnTxt}>Send Code</Text>
             }
           </TouchableOpacity>
+
+          {slowNotice && (
+            <Text style={s.slowTxt}>Still working — the server may be waking up, this can take up to a minute.</Text>
+          )}
         </View>
 
         <Text style={s.footer}>Municipality of Nueva Valencia, Guimaras</Text>
@@ -157,6 +170,7 @@ const s = StyleSheet.create({
 
   btn:          { backgroundColor: C.green, borderRadius: 14, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: 4, shadowColor: C.green, shadowOpacity: 0.3, shadowRadius: 10, elevation: 4 },
   btnTxt:       { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.2 },
+  slowTxt:      { textAlign: 'center', fontSize: 12, color: C.muted, marginTop: 12, lineHeight: 17 },
 
   footer:       { textAlign: 'center', fontSize: 11, color: C.muted, marginTop: 28 },
 });

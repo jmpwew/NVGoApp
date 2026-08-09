@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 import NewsPage from './pages/NewsPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SupportPage from './pages/SupportPage';
 import HotlinesPage from './pages/HotlinesPage';
@@ -101,6 +102,7 @@ export default function App() {
         <Route path="/reports"   element={<RoleRoute allow={['admin']}><ReportsPage /></RoleRoute>} />
         <Route path="/users"     element={<RoleRoute allow={['admin']}><UsersPage /></RoleRoute>} />
         <Route path="/news"      element={<RoleRoute allow={['admin']}><NewsPage /></RoleRoute>} />
+        <Route path="/announcements" element={<RoleRoute allow={['admin']}><AnnouncementsPage /></RoleRoute>} />
         <Route path="/notifications" element={<RoleRoute allow={['admin']}><NotificationsPage /></RoleRoute>} />
         <Route path="/support"   element={<RoleRoute allow={['admin']}><SupportPage /></RoleRoute>} />
         <Route path="/hotlines"  element={<RoleRoute allow={['admin']}><HotlinesPage /></RoleRoute>} />

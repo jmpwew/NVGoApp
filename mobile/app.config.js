@@ -4,6 +4,7 @@ export default ({ config }) => ({
     slug: "nvgo",
     owner: "jmpwew",
     version: "1.0.0",
+    scheme: "nvgo",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",

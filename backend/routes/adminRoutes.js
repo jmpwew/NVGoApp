@@ -12,9 +12,7 @@ router.get('/users/growth', verifyAdmin, adminController.getUserGrowth);
 
 router.get('/activity', verifyAdmin, adminController.getRecentActivity);
 
-// Header bell (persistent read/unread notifications)
-// Shared across all staff roles — each role only ever sees/affects
-// notifications targeted at their own role (enforced in alertController).
+//botification
 router.get('/alerts', verifyStaff, alertController.getFeed);
 router.get('/alerts/unread-count', verifyStaff, alertController.getUnreadCount);
 router.patch('/alerts/read-all', verifyStaff, alertController.markAllRead);
@@ -36,6 +34,12 @@ router.get('/news', verifyAdmin, adminController.getAllNews);
 router.post('/news', verifyAdmin, upload.single('image'), adminController.createNews);
 router.put('/news/:id', verifyAdmin, upload.single('image'), adminController.updateNews);
 router.delete('/news/:id', verifyAdmin, adminController.deleteNews);
+
+// Announcements
+router.get('/announcements', verifyAdmin, adminController.getAllAnnouncements);
+router.post('/announcements', verifyAdmin, upload.single('image'), adminController.createAnnouncement);
+router.put('/announcements/:id', verifyAdmin, upload.single('image'), adminController.updateAnnouncement);
+router.delete('/announcements/:id', verifyAdmin, adminController.deleteAnnouncement);
 
 // Notifications
 router.get('/notifications', verifyAdmin, adminController.getAllNotifications);

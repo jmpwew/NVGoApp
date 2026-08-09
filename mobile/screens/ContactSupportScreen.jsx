@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, TextInput, StatusBar,
+  ScrollView, TextInput, Alert, StatusBar,
   Platform, ActivityIndicator, Linking,
 } from 'react-native';
 import { C } from '../constants/colors';
 import api_url from '../utils/api';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { IcBack, IcPhone, IcMail, IcFB, IcUser, IcMsg, IcSend} from '../constants/icons';
-import AlertModal from '../utils/AlertModal';
 
 
 
@@ -58,20 +57,17 @@ const f = StyleSheet.create({
 
 export default function ContactSupportScreen({ navigation }) {
   const [senderName, setSenderName] = useState('');
-  const [message, setMessage]       = useState('');
-  const [sending, setSending]       = useState(false);
-  const [sent, setSent]             = useState(false);
-  const [alertInfo, setAlertInfo]   = useState(null); // { title, message } | null
-
-  const notify = (title, message) => setAlertInfo({ title, message });
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const handleSend = async () => {
     if (!senderName.trim()) {
-      notify('Required', 'Please enter your name.');
+      Alert.alert('Required', 'Please enter your name.');
       return;
     }
     if (!message.trim()) {
-      notify('Required', 'Please enter a message.');
+      Alert.alert('Required', 'Please enter a message.');
       return;
     }
 
@@ -95,7 +91,7 @@ export default function ContactSupportScreen({ navigation }) {
       setMessage('');
     } catch (err) {
       console.log(err);
-      notify('Error', 'Failed to send message. Please try again.');
+      Alert.alert('Error', 'Failed to send message. Please try again.');
     } finally {
       setSending(false);
     }
@@ -217,20 +213,11 @@ export default function ContactSupportScreen({ navigation }) {
         {/* Office hours note */}
         <View style={s.hoursCard}>
           <Text style={s.hoursTitle}>Office Hours</Text>
-          <Text style={s.hoursRow}>Monday – Friday: 8:00 AM – 5:00 PM</Text>
-          <Text style={s.hoursRow}>Saturday: 8:00 AM – 12:00 PM</Text>
-          <Text style={s.hoursRow}>Sunday & Holidays: Closed</Text>
+          <Text style={s.hoursRow}>Monday – Friday: 8:00 AM – 4:30 PM</Text>
+          <Text style={s.hoursRow}>Weekends & Holidays: Closed</Text>
         </View>
 
       </ScrollView>
-
-      <AlertModal
-        visible={!!alertInfo}
-        title={alertInfo?.title}
-        message={alertInfo?.message}
-        tone="error"
-        onClose={() => setAlertInfo(null)}
-      />
     </View>
   );
 }

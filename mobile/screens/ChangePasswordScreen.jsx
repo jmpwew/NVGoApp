@@ -10,6 +10,10 @@ import api_url from '../utils/api';
 import { C } from '../constants/colors';
 import { IcBack, IcEye, IcCheck, IcLock } from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
+
+// Must match the policy enforced on RegisterScreen and the backend.
+const isPasswordValid = (pw) => pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
 
 
 /* Password field  */
@@ -51,6 +55,7 @@ export default function ChangePasswordScreen({ navigation }) {
   const [showNew,    setShowNew]    = useState(false);
   const [showConfirm,setShowConfirm]= useState(false);
   const [saving,     setSaving]     = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [alertInfo,  setAlertInfo]  = useState(null); // { title, message, tone } | null
 
   const notify = (title, message, tone = 'error') => setAlertInfo({ title, message, tone });
@@ -63,8 +68,8 @@ export default function ChangePasswordScreen({ navigation }) {
       notify('Error', 'Please enter your current password.', 'error');
       return false;
     }
-    if (newPw.length < 6) {
-      notify('Error', 'New password must be at least 6 characters.', 'error');
+    if (!isPasswordValid(newPw)) {
+      notify('Error', 'New password must be at least 8 characters and include a letter and a number.', 'error');
       return false;
     }
     if (newPw !== confirmPw) {
@@ -80,20 +85,25 @@ export default function ChangePasswordScreen({ navigation }) {
 
     try {
       setSaving(true);
+      setSlowNotice(false);
       const stored = await AsyncStorage.getItem('user');
       if (!stored) { notify('Error', 'No user found.', 'error'); return; }
 
       const user = JSON.parse(stored);
 
-      const res  = await fetch(`${api_url}/api/auth/password/change-password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id:         user.id,
-          currentPassword: currentPw,
-          newPassword:     newPw,
-        }),
-      });
+      const res  = await fetchWithTimeout(
+        `${api_url}/api/auth/password/change-password`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id:         user.id,
+            currentPassword: currentPw,
+            newPassword:     newPw,
+          }),
+        },
+        { onSlow: () => setSlowNotice(true) }
+      );
 
       const data = await res.json();
 
@@ -106,9 +116,10 @@ export default function ChangePasswordScreen({ navigation }) {
       navigation.goBack();
     } catch (err) {
       console.log('CHANGE PW ERROR:', err);
-      notify('Error', 'Something went wrong.', 'error');
+      notify('Error', err.isTimeout ? err.message : 'Something went wrong.', 'error');
     } finally {
       setSaving(false);
+      setSlowNotice(false);
     }
   };
 
@@ -161,12 +172,26 @@ export default function ChangePasswordScreen({ navigation }) {
         <View style={s.card}>
           <PwField
             label="New Password"
-            hint="At least 6 characters"
+            hint="At least 8 characters, with a letter and number"
             value={newPw}
             onChangeText={setNewPw}
             show={showNew}
             onToggle={() => setShowNew(v => !v)}
           />
+
+          {/* Requirements checklist */}
+          <View style={s.pwChecklist}>
+            {[
+              { id: 'len', label: 'At least 8 characters', met: newPw.length >= 8 },
+              { id: 'letter', label: 'At least one letter', met: /[a-zA-Z]/.test(newPw) },
+              { id: 'num', label: 'At least one number', met: /[0-9]/.test(newPw) },
+            ].map(rule => (
+              <View key={rule.id} style={s.pwRuleRow}>
+                <View style={[s.pwDot, rule.met && s.pwDotMet]}/>
+                <Text style={[s.pwRuleTxt, rule.met && s.pwRuleTxtMet]}>{rule.label}</Text>
+              </View>
+            ))}
+          </View>
 
           {/* Strength bar */}
           {newPw.length > 0 && strength && (
@@ -245,6 +270,10 @@ export default function ChangePasswordScreen({ navigation }) {
           }
         </TouchableOpacity>
 
+        {slowNotice && (
+          <Text style={s.slowTxt}>Still working — the server may be waking up, this can take up to a minute.</Text>
+        )}
+
         <TouchableOpacity
           style={s.cancelBtn}
           onPress={() => navigation.goBack()}
@@ -310,6 +339,13 @@ const s = StyleSheet.create({
   strengthBars: { flexDirection: 'row', gap: 5, marginBottom: 5 },
   strengthBar:  { flex: 1, height: 3, borderRadius: 2 },
   strengthLabel:{ fontSize: 10, fontWeight: '700' },
+  pwChecklist:  { marginTop: 8, gap: 6 },
+  pwRuleRow:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  pwDot:        { width: 14, height: 14, borderRadius: 7, borderWidth: 1.5, borderColor: C.border },
+  pwDotMet:     { backgroundColor: C.green, borderColor: C.green },
+  pwRuleTxt:    { fontSize: 12, color: C.muted },
+  pwRuleTxtMet: { color: C.green, fontWeight: '600' },
+  slowTxt:      { textAlign: 'center', fontSize: 12, color: C.muted, marginTop: 12, marginHorizontal: 20, lineHeight: 17 },
 
   /* Match */
   matchRow:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingBottom: 10 },

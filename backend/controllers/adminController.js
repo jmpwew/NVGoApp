@@ -311,6 +311,97 @@ exports.deleteNews = async (req, res) => {
   }
 };
 
+// Announcements
+
+const ANNOUNCEMENT_PUSH_TITLE = {
+  info: 'New Announcement',
+  warning: '⚠️ Warning',
+  emergency: '🚨 Emergency Alert',
+};
+
+exports.getAllAnnouncements = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM announcements ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching announcements' });
+  }
+};
+
+exports.createAnnouncement = async (req, res) => {
+  try {
+    const { title, message, urgency, is_active } = req.body;
+    const image = req.file
+      ? await uploadToSupabase(req.file, 'announcement-images')
+      : null;
+    const active = is_active === undefined ? true : is_active === 'true' || is_active === true;
+
+    const result = await pool.query(
+      `INSERT INTO announcements (title, message, image, urgency, is_active, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [title, message, image, urgency || 'info', active, req.user.id]
+    );
+
+    // notify all users when a new, active announcement goes out
+    if (active) {
+      const tokens = await pool.query(
+        'SELECT push_token FROM users WHERE push_token IS NOT NULL'
+      );
+      const pushTokens = tokens.rows.map(r => r.push_token);
+      if (pushTokens.length > 0) {
+        await sendPushNotification(
+          pushTokens,
+          ANNOUNCEMENT_PUSH_TITLE[urgency] || ANNOUNCEMENT_PUSH_TITLE.info,
+          title
+        );
+      }
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error creating announcement' });
+  }
+};
+
+exports.updateAnnouncement = async (req, res) => {
+  try {
+    const { title, message, urgency, is_active } = req.body;
+    const image = req.file
+      ? await uploadToSupabase(req.file, 'announcement-images')
+      : null;
+    const active = is_active === undefined ? true : is_active === 'true' || is_active === true;
+
+    const result = image
+      ? await pool.query(
+          `UPDATE announcements SET title=$1, message=$2, urgency=$3, is_active=$4, image=$5, updated_at=NOW()
+           WHERE id=$6 RETURNING *`,
+          [title, message, urgency, active, image, req.params.id]
+        )
+      : await pool.query(
+          `UPDATE announcements SET title=$1, message=$2, urgency=$3, is_active=$4, updated_at=NOW()
+           WHERE id=$5 RETURNING *`,
+          [title, message, urgency, active, req.params.id]
+        );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating announcement' });
+  }
+};
+
+exports.deleteAnnouncement = async (req, res) => {
+  try {
+    await pool.query('DELETE FROM announcements WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Announcement deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting announcement' });
+  }
+};
+
 // notification
 
 exports.getAllNotifications = async (req, res) => {

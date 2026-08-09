@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, StatusBar, Dimensions, Platform,
-  Linking, RefreshControl
+  Linking, RefreshControl, FlatList,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
@@ -11,6 +11,15 @@ import { IcReport, IcNews, IcPhone, IcMore, IcBell, IcUser, IcChevron, IcWarn, I
 
   
 const { width } = Dimensions.get('window');
+
+const CARD_WIDTH = width * 0.82;
+const CARD_GAP = 12;
+
+const URGENCY_META = {
+  info:      { label: 'INFO',      color: C.skyDk,   bg: C.skyBg,   stripe: C.sky,   emoji: 'ℹ️' },
+  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC', stripe: C.yellow, emoji: '⚠️' },
+  emergency: { label: 'EMERGENCY', color: C.red,     bg: C.redBg,   stripe: C.red,   emoji: '🚨' },
+};
 
 
 import {C} from '../constants/colors';
@@ -27,11 +36,13 @@ export default function HomeScreen({ navigation }) {
   const [userLoaded, setUserLoaded] = useState(false);
   const [weather, setWeather] = useState(null);
   const [latestNews, setLatestNews] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
   const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmEmergencyCall, setConfirmEmergencyCall] = useState(false);
 
-  useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews();
+  useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews(); fetchAnnouncements();
 
   const unsubscribe = navigation.addListener('focus', loadUser); 
   return unsubscribe;                                            
@@ -55,6 +66,7 @@ export default function HomeScreen({ navigation }) {
       await Promise.all([
         fetchWeather(),
         fetchLatestNews(),
+        fetchAnnouncements(),
         loadUser(),
       ]);
 
@@ -82,6 +94,14 @@ export default function HomeScreen({ navigation }) {
       const res  = await fetch(`${api_url}/api/news`);
       const data = await res.json();
       setLatestNews(data.slice(0, 4));
+    } catch (e) { console.log(e); }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res  = await fetch(`${api_url}/api/announcements`);
+      const data = await res.json();
+      setAnnouncements(data);
     } catch (e) { console.log(e); }
   };
 
@@ -214,6 +234,59 @@ export default function HomeScreen({ navigation }) {
                   }
                   >
        
+        {/* Announcements */}
+        {announcements.length > 0 && (
+          <View style={{ marginHorizontal: -16 }}>
+            <Text style={[s.secTitle, { marginHorizontal: 16 }]}>Announcements</Text>
+            <FlatList
+              data={announcements}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={item => String(item.id)}
+              snapToInterval={CARD_WIDTH + CARD_GAP}
+              decelerationRate="fast"
+              contentContainerStyle={{ paddingHorizontal: 16, gap: CARD_GAP }}
+              onMomentumScrollEnd={e => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
+                setAnnouncementIndex(idx);
+              }}
+              renderItem={({ item }) => {
+                const um = URGENCY_META[item.urgency] || URGENCY_META.info;
+                return (
+                  <TouchableOpacity
+                    style={[s.annCard, { width: CARD_WIDTH, borderColor: um.stripe + '30' }]}
+                    activeOpacity={0.88}
+                    onPress={() => navigation.navigate('AnnouncementDetail', { announcement: item })}
+                  >
+                    <View style={[s.annStripe, { backgroundColor: um.stripe }]}/>
+                    {item.image ? (
+                      <Image source={{ uri: getImageUrl(item.image) }} style={s.annImg}/>
+                    ) : (
+                      <View style={[s.annImg, s.annImgEmpty, { backgroundColor: um.bg }]}>
+                        <Text style={{ fontSize: 30 }}>{um.emoji}</Text>
+                      </View>
+                    )}
+                    <View style={s.annBody}>
+                      <View style={[s.annBadge, { backgroundColor: um.bg }]}>
+                        <Text style={{ fontSize: 10 }}>{um.emoji}</Text>
+                        <Text style={[s.annBadgeTxt, { color: um.color }]}>{um.label}</Text>
+                      </View>
+                      <Text style={s.annTitle} numberOfLines={2}>{item.title}</Text>
+                      <Text style={s.annMsg} numberOfLines={2}>{item.message}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+            {announcements.length > 1 && (
+              <View style={s.annDots}>
+                {announcements.map((_, i) => (
+                  <View key={i} style={[s.annDot, i === announcementIndex && s.annDotActive]}/>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* features  */}
         <Text style={s.secTitle}>Features</Text>
@@ -440,4 +513,20 @@ const s = StyleSheet.create({
   sosSub:      { color: 'rgba(255,255,255,0.7)', fontSize: 10, marginTop: 2 },
   sosBtn:      { backgroundColor: '#fff', borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14 },
   sosBtnTxt:   { color: C.red, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+
+  /* Announcements */
+  annCard:     { backgroundColor: C.card, borderRadius: 18, overflow: 'hidden', borderWidth: 1.5,
+                 shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  annStripe:   { height: 4, width: '100%' },
+  annImg:      { width: '100%', height: 110 },
+  annImgEmpty: { alignItems: 'center', justifyContent: 'center' },
+  annBody:     { padding: 13, gap: 6 },
+  annBadge:    { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
+                 borderRadius: 6, paddingVertical: 3, paddingHorizontal: 8 },
+  annBadgeTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+  annTitle:    { fontSize: 13.5, fontWeight: '800', color: C.text, lineHeight: 18 },
+  annMsg:      { fontSize: 11, color: C.sub, lineHeight: 16 },
+  annDots:     { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
+  annDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: C.border },
+  annDotActive:{ width: 16, backgroundColor: C.green },
 });

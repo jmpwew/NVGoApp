@@ -179,7 +179,7 @@ export default function MyReportsScreen({ navigation }) {
 
               {/* Card header — ID + badge */}
               <View style={styles.cardHeader}>
-                <Text style={styles.reportId}>RPT-{String(item.id).padStart(4, '0')}</Text>
+                
                 <View style={[styles.badge, { backgroundColor: s.bg }]}>
                   <Text style={[styles.badgeText, { color: s.text }]}>{s.label}</Text>
                 </View>
