@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, StatusBar, Dimensions, Platform,
@@ -38,6 +38,7 @@ export default function HomeScreen({ navigation }) {
   const [latestNews, setLatestNews] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const announcementListRef = useRef(null);
   const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmEmergencyCall, setConfirmEmergencyCall] = useState(false);
@@ -102,6 +103,14 @@ export default function HomeScreen({ navigation }) {
       const res  = await fetch(`${api_url}/api/announcements`);
       const data = await res.json();
       setAnnouncements(data);
+
+      // Always land back on the first (highest-priority / newest) card
+      // so a freshly-posted announcement is visible immediately instead
+      // of being hidden wherever the carousel was last scrolled to.
+      setAnnouncementIndex(0);
+      requestAnimationFrame(() => {
+        announcementListRef.current?.scrollToOffset({ offset: 0, animated: false });
+      });
     } catch (e) { console.log(e); }
   };
 
@@ -239,6 +248,7 @@ export default function HomeScreen({ navigation }) {
           <View style={{ marginHorizontal: -16, marginBottom: -8 }}>
             <Text style={[s.secTitle, { marginHorizontal: 16 }]}>Announcements</Text>
             <FlatList
+              ref={announcementListRef}
               data={announcements}
               horizontal
               showsHorizontalScrollIndicator={false}

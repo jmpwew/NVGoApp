@@ -319,9 +319,11 @@ export default function ReportScreen() {
               javaScriptEnabled={true}
             />
           )}
+        </View>
 
-          <View style={s.divider}/>
-          <Field icon={<IcNote/>} placeholder="Landmark or description (e.g. near barangay hall)" value={locationNote} onChangeText={setLocationNote}/>
+        <Text style={s.secLabel}>LANDMARK (optional)</Text>
+        <View style={s.card}>
+          <Field icon={<IcNote/>} placeholder="e.g. near barangay hall" value={locationNote} onChangeText={setLocationNote}/>
         </View>
 
         <Text style={s.secLabel}>PHOTOS & VIDEOS (optional)</Text>

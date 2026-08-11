@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import api_url from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
-import { IcBack, IcCamera, IcSave, IcLock, IcChevron} from '../constants/icons';
+import { IcBack, IcCamera, IcSave, IcLock, IcMail, IcChevron} from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
 
 
@@ -58,7 +58,11 @@ export default function EditProfileScreen({ navigation }) {
   const notify = (title, message, tone = 'error') => setAlertInfo({ title, message, tone });
  
 
-  useEffect(() => { loadUser(); }, []);
+  useEffect(() => {
+    loadUser();
+    const unsubscribe = navigation.addListener('focus', loadUser);
+    return unsubscribe;
+  }, [navigation]);
 
   const loadUser = async () => {
     try {
@@ -179,15 +183,29 @@ export default function EditProfileScreen({ navigation }) {
 
         {/*contact*/}
         <Text style={s.secLabel}>CONTACT</Text>
+
+        {/* Email — display only, navigate to change screen */}
+        <TouchableOpacity
+          style={s.card}
+          onPress={() => navigation.navigate('ChangeEmail')}
+          activeOpacity={0.75}
+        >
+          <View style={s.pwRow}>
+            <View style={s.pwLeft}>
+              <Text style={s.fieldLabel}>Email</Text>
+              <Text style={s.emailTxt}>{email || '—'}</Text>
+            </View>
+            <View style={s.pwRight}>
+              <IcMail/>
+              <Text style={s.pwChangeTxt}>Change</Text>
+              <IcChevron/>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <View style={{ height: 8 }}/>
+
         <View style={s.card}>
-          <Field
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <View style={s.divider}/>
           <Field
             label="Contact Number"
             value={contact}
@@ -316,6 +334,7 @@ const s = StyleSheet.create({
   pwRow:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   pwLeft:       { flex: 1 },
   pwDots:       { fontSize: 16, color: C.text, letterSpacing: 3, marginTop: 2 },
+  emailTxt:     { fontSize: 14, color: C.text, fontWeight: '600', marginTop: 2 },
   pwRight:      { flexDirection: 'row', alignItems: 'center', gap: 5 },
   pwChangeTxt:  { fontSize: 13, fontWeight: '700', color: C.green },
 

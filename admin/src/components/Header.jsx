@@ -8,6 +8,14 @@ import playNotificationSound from '../playNotificationSound';
 import { API } from '../config';
 const POLL_MS = 5000;
 
+const ROLE_LABELS = {
+  admin:    'Admin',
+  verifier: 'Verifier',
+  police:   'Police',
+  bfp:      'BFP',
+  medical:  'Medical',
+};
+
 export default function Header({ onToggleNav }) {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen]   = useState(false);
@@ -154,7 +162,7 @@ export default function Header({ onToggleNav }) {
       </button>
 
       <div className="header-logo">
-        NV<span>Go</span> Admin
+        NV<span>Go</span> {ROLE_LABELS[admin.role] || 'Admin'}
       </div>
 
       <form className="header-search" onSubmit={handleSearchSubmit}>

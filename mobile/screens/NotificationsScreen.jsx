@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
+  View, Text, Image, StyleSheet, TouchableOpacity,
   ScrollView, StatusBar, Platform, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../constants/colors';
 import { IcBack, IcBell, IcAlert, IcCheck, IcInfo, IcTrash } from '../constants/icons';
 import api_url from '../utils/api';
+import { getImageUrl } from '../utils/getImageUrl';
 
 
 
@@ -45,9 +46,13 @@ function NotifCard({ item, onOpen, onDelete }) {
     >
       {!item.is_read && <View style={[s.unreadDot, { backgroundColor: cfg.dot }]}/>}
 
-      <View style={[s.iconWrap, { backgroundColor: cfg.bg, borderColor: cfg.border + '40' }]}>
-        {cfg.icon}
-      </View>
+      {item.image ? (
+        <Image source={{ uri: getImageUrl(item.image) }} style={s.thumb}/>
+      ) : (
+        <View style={[s.iconWrap, { backgroundColor: cfg.bg, borderColor: cfg.border + '40' }]}>
+          {cfg.icon}
+        </View>
+      )}
 
       <View style={s.cardBody}>
         <View style={s.cardTop}>
@@ -56,7 +61,8 @@ function NotifCard({ item, onOpen, onDelete }) {
           </Text>
           <Text style={s.cardTime}>{formatTime(item.created_at)}</Text>
         </View>
-        <Text style={s.cardMsg} numberOfLines={2}>{item.body}</Text>
+        {/* Full announcement/news text shown up to 3 lines, then "…" if longer */}
+        <Text style={s.cardMsg} numberOfLines={3} ellipsizeMode="tail">{item.body}</Text>
       </View>
 
       <TouchableOpacity style={s.deleteBtn} onPress={() => onDelete(item.id)} hitSlop={8}>
@@ -121,6 +127,36 @@ export default function NotificationsScreen({ navigation }) {
 
   const openNotification = (item) => {
     if (!item.is_read) markRead(item.id);
+
+    // Announcement/news notifications open the real detail screen (full
+    // content + picture, same view as browsing the Home/News feed).
+    if (item.related_type === 'announcement') {
+      navigation.navigate('AnnouncementDetail', {
+        announcement: {
+          id: item.related_id,
+          title: item.title,
+          message: item.body,
+          image: item.image,
+          urgency: item.type === 'alert' ? 'warning' : 'info',
+          created_at: item.created_at,
+        },
+      });
+      return;
+    }
+
+    if (item.related_type === 'news') {
+      navigation.navigate('NewsDetail', {
+        news: {
+          id: item.related_id,
+          title: item.title,
+          content: item.body,
+          image: item.image,
+          created_at: item.created_at,
+        },
+      });
+      return;
+    }
+
     navigation.navigate('NotificationDetail', { notification: item });
   };
 
@@ -306,6 +342,7 @@ const s = StyleSheet.create({
   },
   unreadDot:    { position: 'absolute', top: 10, right: 42, width: 7, height: 7, borderRadius: 4 },
   iconWrap:     { width: 36, height: 36, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  thumb:        { width: 44, height: 44, borderRadius: 10, flexShrink: 0, backgroundColor: C.border },
   cardBody:     { flex: 1 },
   cardTop:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   cardTitle:    { fontSize: 13, fontWeight: '700', color: C.text, flex: 1, marginRight: 6 },

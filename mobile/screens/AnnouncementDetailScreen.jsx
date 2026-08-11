@@ -7,8 +7,8 @@ import { getImageUrl } from '../utils/getImageUrl';
 import { IcBack } from '../constants/icons';
 
 const URGENCY_META = {
-  info:      { label: 'INFO',      color: C.skyDk, bg: C.skyBg },
-  warning:   { label: 'WARNING',   color: '#935e00', bg: '#FFF6DC' },
+  info: { label: 'INFO',  color: C.skyDk, bg: C.skyBg },
+  warning: { label: 'WARNING', color: '#935e00', bg: '#FFF6DC' },
   emergency: { label: 'EMERGENCY', color: '#fff', bg: C.red },
 };
 
@@ -34,9 +34,7 @@ export default function AnnouncementDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView
-        style={s.scroll}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
+        style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}
       >
         {announcement.image ? (
           <Image

@@ -17,6 +17,7 @@ import ProfileDetails from './screens/ProfileDetailsScreen';
 import MyReportsScreen from './screens/MyReportsScreen';
 import TabNavigator from './navigation/TabNavigator';
 import ChangePasswordScreen from './screens/ChangePasswordScreen';
+import ChangeEmailScreen from './screens/ChangeEmailScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import NotificationDetailScreen from './screens/NotificationDetailScreen';
 import ContactSupportScreen from './screens/ContactSupportScreen';
@@ -31,7 +32,8 @@ import { requestLocationPermission } from './utils/locationPermission';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -87,6 +89,12 @@ export default function App() {
           <Stack.Screen
             name="ChangePassword"
             component={ChangePasswordScreen}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="ChangeEmail"
+            component={ChangeEmailScreen}
             options={{ headerShown: false }}
           />
 

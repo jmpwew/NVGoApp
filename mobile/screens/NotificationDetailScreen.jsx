@@ -1,9 +1,10 @@
 import {
-  View, Text, StyleSheet, TouchableOpacity,
+  View, Text, Image, StyleSheet, TouchableOpacity,
   ScrollView, StatusBar, Platform,
 } from 'react-native';
 import { C } from '../constants/colors';
 import { IcBack, IcAlert, IcCheck, IcInfo, IcBell, IcClock } from '../constants/icons';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const TYPE = {
   alert: { icon: <IcAlert s={22} />, bg: '#FFFBE6', border: C.yellowDk, label: 'Alert' },
@@ -42,6 +43,14 @@ export default function NotificationDetailScreen({ route, navigation }) {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {notification.image ? (
+          <Image
+            source={{ uri: getImageUrl(notification.image) }}
+            style={s.image}
+            resizeMode="cover"
+          />
+        ) : null}
+
         <View style={s.card}>
           {/* Type + icon */}
           <View style={s.topRow}>
@@ -99,6 +108,11 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
   },
   headerTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  image: {
+    width: '100%', height: 220, marginTop: 16, borderRadius: 16,
+    alignSelf: 'center', maxWidth: '92%',
+  },
 
   /* Card */
   card: {
