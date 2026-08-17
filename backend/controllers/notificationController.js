@@ -1,8 +1,6 @@
 const pool = require('../config/db');
 
 // Returns notifications for the logged-in user:
-// their own (user_id = me) + broadcasts (user_id IS NULL) sent on or after
-// they registered, so new accounts don't inherit old admin broadcasts.
 exports.getNotifications = async (req, res) => {
   try {
     const result = await pool.query(

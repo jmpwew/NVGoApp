@@ -269,9 +269,7 @@ exports.createNews = async (req, res) => {
     );
     const news = result.rows[0];
 
-    // record a broadcast notification so it shows up in every citizen's
-    // in-app notification list (with the full content + picture), not just
-    // as a push banner
+ 
     await pool.query(
       `INSERT INTO notifications (user_id, title, body, type, image, related_type, related_id)
        VALUES (NULL, $1, $2, 'update', $3, 'news', $4)`,
@@ -357,9 +355,7 @@ exports.createAnnouncement = async (req, res) => {
 
     // notify all users when a new, active announcement goes out
     if (active) {
-      // record a broadcast notification so it shows up in every citizen's
-      // in-app notification list (full message + picture), not just as a
-      // push banner
+  
       const notifType = (urgency === 'emergency' || urgency === 'warning') ? 'alert' : 'info';
       await pool.query(
         `INSERT INTO notifications (user_id, title, body, type, image, related_type, related_id)

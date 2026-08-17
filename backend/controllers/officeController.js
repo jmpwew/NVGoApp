@@ -5,9 +5,7 @@ const { createAlert } = require('./alertController');
 const OFFICE_LABELS = { police: 'Police', bfp: 'BFP (Fire)', medical: 'Medical / Ambulance' };
 const STATUS_LABELS = { ongoing: 'Ongoing', dispatched: 'Unit Dispatched', resolved: 'Resolved' };
 
-// Inserts an in-app notification for the citizen and pushes it to their
-// device (if they have a push token on file). Used for both the
-// "unit dispatched" and "report resolved" moments below.
+// notification
 async function notifyCitizen(user_id, title, body) {
   if (!user_id) return;
 
@@ -24,7 +22,7 @@ async function notifyCitizen(user_id, title, body) {
   }
 }
 
-// Reports assigned to the logged-in office (req.user.role = 'police' | 'bfp' | 'medical')
+// Reports assigned to the logged-in office pilice, bfp ,medical
 exports.getMyAssignments = async (req, res) => {
   try {
     const result = await pool.query(
@@ -51,8 +49,7 @@ exports.getMyAssignments = async (req, res) => {
   }
 };
 
-// Update this office's own status/action note for a given assignment.
-// An office can only touch its OWN assignment row (enforced by office_role match).
+
 exports.updateAssignment = async (req, res) => {
   try {
     const { assignmentId } = req.params;
@@ -96,8 +93,7 @@ exports.updateAssignment = async (req, res) => {
       target_role: 'admin',
     }).catch(err => console.error('createAlert (office) failed:', err));
 
-    // Let the citizen know as soon as a unit is dispatched to their report —
-    // don't make them wait until every assigned office resolves.
+  
     if (status === 'dispatched') {
       const reportResult = await pool.query(
         'SELECT user_id FROM reports WHERE id = $1',

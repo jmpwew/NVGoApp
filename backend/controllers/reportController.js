@@ -8,9 +8,7 @@ exports.createReport = async (req, res) => {
     const user_id = req.user?.id || null;
     const { name, contact, description, latitude, longitude, location_note } = req.body;
 
-    // Limit logged-in accounts to 5 reports per calendar day. Guest
-    // reports (no account) aren't limited here since there's no account
-    // identity to rate-limit against.
+    // Limit logged-in accounts to 5 reports
     if (user_id) {
       const todayCount = await pool.query(
         `SELECT COUNT(*) FROM reports

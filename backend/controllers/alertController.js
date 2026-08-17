@@ -1,8 +1,7 @@
 const pool = require('../config/db');
 
 // GET /api/admin/alerts
-// Latest notifications for the caller's OWN role's bell dropdown
-// (read + unread), newest first.
+
 exports.getFeed = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 30, 100);
@@ -78,11 +77,7 @@ exports.deleteAlert = async (req, res) => {
   }
 };
 
-// Helper used by other controllers to create a bell notification.
-// (Not an HTTP handler — imported directly.)
-// target_role: which role's bell this shows up in —
-// 'admin' | 'verifier' | 'police' | 'bfp' | 'medical'. Defaults to 'admin'
-// to match existing behavior for callers that don't specify one.
+
 exports.createAlert = async ({ type, related_id, title, detail, target_role = 'admin' }) => {
   await pool.query(
     `INSERT INTO admin_notifications (type, related_id, title, detail, target_role)

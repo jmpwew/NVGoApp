@@ -1,14 +1,14 @@
 const pool = require('../config/db');
 const sendEmail = require('../utils/sendEmail');
 
-// In-memory OTP store: { user_id: { otp, expiresAt, verified, oldEmail } }
+
 const otpStore = {};
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // POST /api/profile/email/send-otp
-// Sends a verification code to the user's CURRENT (old) email address,
-// so ownership of the existing inbox is confirmed before anything changes.
+// Sends a verification code to the user's old email address,
+
 exports.sendEmailChangeOtp = async (req, res) => {
   try {
     const user_id = req.user.id;
@@ -82,7 +82,7 @@ exports.verifyEmailChangeOtp = async (req, res) => {
 
 // PUT /api/profile/email
 // Applies the new email address, only after the OTP sent to the old
-// email has been verified.
+
 exports.changeEmail = async (req, res) => {
   try {
     const user_id = req.user.id;

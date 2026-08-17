@@ -4,7 +4,9 @@ const { uploadToSupabase } = require('../utils/uploadToSupabase');
 exports.updateProfile = async (req, res) => {
   try {
     const user_id = req.user.id;
-    const { firstname, lastname, email, contact, address } = req.body;
+    const { firstname, lastname, email, contact, address, remove_image } = req.body;
+
+    const shouldRemove = remove_image === 'true' || remove_image === true;
 
     const imageUrl = req.file
       ? await uploadToSupabase(req.file, 'profile-images')
@@ -17,10 +19,14 @@ exports.updateProfile = async (req, res) => {
            email     = $3,
            contact   = $4,
            address   = $5,
-           image     = COALESCE($6, image)
-       WHERE id = $7
+           image     = CASE
+                          WHEN $6::text IS NOT NULL THEN $6
+                          WHEN $7::boolean THEN NULL
+                          ELSE image
+                        END
+       WHERE id = $8
        RETURNING id, firstname, lastname, email, contact, address, role, image`,
-      [firstname, lastname, email, contact, address, imageUrl, user_id]
+      [firstname, lastname, email, contact, address, imageUrl, shouldRemove, user_id]
     );
 
     if (result.rows.length === 0) {
