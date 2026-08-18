@@ -80,7 +80,7 @@ function Layout({ children }) {
 }
 
 // Wraps a page and restricts it to a set of allowed roles.
-// Logged out -> /login. Logged in but wrong role -> their own dashboard.
+
 function RoleRoute({ allow, children }) {
   const token = localStorage.getItem('token');
   const role = getStoredRole();
@@ -99,13 +99,13 @@ export default function App() {
 
         {/* Main Admin */}
         <Route path="/dashboard" element={<RoleRoute allow={['admin']}><DashboardPage /></RoleRoute>} />
-        <Route path="/reports"   element={<RoleRoute allow={['admin']}><ReportsPage /></RoleRoute>} />
-        <Route path="/users"     element={<RoleRoute allow={['admin']}><UsersPage /></RoleRoute>} />
-        <Route path="/news"      element={<RoleRoute allow={['admin']}><NewsPage /></RoleRoute>} />
+        <Route path="/reports" element={<RoleRoute allow={['admin']}><ReportsPage /></RoleRoute>} />
+        <Route path="/users"   element={<RoleRoute allow={['admin']}><UsersPage /></RoleRoute>} />
+        <Route path="/news"  element={<RoleRoute allow={['admin']}><NewsPage /></RoleRoute>} />
         <Route path="/announcements" element={<RoleRoute allow={['admin']}><AnnouncementsPage /></RoleRoute>} />
         <Route path="/notifications" element={<RoleRoute allow={['admin']}><NotificationsPage /></RoleRoute>} />
-        <Route path="/support"   element={<RoleRoute allow={['admin']}><SupportPage /></RoleRoute>} />
-        <Route path="/hotlines"  element={<RoleRoute allow={['admin']}><HotlinesPage /></RoleRoute>} />
+        <Route path="/support" element={<RoleRoute allow={['admin']}><SupportPage /></RoleRoute>} />
+        <Route path="/hotlines" element={<RoleRoute allow={['admin']}><HotlinesPage /></RoleRoute>} />
 
         {/* Verifier */}
         <Route path="/verifier"  element={<RoleRoute allow={['verifier']}><VerifierDashboard /></RoleRoute>} />
