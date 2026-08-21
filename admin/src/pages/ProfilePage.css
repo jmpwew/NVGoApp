@@ -106,12 +106,6 @@
   color: var(--success);
 }
 
-.profile-meta-divider {
-  height: 1px;
-  background-color: var(--border);
-  margin: 16px 0;
-}
-
 .profile-quickinfo {
   display: flex;
   flex-direction: column;
