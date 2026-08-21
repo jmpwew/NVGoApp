@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import axios from 'axios';
 import './ProfilePage.css';
 
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
+import {
+  MailIcon, PhoneIcon, MapPinIcon, CalendarIcon, ClockIcon,
+  CameraIcon, PencilIcon, ShieldIcon, CheckCircleIcon,
+} from '../components/Icons';
 
 const ROLE_LABELS = {
   admin:    'Administrator',
@@ -12,6 +16,37 @@ const ROLE_LABELS = {
   bfp:      'BFP (Fire)',
   medical:  'Medical / Ambulance',
 };
+
+const ROLE_BADGE_CLASSES = {
+  admin:    'badge-admin',
+  verifier: 'badge-verifier',
+  police:   'badge-office-police',
+  bfp:      'badge-office-bfp',
+  medical:  'badge-office-medical',
+};
+
+const ROLE_BANNER_CLASSES = {
+  admin:    'banner-admin',
+  verifier: 'banner-verifier',
+  police:   'banner-police',
+  bfp:      'banner-bfp',
+  medical:  'banner-medical',
+};
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return 'This is your first login';
+  return new Date(dateStr).toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+}
 
 export default function ProfilePage() {
   const token = localStorage.getItem('token');
@@ -27,13 +62,22 @@ export default function ProfilePage() {
     contact:   stored.contact   || '',
     address:   stored.address   || '',
   });
+  const [editing, setEditing]         = useState(false);
   const [imageFile, setImageFile]     = useState(null);
   const [preview, setPreview]         = useState(null);
   const [currentImage, setCurrentImage] = useState(stored.image || null);
   const [saving, setSaving]           = useState(false);
   const [message, setMessage]         = useState(null); // { type: 'success'|'error', text }
+  const [meta, setMeta] = useState({
+    created_at: stored.created_at || null,
+    last_login: stored.last_login || null,
+  });
 
-  const initials = (`${form.firstname} ${form.lastname}`.trim() || form.email || 'Admin')
+  const fileInputRef = useRef(null);
+  const role = stored.role;
+
+  const fullName = `${form.firstname} ${form.lastname}`.trim() || 'Admin User';
+  const initials = (fullName || form.email || 'Admin')
     .split(' ')
     .map(w => w[0])
     .join('')
@@ -45,6 +89,20 @@ export default function ProfilePage() {
     if (!file) return;
     setImageFile(file);
     setPreview(URL.createObjectURL(file));
+  }
+
+  function cancelEdit() {
+    setForm({
+      firstname: stored.firstname || '',
+      lastname:  stored.lastname  || '',
+      email:     stored.email     || '',
+      contact:   stored.contact   || '',
+      address:   stored.address   || '',
+    });
+    setImageFile(null);
+    setPreview(null);
+    setMessage(null);
+    setEditing(false);
   }
 
   async function handleSubmit(e) {
@@ -71,9 +129,11 @@ export default function ProfilePage() {
       const updated = res.data.user;
       localStorage.setItem('admin', JSON.stringify(updated));
       setCurrentImage(updated.image);
+      setMeta({ created_at: updated.created_at, last_login: updated.last_login });
       setImageFile(null);
       setPreview(null);
       setMessage({ type: 'success', text: 'Profile updated successfully.' });
+      setEditing(false);
     } catch (err) {
       console.log(err);
       setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update profile.' });
@@ -83,93 +143,193 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="page">
+    <div className="page profile-page">
       <h1>My Profile</h1>
 
-      <div className="card profile-card">
-        <div className="profile-avatar-block">
-          {preview ? (
-            <img src={preview} alt="preview" className="profile-avatar-lg" />
-          ) : currentImage ? (
-            <img src={getImageUrl(currentImage)} alt="profile" className="profile-avatar-lg" />
-          ) : (
-            <div className="profile-avatar-lg profile-avatar-fallback">{initials}</div>
-          )}
+      <div className="profile-layout">
+        {/* ── Left: identity card ─────────────────────────────── */}
+        <div className="card profile-identity-card">
+          <div className={`profile-banner ${ROLE_BANNER_CLASSES[role] || 'banner-admin'}`} />
 
-          <div>
-            <div className="profile-name">{`${form.firstname} ${form.lastname}`.trim() || 'Admin User'}</div>
-            <div className="profile-role badge badge-admin">{ROLE_LABELS[stored.role] || stored.role || 'Staff'}</div>
-          </div>
-        </div>
-
-        {message && (
-          <div className={`profile-message profile-message-${message.type}`}>
-            {message.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="profile-form-grid">
-            <div className="form-group">
-              <label>First name</label>
-              <input
-                type="text"
-                value={form.firstname}
-                onChange={e => setForm({ ...form, firstname: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Last name</label>
-              <input
-                type="text"
-                value={form.lastname}
-                onChange={e => setForm({ ...form, lastname: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Email</label>
+          <div className="profile-avatar-wrap">
+            {preview ? (
+              <img src={preview} alt="preview" className="profile-avatar-lg" />
+            ) : currentImage ? (
+              <img src={getImageUrl(currentImage)} alt="profile" className="profile-avatar-lg" />
+            ) : (
+              <div className="profile-avatar-lg profile-avatar-fallback">{initials}</div>
+            )}
+            {editing && (
+              <button
+                type="button"
+                className="avatar-edit-btn"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Change profile photo"
+              >
+                <CameraIcon />
+              </button>
+            )}
             <input
-              type="email"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              required
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              hidden
             />
           </div>
 
-          <div className="profile-form-grid">
-            <div className="form-group">
-              <label>Contact number</label>
-              <input
-                type="text"
-                value={form.contact}
-                onChange={e => setForm({ ...form, contact: e.target.value })}
-              />
+          <div className="profile-identity-body">
+            <div className="profile-name">{fullName}</div>
+            <div className={`badge ${ROLE_BADGE_CLASSES[role] || 'badge-admin'} profile-role-badge`}>
+              <ShieldIcon width={12} height={12} /> {ROLE_LABELS[role] || role || 'Staff'}
             </div>
-            <div className="form-group">
-              <label>Address</label>
-              <input
-                type="text"
-                value={form.address}
-                onChange={e => setForm({ ...form, address: e.target.value })}
-              />
+
+            <div className="profile-status">
+              <CheckCircleIcon width={14} height={14} />
+              <span>Active account</span>
             </div>
+
+            <div className="profile-quickinfo">
+              <div className="profile-quickinfo-row">
+                <MailIcon />
+                <span>{form.email || '—'}</span>
+              </div>
+              <div className="profile-quickinfo-row">
+                <PhoneIcon />
+                <span>{form.contact || 'No contact number'}</span>
+              </div>
+              <div className="profile-quickinfo-row">
+                <MapPinIcon />
+                <span>{form.address || 'No address on file'}</span>
+              </div>
+            </div>
+
+            <div className="profile-meta-divider" />
+
+            <div className="profile-quickinfo">
+              <div className="profile-quickinfo-row">
+                <CalendarIcon />
+                <span>Member since {formatDate(meta.created_at)}</span>
+              </div>
+              <div className="profile-quickinfo-row">
+                <ClockIcon />
+                <span>Last login: {formatDateTime(meta.last_login)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right: editable details ─────────────────────────── */}
+        <div className="card profile-details-card">
+          <div className="profile-details-header">
+            <div>
+              <h2>Personal Information</h2>
+              <p>Keep your account details accurate and up to date.</p>
+            </div>
+            {!editing && (
+              <button type="button" className="btn-outline" onClick={() => setEditing(true)}>
+                <PencilIcon /> Edit profile
+              </button>
+            )}
           </div>
 
-          <div className="form-group">
-            <label>Profile photo</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-          </div>
+          {message && (
+            <div className={`profile-message profile-message-${message.type}`}>
+              {message.text}
+            </div>
+          )}
 
-          <div className="form-buttons">
-            <button type="submit" className="btn-green" disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
+          {!editing ? (
+            <div className="profile-view-grid">
+              <div className="profile-view-field">
+                <label>First name</label>
+                <div className="profile-view-value">{form.firstname || '—'}</div>
+              </div>
+              <div className="profile-view-field">
+                <label>Last name</label>
+                <div className="profile-view-value">{form.lastname || '—'}</div>
+              </div>
+              <div className="profile-view-field profile-view-field-wide">
+                <label>Email address</label>
+                <div className="profile-view-value">{form.email || '—'}</div>
+              </div>
+              <div className="profile-view-field">
+                <label>Contact number</label>
+                <div className="profile-view-value">{form.contact || '—'}</div>
+              </div>
+              <div className="profile-view-field">
+                <label>Address</label>
+                <div className="profile-view-value">{form.address || '—'}</div>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="profile-form-grid">
+                <div className="form-group">
+                  <label>First name</label>
+                  <input
+                    type="text"
+                    value={form.firstname}
+                    onChange={e => setForm({ ...form, firstname: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Last name</label>
+                  <input
+                    type="text"
+                    value={form.lastname}
+                    onChange={e => setForm({ ...form, lastname: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="profile-form-grid">
+                <div className="form-group">
+                  <label>Contact number</label>
+                  <input
+                    type="text"
+                    value={form.contact}
+                    onChange={e => setForm({ ...form, contact: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={e => setForm({ ...form, address: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Profile photo</label>
+                <input type="file" accept="image/*" onChange={handleImageChange} />
+              </div>
+
+              <div className="form-buttons">
+                <button type="button" className="btn-outline" onClick={cancelEdit} disabled={saving}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-green" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
