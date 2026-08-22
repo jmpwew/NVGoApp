@@ -124,7 +124,7 @@ export default function UsersPage() {
                   type="text"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Juan Dela Cruz"
+                  placeholder="Station"
                   required
                 />
               </div>
