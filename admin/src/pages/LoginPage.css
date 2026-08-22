@@ -29,7 +29,7 @@
   margin-bottom: 24px;
 }
 
-.login-box button {
+.login-box button:not(.password-toggle-btn) {
   width: 100%;
   padding: 11px;
   font-size: 15px;
@@ -59,6 +59,8 @@
   top: 50%;
   right: 4px;
   transform: translateY(-50%);
+  width: auto;
+  margin-top: 0;
   background: none;
   border: none;
   padding: 6px;
