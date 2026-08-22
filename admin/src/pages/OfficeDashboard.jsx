@@ -41,7 +41,7 @@ export default function OfficeDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState('all'); // all | ongoing | resolved
+  const [filter, setFilter]           = useState('ongoing'); // ongoing | dispatched | resolved
   const [search, setSearch]           = useState('');
   const [page, setPage]               = useState(1);
   const PAGE_SIZE = 10;
@@ -100,7 +100,7 @@ export default function OfficeDashboard() {
     setNote(a.action_note || '');
   }
 
-  async function performUpdateStatus(assignmentId, status) {
+  async function performUpdateStatus(assignmentId, status, fromStatus) {
     try {
       const res = await axios.put(
         `${API}/api/office/assignments/${assignmentId}`,
@@ -117,9 +117,11 @@ export default function OfficeDashboard() {
         type: 'success',
         text: status === 'resolved'
           ? 'Marked as resolved.'
-          : status === 'dispatched'
-            ? 'Reverted to Unit Dispatched.'
-            : 'Status updated.'
+          : status === 'dispatched' && fromStatus === 'ongoing'
+            ? 'Unit dispatched.'
+            : status === 'dispatched'
+              ? 'Reverted to Unit Dispatched.'
+              : 'Status updated.'
       });
     } catch (err) {
       console.log(err);
@@ -127,15 +129,14 @@ export default function OfficeDashboard() {
     }
   }
 
-  function updateStatus(assignmentId, status) {
-  
-    setConfirmAction({ assignmentId, status });
+  function updateStatus(assignmentId, status, fromStatus) {
+    setConfirmAction({ assignmentId, status, fromStatus });
   }
 
   async function handleConfirmStatusChange() {
     if (!confirmAction) return;
     setStatusUpdating(true);
-    await performUpdateStatus(confirmAction.assignmentId, confirmAction.status);
+    await performUpdateStatus(confirmAction.assignmentId, confirmAction.status, confirmAction.fromStatus);
     setStatusUpdating(false);
     setConfirmAction(null);
   }
@@ -187,7 +188,7 @@ export default function OfficeDashboard() {
   }
 
   const filtered = assignments.filter(a => {
-    const matchesStatus = filter === 'all' || a.assignment_status === filter;
+    const matchesStatus = a.assignment_status === filter;
     const q = search.toLowerCase();
     const matchesSearch = !q ||
       a.name?.toLowerCase().includes(q) ||
@@ -236,7 +237,6 @@ export default function OfficeDashboard() {
 
       <div className="filter-pill-bar">
         {[
-          { value: 'all',        label: 'All' },
           { value: 'ongoing',    label: 'Ongoing' },
           { value: 'dispatched', label: 'Unit Dispatched' },
           { value: 'resolved',   label: 'Resolved' },
@@ -305,15 +305,19 @@ export default function OfficeDashboard() {
               </div>
               <span className="case-card-time">{timeAgo(a.assigned_at)}</span>
               <div className="case-card-action" onClick={e => e.stopPropagation()}>
-                {a.assignment_status === 'dispatched' ? (
-                  <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'resolved')}>
+                {a.assignment_status === 'ongoing' ? (
+                  <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'dispatched', 'ongoing')}>
+                    Dispatch
+                  </button>
+                ) : a.assignment_status === 'dispatched' ? (
+                  <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'resolved', 'dispatched')}>
                     Resolve
                   </button>
                 ) : a.assignment_status === 'resolved' ? (
-                  <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'dispatched')}>
+                  <button className="btn-gray" onClick={() => updateStatus(a.assignment_id, 'dispatched', 'resolved')}>
                     Cancel resolve
                   </button>
-                ) : null /* 'ongoing' — open the card to dispatch with a note */}
+                ) : null}
               </div>
             </div>
           ))}
@@ -427,12 +431,12 @@ export default function OfficeDashboard() {
                 </button>
               )}
               {selected.assignment_status === 'dispatched' && (
-                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'resolved')}>
+                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'resolved', 'dispatched')}>
                   Mark Resolved
                 </button>
               )}
               {selected.assignment_status === 'resolved' && (
-                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'dispatched')}>
+                <button className="btn-gray" onClick={() => updateStatus(selected.assignment_id, 'dispatched', 'resolved')}>
                   Cancel Resolve
                 </button>
               )}
@@ -443,12 +447,22 @@ export default function OfficeDashboard() {
 
       <ConfirmModal
         open={!!confirmAction}
-        title={confirmAction?.status === 'resolved'
-          ? 'Mark this report as resolved?'
-          : confirmAction?.status === 'dispatched'
-            ? 'Revert this report to Unit Dispatched?'
-            : 'Mark this report as ongoing?'}
-        confirmLabel={confirmAction?.status === 'resolved' ? 'Resolve' : 'Yes, revert'}
+        title={
+          confirmAction?.status === 'resolved'
+            ? 'Mark this report as resolved?'
+            : confirmAction?.status === 'dispatched' && confirmAction?.fromStatus === 'ongoing'
+              ? 'Dispatch a unit to this report?'
+              : confirmAction?.status === 'dispatched'
+                ? 'Revert this report to Unit Dispatched?'
+                : 'Mark this report as ongoing?'
+        }
+        confirmLabel={
+          confirmAction?.status === 'resolved'
+            ? 'Resolve'
+            : confirmAction?.status === 'dispatched' && confirmAction?.fromStatus === 'ongoing'
+              ? 'Dispatch'
+              : 'Yes, revert'
+        }
         loading={statusUpdating}
         onConfirm={handleConfirmStatusChange}
         onCancel={() => setConfirmAction(null)}

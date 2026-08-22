@@ -44,3 +44,31 @@
   font-size: 13px;
   margin-bottom: 14px;
 }
+
+.password-input-wrap {
+  position: relative;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 38px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa0a6;
+  cursor: pointer;
+}
+
+.password-toggle-btn:hover {
+  color: #555;
+}
