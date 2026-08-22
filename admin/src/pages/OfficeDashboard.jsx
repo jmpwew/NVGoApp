@@ -247,20 +247,23 @@ export default function OfficeDashboard() {
         </div>
       </div>
 
-      <div className="filter-pill-bar">
+      <div className="report-tabs">
         {[
-          { value: 'ongoing',    label: 'Ongoing' },
-          { value: 'dispatched', label: 'Unit Dispatched' },
-          { value: 'resolved',   label: 'Resolved' },
+          { value: 'ongoing',    label: 'Ongoing',         count: ongoingCount },
+          { value: 'dispatched', label: 'Unit Dispatched', count: dispatchedCount },
+          { value: 'resolved',   label: 'Resolved',        count: resolvedCount },
         ].map(opt => (
           <button
             key={opt.value}
-            className={`filter-pill ${filter === opt.value ? 'active' : ''}`}
+            className={`report-tab ${filter === opt.value ? 'active' : ''}`}
             onClick={() => setFilter(opt.value)}
           >
-            {opt.label}
+            {opt.label} <span className="report-tab-count">{opt.count}</span>
           </button>
         ))}
+      </div>
+
+      <div className="filter-pill-bar">
         <div className="search-input-wrap">
           <input
             type="text"

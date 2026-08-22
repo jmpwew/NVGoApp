@@ -31,10 +31,10 @@ export default function ReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reports, setReports]   = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState('all');  // all | pending | ongoing | resolved
+  const [filter, setFilter]     = useState('all');  
   const [search, setSearch]     = useState('');
-  const [expandedMap, setExpandedMap] = useState(null);     // { lat, lng } | null
-  const [selectedReport, setSelectedReport] = useState(null); // full report object | null
+  const [expandedMap, setExpandedMap] = useState(null);     
+  const [selectedReport, setSelectedReport] = useState(null); 
   const [toast, setToast]       = useState(null);
   const token = localStorage.getItem('token');
 
@@ -58,8 +58,7 @@ export default function ReportsPage() {
     }
   }, [searchParams, reports]);
 
-  // Uses the full trail endpoint: each report includes verifier + assignments.
-  // silent=true skips the loading-skeleton flash on background polls.
+
   async function fetchReports(silent = false) {
     if (!silent) setLoading(true);
     try {
@@ -130,21 +129,24 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="filter-pill-bar">
+      <div className="report-tabs">
         {[
-          { value: 'all',      label: 'All' },
-          { value: 'pending',  label: 'Pending' },
-          { value: 'ongoing',  label: 'Ongoing' },
-          { value: 'resolved', label: 'Resolved' },
+          { value: 'all',      label: 'All',      count: reports.length },
+          { value: 'pending',  label: 'Pending',  count: reports.filter(r => r.status === 'pending').length },
+          { value: 'ongoing',  label: 'Ongoing',  count: reports.filter(r => r.status === 'ongoing').length },
+          { value: 'resolved', label: 'Resolved', count: reports.filter(r => r.status === 'resolved').length },
         ].map(opt => (
           <button
             key={opt.value}
-            className={`filter-pill ${filter === opt.value ? 'active' : ''}`}
+            className={`report-tab ${filter === opt.value ? 'active' : ''}`}
             onClick={() => setFilter(opt.value)}
           >
-            {opt.label}
+            {opt.label} <span className="report-tab-count">{opt.count}</span>
           </button>
         ))}
+      </div>
+
+      <div className="filter-pill-bar">
         <div className="search-input-wrap">
           <input
             type="text"

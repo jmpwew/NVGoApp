@@ -56,9 +56,7 @@ export default function VerifierDashboard() {
     fetchPending();
     fetchVerified();
 
-    // Keep pending/verified lists fresh without a manual refresh, same 5s
-    // cadence as DashboardPage/App.jsx. silent=true on the poll skips the
-    // loading-skeleton flash, same as ReportsPage.
+ 
     const interval = setInterval(() => {
       fetchPending(true);
       fetchVerified();
@@ -70,8 +68,7 @@ export default function VerifierDashboard() {
     setPage(1);
   }, [view, search]);
 
-  // Coming from a bell notification -> /verifier?reportId=123 opens that
-  // specific report directly instead of just landing on the list.
+ 
   useEffect(() => {
     const reportId = searchParams.get('reportId');
     if (!reportId || (pending.length === 0 && verified.length === 0)) return;
@@ -89,9 +86,7 @@ export default function VerifierDashboard() {
     }
   }, [searchParams, pending, verified]);
 
-  // Esc closes the detail modal, same as clicking outside it or the ✕.
-  // Skipped while the confirm dialog is open on top of it — that has its
-  // own Esc handling, and we don't want one keypress to close both at once.
+
   useEffect(() => {
     if (!selected || confirmVerify) return;
     function handleKeyDown(e) {
@@ -168,7 +163,7 @@ export default function VerifierDashboard() {
     }
   }
 
-  // Search + pagination apply to whichever list is currently in view.
+
   const activeList = view === 'pending' ? pending : verified;
   const filtered = activeList.filter(r =>
     r.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -203,19 +198,22 @@ export default function VerifierDashboard() {
         </div>
       </div>
 
-      <div className="filter-pill-bar">
+      <div className="report-tabs">
         <button
-          className={`filter-pill ${view === 'pending' ? 'active' : ''}`}
+          className={`report-tab ${view === 'pending' ? 'active' : ''}`}
           onClick={() => setView('pending')}
         >
-          Pending
+          Pending <span className="report-tab-count">{pending.length}</span>
         </button>
         <button
-          className={`filter-pill ${view === 'verified' ? 'active' : ''}`}
+          className={`report-tab ${view === 'verified' ? 'active' : ''}`}
           onClick={() => setView('verified')}
         >
-          Verified
+          Verified <span className="report-tab-count">{verified.length}</span>
         </button>
+      </div>
+
+      <div className="filter-pill-bar">
         <div className="search-input-wrap">
           <input
             type="text"
