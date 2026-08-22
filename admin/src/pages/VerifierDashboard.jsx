@@ -89,6 +89,18 @@ export default function VerifierDashboard() {
     }
   }, [searchParams, pending, verified]);
 
+  // Esc closes the detail modal, same as clicking outside it or the ✕.
+  // Skipped while the confirm dialog is open on top of it — that has its
+  // own Esc handling, and we don't want one keypress to close both at once.
+  useEffect(() => {
+    if (!selected || confirmVerify) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setSelected(null);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selected, confirmVerify]);
+
   async function fetchPending(silent = false) {
     if (!silent) setLoading(true);
     try {

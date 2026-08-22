@@ -80,6 +80,18 @@ export default function OfficeDashboard() {
     }
   }, [searchParams, assignments]);
 
+  // Esc closes the detail modal, same as clicking outside it or the ✕.
+  // Skipped while the confirm dialog is open on top of it — that has its
+  // own Esc handling, and we don't want one keypress to close both at once.
+  useEffect(() => {
+    if (!selected || confirmAction) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setSelected(null);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selected, confirmAction]);
+
   async function fetchAssignments(silent = false) {
     if (!silent) setLoading(true);
     try {
@@ -303,7 +315,11 @@ export default function OfficeDashboard() {
                   )}
                 </div>
               </div>
-              <span className="case-card-time">{timeAgo(a.assigned_at)}</span>
+              <span className="case-card-time">
+                {a.assignment_status === 'ongoing'
+                  ? timeAgo(a.assigned_at)
+                  : <>updated {timeAgo(a.updated_at)}</>}
+              </span>
               <div className="case-card-action" onClick={e => e.stopPropagation()}>
                 {a.assignment_status === 'ongoing' ? (
                   <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'dispatched', 'ongoing')}>
@@ -369,6 +385,12 @@ export default function OfficeDashboard() {
                 <div className="detail-label">Date Assigned</div>
                 <div className="detail-value">{new Date(selected.assigned_at).toLocaleString()}</div>
               </div>
+              {selected.assignment_status !== 'ongoing' && (
+                <div>
+                  <div className="detail-label">Last Updated</div>
+                  <div className="detail-value">{new Date(selected.updated_at).toLocaleString()}</div>
+                </div>
+              )}
             </div>
 
             <div className="detail-label">Description</div>

@@ -1,29 +1,28 @@
+import { useEffect } from 'react';
 import './ConfirmModal.css';
 
-// Reusable confirmation dialog, styled to match the app's existing modals
-// (used instead of the native browser confirm()).
-//
-// Usage:
-//   const [confirm, setConfirm] = useState(null); // { onConfirm } or null
-//   <ConfirmModal
-//     open={!!confirm}
-//     title="Mark this report as resolved?"
-//     message="The reporter will be notified once every assigned office resolves it."
-//     confirmLabel="Resolve"
-//     onConfirm={() => { confirm.onConfirm(); setConfirm(null); }}
-//     onCancel={() => setConfirm(null)}
-//   />
+
 export default function ConfirmModal({
   open,
   title,
   message,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
-  tone = 'default', // 'default' | 'danger'
+  tone = 'default', //default or dangerr
   loading = false,
   onConfirm,
   onCancel,
 }) {
+ 
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && !loading) onCancel?.();
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, loading, onCancel]);
+
   if (!open) return null;
 
   return (
