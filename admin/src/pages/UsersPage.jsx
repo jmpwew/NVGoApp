@@ -19,8 +19,7 @@ function badgeClass(role) {
 }
 
 const emptyForm = {
-  firstname: '',
-  lastname: '',
+  name: '',
   email: '',
   password: '',
   contact: '',
@@ -57,7 +56,15 @@ export default function UsersPage() {
     setFormError('');
     setSaving(true);
     try {
-      await axios.post(`${API}/api/admin/users`, form, {
+      const trimmed = form.name.trim();
+      const [firstname, ...rest] = trimmed.split(/\s+/);
+      const lastname = rest.join(' ') || firstname; // fallback if only one word given
+
+      await axios.post(`${API}/api/admin/users`, {
+        ...form,
+        firstname,
+        lastname,
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       cancelForm();
@@ -112,20 +119,12 @@ export default function UsersPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>First Name</label>
+                <label>Name</label>
                 <input
                   type="text"
-                  value={form.firstname}
-                  onChange={e => setForm({ ...form, firstname: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Last Name</label>
-                <input
-                  type="text"
-                  value={form.lastname}
-                  onChange={e => setForm({ ...form, lastname: e.target.value })}
+                  value={form.name}
+                  onChange={e => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g. Juan Dela Cruz"
                   required
                 />
               </div>
