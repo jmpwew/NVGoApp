@@ -42,6 +42,7 @@ export default function OfficeDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState('all'); // all | ongoing | resolved
+  const [search, setSearch]           = useState('');
   const [page, setPage]               = useState(1);
   const PAGE_SIZE = 10;
   const [selected, setSelected]       = useState(null);
@@ -64,7 +65,7 @@ export default function OfficeDashboard() {
 
   useEffect(() => {
     setPage(1);
-  }, [filter]);
+  }, [filter, search]);
 
   // Coming from a bell notification -> /office?reportId=123 opens that
   // specific assignment directly instead of just landing on the list.
@@ -185,9 +186,15 @@ export default function OfficeDashboard() {
     }
   }
 
-  const filtered = assignments.filter(a =>
-    filter === 'all' || a.assignment_status === filter
-  );
+  const filtered = assignments.filter(a => {
+    const matchesStatus = filter === 'all' || a.assignment_status === filter;
+    const q = search.toLowerCase();
+    const matchesSearch = !q ||
+      a.name?.toLowerCase().includes(q) ||
+      a.description?.toLowerCase().includes(q) ||
+      a.location_note?.toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
   const ongoingCount    = assignments.filter(a => a.assignment_status === 'ongoing').length;
   const dispatchedCount = assignments.filter(a => a.assignment_status === 'dispatched').length;
   const resolvedCount   = assignments.filter(a => a.assignment_status === 'resolved').length;
@@ -242,6 +249,14 @@ export default function OfficeDashboard() {
             {opt.label}
           </button>
         ))}
+        <div className="search-input-wrap">
+          <input
+            type="text"
+            placeholder="Search by name, description, or location..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
         <span className="filter-pill-count">{filtered.length} report(s)</span>
       </div>
 
@@ -254,8 +269,14 @@ export default function OfficeDashboard() {
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">📋</div>
-          <div className="empty-state-title">No reports assigned</div>
-          <div className="empty-state-text">Reports the verifier sends to your office will appear here.</div>
+          <div className="empty-state-title">
+            {assignments.length === 0 ? 'No reports assigned' : 'No matching reports'}
+          </div>
+          <div className="empty-state-text">
+            {assignments.length === 0
+              ? 'Reports the verifier sends to your office will appear here.'
+              : 'Try a different search term or filter.'}
+          </div>
         </div>
       ) : (
         <div className="case-card-list">

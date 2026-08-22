@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
@@ -45,6 +46,10 @@ export default function VerifierDashboard() {
   const [checked, setChecked]     = useState([]);   // office roles picked
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]         = useState(null);
+  const [search, setSearch]       = useState('');
+  const [page, setPage]           = useState(1);
+  const PAGE_SIZE = 10;
+  const [confirmVerify, setConfirmVerify] = useState(false); // true while the "verify & turnover" confirm dialog is open
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -60,6 +65,10 @@ export default function VerifierDashboard() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [view, search]);
 
   // Coming from a bell notification -> /verifier?reportId=123 opens that
   // specific report directly instead of just landing on the list.
@@ -118,11 +127,15 @@ export default function VerifierDashboard() {
     );
   }
 
-  async function submitVerification() {
+  function requestVerify() {
     if (checked.length === 0) {
       setToast({ type: 'error', text: 'Select at least one office before submitting.' });
       return;
     }
+    setConfirmVerify(true);
+  }
+
+  async function submitVerification() {
     setSubmitting(true);
     try {
       await axios.put(
@@ -133,6 +146,7 @@ export default function VerifierDashboard() {
       setPending(prev => prev.filter(r => r.id !== selected.id));
       fetchVerified();
       setSelected(null);
+      setConfirmVerify(false);
       setToast({ type: 'success', text: 'Report verified and forwarded.' });
     } catch (err) {
       console.log(err);
@@ -141,6 +155,16 @@ export default function VerifierDashboard() {
       setSubmitting(false);
     }
   }
+
+  // Search + pagination apply to whichever list is currently in view.
+  const activeList = view === 'pending' ? pending : verified;
+  const filtered = activeList.filter(r =>
+    r.name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.description?.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="page">
@@ -180,8 +204,16 @@ export default function VerifierDashboard() {
         >
           Verified
         </button>
+        <div className="search-input-wrap">
+          <input
+            type="text"
+            placeholder="Search by name or description..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
         <span className="filter-pill-count">
-          {(view === 'pending' ? pending.length : verified.length)} report(s)
+          {filtered.length} report(s)
         </span>
       </div>
 
@@ -192,15 +224,17 @@ export default function VerifierDashboard() {
               <div key={i} className="skeleton-row"><div className="skeleton-bar" /></div>
             ))}
           </div>
-        ) : pending.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">✅</div>
-            <div className="empty-state-title">No pending reports</div>
-            <div className="empty-state-text">New reports will appear here for review.</div>
+            <div className="empty-state-title">{pending.length === 0 ? 'No pending reports' : 'No matching reports'}</div>
+            <div className="empty-state-text">
+              {pending.length === 0 ? 'New reports will appear here for review.' : 'Try a different search term.'}
+            </div>
           </div>
         ) : (
         <div className="case-card-list">
-          {pending.map(r => (
+          {paginated.map(r => (
             <div key={r.id} className="case-card" onClick={() => openReview(r)}>
               <div className="case-card-stripe status-pending" />
               <div className="avatar-circle">{initials(r.name)}</div>
@@ -231,15 +265,17 @@ export default function VerifierDashboard() {
         </div>
         )
       ) : (
-        verified.length === 0 ? (
+        filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">🗂️</div>
-            <div className="empty-state-title">No verified reports yet</div>
-            <div className="empty-state-text">Reports you verify will show up here for reference.</div>
+            <div className="empty-state-title">{verified.length === 0 ? 'No verified reports yet' : 'No matching reports'}</div>
+            <div className="empty-state-text">
+              {verified.length === 0 ? 'Reports you verify will show up here for reference.' : 'Try a different search term.'}
+            </div>
           </div>
         ) : (
           <div className="case-card-list">
-            {verified.map(r => (
+            {paginated.map(r => (
               <div key={r.id} className="case-card" onClick={() => openReview(r, true)}>
                 <div className="case-card-stripe status-resolved" />
                 <div className="avatar-circle">{initials(r.name)}</div>
@@ -263,6 +299,26 @@ export default function VerifierDashboard() {
             ))}
           </div>
         )
+      )}
+
+      {!loading && filtered.length > 0 && totalPages > 1 && (
+        <div className="pagination-bar">
+          <button
+            className="btn-gray pagination-btn"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          <span className="pagination-status">Page {currentPage} of {totalPages}</span>
+          <button
+            className="btn-gray pagination-btn"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       )}
 
       {selected && (
@@ -368,7 +424,7 @@ export default function VerifierDashboard() {
                 </div>
 
                 <div className="action-buttons detail-modal-actions">
-                  <button className="btn-green" onClick={submitVerification} disabled={submitting}>
+                  <button className="btn-green" onClick={requestVerify} disabled={submitting}>
                     {submitting ? <><span className="spinner" /> Submitting...</> : 'Verify & Turnover'}
                   </button>
                 </div>
@@ -377,6 +433,20 @@ export default function VerifierDashboard() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmVerify}
+        title="Verify and forward this report?"
+        message={
+          `This will send "${selected?.name || 'this report'}" to: ` +
+          checked.map(role => OFFICE_LABELS[role] || role).join(', ') +
+          '. This action cannot be undone.'
+        }
+        confirmLabel="Verify & Turnover"
+        loading={submitting}
+        onConfirm={submitVerification}
+        onCancel={() => setConfirmVerify(false)}
+      />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>
