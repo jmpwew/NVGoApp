@@ -27,6 +27,7 @@ router.delete('/reports/:id', verifyAdmin, adminController.deleteReport);
 
 // Users
 router.get('/users', verifyAdmin, adminController.getAllUsers);
+router.post('/users', verifyAdmin, adminController.createStaffUser);
 router.delete('/users/:id', verifyAdmin, adminController.deleteUser);
 
 // News

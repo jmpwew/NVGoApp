@@ -1,0 +1,32 @@
+.hotline-form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+.hotline-form h2 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.hotline-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hotline-form .form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 700px) {
+  .hotline-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}

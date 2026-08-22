@@ -1,11 +1,40 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import './UsersPage.css';
 
 import { API } from '../config';
 
+const ROLES = [
+  { value: 'admin',    label: 'Admin' },
+  { value: 'verifier', label: 'Verifier' },
+  { value: 'police',   label: 'Office - Police' },
+  { value: 'bfp',      label: 'Office - BFP' },
+  { value: 'medical',  label: 'Office - Medical' },
+];
+
+const OFFICE_ROLES = ['police', 'bfp', 'medical'];
+
+function badgeClass(role) {
+  return OFFICE_ROLES.includes(role) ? `badge-office-${role}` : `badge-${role}`;
+}
+
+const emptyForm = {
+  firstname: '',
+  lastname: '',
+  email: '',
+  password: '',
+  contact: '',
+  address: '',
+  role: 'admin',
+};
+
 export default function UsersPage() {
-  const [users, setUsers]   = useState([]);
-  const [search, setSearch] = useState('');
+  const [users, setUsers]     = useState([]);
+  const [search, setSearch]   = useState('');
+  const [form, setForm]       = useState(emptyForm);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [formError, setFormError] = useState('');
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -21,6 +50,29 @@ export default function UsersPage() {
     } catch (err) {
       console.log(err);
     }
+  }
+
+  async function handleAddUser(e) {
+    e.preventDefault();
+    setFormError('');
+    setSaving(true);
+    try {
+      await axios.post(`${API}/api/admin/users`, form, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      cancelForm();
+      fetchUsers();
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Failed to create user.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function cancelForm() {
+    setForm(emptyForm);
+    setFormError('');
+    setShowForm(false);
   }
 
   async function deleteUser(id) {
@@ -42,7 +94,109 @@ export default function UsersPage() {
 
   return (
     <div className="page">
-      <h1>Users</h1>
+      <div className="section-header">
+        <h1>Users</h1>
+        {!showForm && (
+          <button className="btn-green" onClick={() => setShowForm(true)}>
+            + Add User
+          </button>
+        )}
+      </div>
+
+      {/* Add staff account form */}
+      {showForm && (
+        <div className="hotline-form">
+          <h2>Add Staff Account</h2>
+          <form onSubmit={handleAddUser}>
+            {formError && <div className="error-msg">{formError}</div>}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  value={form.firstname}
+                  onChange={e => setForm({ ...form, firstname: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  value={form.lastname}
+                  onChange={e => setForm({ ...form, lastname: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Role</label>
+                <select
+                  value={form.role}
+                  onChange={e => setForm({ ...form, role: e.target.value })}
+                >
+                  {ROLES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                  placeholder="name@email.com"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="At least 8 characters, 1 letter & 1 number"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Contact</label>
+                <input
+                  type="text"
+                  value={form.contact}
+                  onChange={e => setForm({ ...form, contact: e.target.value })}
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={e => setForm({ ...form, address: e.target.value })}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+
+            <div className="form-buttons">
+              <button type="submit" className="btn-green" disabled={saving}>
+                {saving ? 'Creating...' : 'Add User'}
+              </button>
+              <button type="button" className="btn-gray" onClick={cancelForm}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div style={{ marginBottom: '16px' }}>
         <input
@@ -77,7 +231,7 @@ export default function UsersPage() {
                 <td>{u.contact || '—'}</td>
                 <td>{u.address || '—'}</td>
                 <td>
-                  <span className={`badge badge-${u.role}`}>{u.role}</span>
+                  <span className={`badge ${badgeClass(u.role)}`}>{u.role}</span>
                 </td>
                 <td>{new Date(u.created_at).toLocaleDateString()}</td>
                 <td>

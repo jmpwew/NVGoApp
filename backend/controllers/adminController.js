@@ -1,10 +1,12 @@
+const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
-// Push notifications get cut off by the OS after a couple lines anyway, so
-// keep the body short and obviously truncated rather than dumping the whole
-// announcement/news text into the system tray.
+// staff roles that admins are allowed to create from the admin panel
+const STAFF_ROLES = ['admin', 'verifier', 'police', 'bfp', 'medical'];
+
+
 const PUSH_BODY_MAX_LEN = 150;
 function truncateForPush(text) {
   if (!text) return '';
@@ -38,7 +40,7 @@ exports.getStats = async (req, res) => {
 };
 
 
-// user growth for the current year, grouped by month (for dashboard chart)
+
 exports.getUserGrowth = async (req, res) => {
   try {
     const result = await pool.query(
@@ -241,6 +243,44 @@ exports.deleteUser = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error deleting user' });
+  }
+};
+
+// create a staff account (admin, verifier, or office: police/bfp/medical)
+exports.createStaffUser = async (req, res) => {
+  try {
+    const { firstname, lastname, email, password, contact, address, role } = req.body;
+
+    if (!firstname || !lastname || !email || !password || !role) {
+      return res.status(400).json({ message: 'Firstname, lastname, email, password, and role are required' });
+    }
+
+    if (!STAFF_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role.' });
+    }
+
+    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters and include a letter and a number.' });
+    }
+
+    const check = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (check.rows.length > 0) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users (firstname, lastname, email, password, contact, address, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, firstname, lastname, email, contact, address, role, created_at`,
+      [firstname, lastname, email, hashedPassword, contact || null, address || null, role]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error creating user' });
   }
 };
 
