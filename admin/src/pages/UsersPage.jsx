@@ -3,6 +3,10 @@ import axios from 'axios';
 import './UsersPage.css';
 
 import { API } from '../config';
+import ConfirmModal from '../components/ConfirmModal';
+
+const STAFF_ROLES  = ['admin', 'verifier', 'police', 'bfp', 'medical'];
+const OFFICE_ROLES = ['police', 'bfp', 'medical'];
 
 const ROLES = [
   { value: 'admin',    label: 'Admin' },
@@ -11,8 +15,6 @@ const ROLES = [
   { value: 'bfp',      label: 'Office - BFP' },
   { value: 'medical',  label: 'Office - Medical' },
 ];
-
-const OFFICE_ROLES = ['police', 'bfp', 'medical'];
 
 function badgeClass(role) {
   return OFFICE_ROLES.includes(role) ? `badge-office-${role}` : `badge-${role}`;
@@ -29,11 +31,16 @@ const emptyForm = {
 
 export default function UsersPage() {
   const [users, setUsers]     = useState([]);
+  const [tab, setTab]         = useState('users'); // 'users' | 'staff'
   const [search, setSearch]   = useState('');
   const [form, setForm]       = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving]   = useState(false);
   const [formError, setFormError] = useState('');
+
+  const [deleteTarget, setDeleteTarget] = useState(null); // user object pending deletion
+  const [deleting, setDeleting] = useState(false);
+
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -82,20 +89,34 @@ export default function UsersPage() {
     setShowForm(false);
   }
 
-  async function deleteUser(id) {
-    if (!confirm('Delete this user? This will also delete their reports.')) return;
+  function switchTab(next) {
+    setTab(next);
+    setSearch('');
+    cancelForm();
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await axios.delete(`${API}/api/admin/users/${id}`, {
+      await axios.delete(`${API}/api/admin/users/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUsers(prev => prev.filter(u => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err) {
       console.log(err);
       alert('Failed to delete user.');
+    } finally {
+      setDeleting(false);
     }
   }
 
-  const filtered = users.filter(u =>
+  const appUsers  = users.filter(u => u.role === 'user');
+  const staffList = users.filter(u => STAFF_ROLES.includes(u.role));
+  const activeList = tab === 'users' ? appUsers : staffList;
+
+  const filtered = activeList.filter(u =>
     `${u.firstname} ${u.lastname} ${u.email}`.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -103,99 +124,28 @@ export default function UsersPage() {
     <div className="page">
       <div className="section-header">
         <h1>Users</h1>
-        {!showForm && (
+        {tab === 'staff' && (
           <button className="btn-green" onClick={() => setShowForm(true)}>
             + Add User
           </button>
         )}
       </div>
 
-      {/* Add staff account form */}
-      {showForm && (
-        <div className="hotline-form">
-          <h2>Add Staff Account</h2>
-          <form onSubmit={handleAddUser}>
-            {formError && <div className="error-msg">{formError}</div>}
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  placeholder="Station"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Role</label>
-                <select
-                  value={form.role}
-                  onChange={e => setForm({ ...form, role: e.target.value })}
-                >
-                  {ROLES.map(r => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  placeholder="name@email.com"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  placeholder="At least 8 characters, 1 letter & 1 number"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Contact</label>
-                <input
-                  type="text"
-                  value={form.contact}
-                  onChange={e => setForm({ ...form, contact: e.target.value })}
-                  placeholder="Optional"
-                />
-              </div>
-              <div className="form-group">
-                <label>Address</label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={e => setForm({ ...form, address: e.target.value })}
-                  placeholder="Optional"
-                />
-              </div>
-            </div>
-
-            <div className="form-buttons">
-              <button type="submit" className="btn-green" disabled={saving}>
-                {saving ? 'Creating...' : 'Add User'}
-              </button>
-              <button type="button" className="btn-gray" onClick={cancelForm}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="users-tabs">
+        <button
+          className={`users-tab ${tab === 'users' ? 'active' : ''}`}
+          onClick={() => switchTab('users')}
+        >
+          App Users <span className="users-tab-count">{appUsers.length}</span>
+        </button>
+        <button
+          className={`users-tab ${tab === 'staff' ? 'active' : ''}`}
+          onClick={() => switchTab('staff')}
+        >
+          Staff Accounts <span className="users-tab-count">{staffList.length}</span>
+        </button>
+      </div>
 
       <div style={{ marginBottom: '16px' }}>
         <input
@@ -221,7 +171,11 @@ export default function UsersPage() {
         </thead>
         <tbody>
           {filtered.length === 0 ? (
-            <tr><td colSpan="8">No users found.</td></tr>
+            <tr>
+              <td colSpan="7">
+                {tab === 'users' ? 'No app users found.' : 'No staff accounts found.'}
+              </td>
+            </tr>
           ) : (
             filtered.map(u => (
               <tr key={u.id}>
@@ -234,7 +188,7 @@ export default function UsersPage() {
                 </td>
                 <td>{new Date(u.created_at).toLocaleDateString()}</td>
                 <td>
-                  <button className="btn-red" onClick={() => deleteUser(u.id)}>
+                  <button className="btn-red" onClick={() => setDeleteTarget(u)}>
                     Delete
                   </button>
                 </td>
@@ -243,6 +197,111 @@ export default function UsersPage() {
           )}
         </tbody>
       </table>
+
+      {/* Add staff account modal */}
+      {showForm && (
+        <div className="users-modal-overlay" onClick={cancelForm}>
+          <div className="users-modal" onClick={e => e.stopPropagation()}>
+            <h2>Add Staff Account</h2>
+            <form onSubmit={handleAddUser}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder="e.g. Juan Dela Cruz"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    value={form.role}
+                    onChange={e => setForm({ ...form, role: e.target.value })}
+                  >
+                    {ROLES.map(r => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={e => setForm({ ...form, email: e.target.value })}
+                    placeholder="name@email.com"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={e => setForm({ ...form, password: e.target.value })}
+                    placeholder="At least 8 characters, 1 letter & 1 number"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Contact</label>
+                  <input
+                    type="text"
+                    value={form.contact}
+                    onChange={e => setForm({ ...form, contact: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={e => setForm({ ...form, address: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+
+              <div className="form-buttons">
+                <button type="submit" className="btn-green" disabled={saving}>
+                  {saving ? 'Creating...' : 'Add User'}
+                </button>
+                <button type="button" className="btn-gray" onClick={cancelForm}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this user?"
+        message={
+          deleteTarget
+            ? `This will permanently delete ${deleteTarget.firstname} ${deleteTarget.lastname} (${deleteTarget.email}) and all of their reports. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -1,32 +1,91 @@
-.hotline-form {
+.users-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.users-tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.users-tab:hover {
+  color: #1B8A4C;
+}
+
+.users-tab.active {
+  color: #1B8A4C;
+  border-bottom-color: #1B8A4C;
+}
+
+.users-tab-count {
+  background-color: #f0f0f0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 20px;
+}
+
+.users-tab.active .users-tab-count {
+  background-color: #d1f5e0;
+  color: #1B8A4C;
+}
+
+/* Add Staff Account modal */
+.users-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+}
+
+.users-modal {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  margin-bottom: 24px;
+  border-radius: 12px;
+  padding: 28px 26px 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 
-.hotline-form h2 {
-  font-size: 16px;
-  margin-bottom: 16px;
-  color: #333;
+.users-modal h2 {
+  font-size: 17px;
+  color: #222;
+  margin-bottom: 18px;
 }
 
-.hotline-form .form-row {
+.users-modal .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
   margin-bottom: 14px;
 }
 
-.hotline-form .form-buttons {
+.users-modal .form-buttons {
   display: flex;
   gap: 10px;
   margin-top: 10px;
 }
 
 @media (max-width: 700px) {
-  .hotline-form .form-row {
+  .users-modal .form-row {
     grid-template-columns: 1fr;
   }
 }
