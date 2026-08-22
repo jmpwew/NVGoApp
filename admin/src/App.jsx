@@ -11,6 +11,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import SupportPage from './pages/SupportPage';
 import HotlinesPage from './pages/HotlinesPage';
 import ProfilePage from './pages/ProfilePage';
+import AccountPage from './pages/AccountPage';
 import VerifierDashboard from './pages/VerifierDashboard';
 import OfficeDashboard  from './pages/OfficeDashboard';
 import Header from './components/Header';
@@ -79,7 +80,7 @@ function Layout({ children }) {
   );
 }
 
-// Wraps a page and restricts it to a set of allowed roles.
+
 
 function RoleRoute({ allow, children }) {
   const token = localStorage.getItem('token');
@@ -113,8 +114,10 @@ export default function App() {
         {/* Offices: police | bfp | medical share one dashboard, filtered server-side by role */}
         <Route path="/office"    element={<RoleRoute allow={['police', 'bfp', 'medical']}><OfficeDashboard /></RoleRoute>} />
 
-        {/* Shared */}
-        <Route path="/profile"   element={<RoleRoute allow={['admin', 'verifier', 'police', 'bfp', 'medical']}><ProfilePage /></RoleRoute>} />
+        {/* Admin: individual account, personal profile */}
+        <Route path="/profile"   element={<RoleRoute allow={['admin']}><ProfilePage /></RoleRoute>} />
+
+        <Route path="/account"   element={<RoleRoute allow={['verifier', 'police', 'bfp', 'medical']}><AccountPage /></RoleRoute>} />
 
         <Route path="*" element={<Navigate to={homeRouteForRole(getStoredRole())} />} />
       </Routes>

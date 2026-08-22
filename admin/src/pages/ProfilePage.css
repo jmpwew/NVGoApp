@@ -232,3 +232,27 @@
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* ── Security card (password change) ─────────────────── */
+.profile-security-card {
+  margin-top: 20px;
+}
+
+.profile-security-card .profile-details-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.profile-security-card .form-buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.profile-field-hint {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: -6px 0 14px;
+}

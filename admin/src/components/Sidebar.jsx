@@ -65,9 +65,18 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
             </NavLink>
           )}
 
-          <NavLink to="/profile" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-            <span>Profile</span>
-          </NavLink>
+          {/* Only 'admin' is an individually-issued login — verifier and
+              office accounts are shared, so they get "Account Settings"
+              (see AccountPage.jsx) instead of a self-editable profile. */}
+          {['verifier', 'police', 'bfp', 'medical'].includes(role) ? (
+            <NavLink to="/account" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              <span>Account Settings</span>
+            </NavLink>
+          ) : (
+            <NavLink to="/profile" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              <span>Profile</span>
+            </NavLink>
+          )}
         </nav>
       </div>
     </>

@@ -1,27 +1,16 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
-import './ProfilePage.css';
+import './ProfilePage.css'; // reuses the same card/layout styles as ProfilePage
 
 import { API } from '../config';
-import { getImageUrl } from '../getImageUrl';
 import {
   MapPinIcon, ShieldIcon, CheckCircleIcon,
 } from '../components/Icons';
 
-// Admin-only page. Verifier/police/bfp/medical are shared office logins and
-// use AccountPage.jsx (route: /account) instead — see App.jsx.
-
-// Inlined locally because Icons.jsx does not export these — avoids
-// "X is not exported by Icons.jsx" build failures on Vercel.
-function CameraIcon(props) {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  );
-}
+// Account Settings page for shared office/desk logins: verifier, police,
+// bfp, medical. Unlike ProfilePage.jsx (admin, an individual account), these
+// roles share ONE login per office, so there's no personal name or photo —
+// just an office/unit name, contact info, and password.
 
 function MailIcon(props) {
   return (
@@ -63,7 +52,6 @@ function LockIcon(props) {
 }
 
 const ROLE_LABELS = {
-  admin:    'Administrator',
   verifier: 'Verifier',
   police:   'Police',
   bfp:      'BFP (Fire)',
@@ -71,7 +59,6 @@ const ROLE_LABELS = {
 };
 
 const ROLE_BADGE_CLASSES = {
-  admin:    'badge-admin',
   verifier: 'badge-verifier',
   police:   'badge-office-police',
   bfp:      'badge-office-bfp',
@@ -79,44 +66,40 @@ const ROLE_BADGE_CLASSES = {
 };
 
 const ROLE_BANNER_CLASSES = {
-  admin:    'banner-admin',
   verifier: 'banner-verifier',
   police:   'banner-police',
   bfp:      'banner-bfp',
   medical:  'banner-medical',
 };
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const token = localStorage.getItem('token');
   const stored = (() => {
     try { return JSON.parse(localStorage.getItem('admin')) || {}; }
     catch { return {}; }
   })();
 
-  const [form, setForm] = useState({
-    firstname: stored.firstname || '',
-    lastname:  stored.lastname  || '',
-    email:     stored.email     || '',
-    contact:   stored.contact   || '',
-    address:   stored.address   || '',
-  });
-  const [editing, setEditing]         = useState(false);
-  const [imageFile, setImageFile]     = useState(null);
-  const [preview, setPreview]         = useState(null);
-  const [currentImage, setCurrentImage] = useState(stored.image || null);
-  const [saving, setSaving]           = useState(false);
-  const [message, setMessage]         = useState(null); // { type: 'success'|'error', text }
-
-  const [pwForm, setPwForm]           = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [pwSaving, setPwSaving]       = useState(false);
-  const [pwMessage, setPwMessage]     = useState(null); // { type: 'success'|'error', text }
-  const [changingPw, setChangingPw]   = useState(false);
-
-  const fileInputRef = useRef(null);
   const role = stored.role;
 
-  const fullName = `${form.firstname} ${form.lastname}`.trim() || 'Admin User';
-  const initials = (fullName || form.email || 'Admin')
+  // "firstname" doubles as the office/unit display name for these shared
+  // accounts (e.g. "Cabuyao Police Station"); "lastname" is unused.
+  const [form, setForm] = useState({
+    officeName: stored.firstname || '',
+    email:      stored.email     || '',
+    contact:    stored.contact   || '',
+    address:    stored.address   || '',
+  });
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [message, setMessage] = useState(null); // { type: 'success'|'error', text }
+
+  const [pwForm, setPwForm]         = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwSaving, setPwSaving]     = useState(false);
+  const [pwMessage, setPwMessage]   = useState(null); // { type, text }
+  const [changingPw, setChangingPw] = useState(false);
+
+  const displayName = form.officeName.trim() || 'Office Account';
+  const initials = displayName
     .split(' ')
     .filter(Boolean)
     .map(w => w[0])
@@ -124,23 +107,13 @@ export default function ProfilePage() {
     .slice(0, 2)
     .toUpperCase();
 
-  function handleImageChange(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setPreview(URL.createObjectURL(file));
-  }
-
   function cancelEdit() {
     setForm({
-      firstname: stored.firstname || '',
-      lastname:  stored.lastname  || '',
-      email:     stored.email     || '',
-      contact:   stored.contact   || '',
-      address:   stored.address   || '',
+      officeName: stored.firstname || '',
+      email:      stored.email     || '',
+      contact:    stored.contact   || '',
+      address:    stored.address   || '',
     });
-    setImageFile(null);
-    setPreview(null);
     setMessage(null);
     setEditing(false);
   }
@@ -152,12 +125,11 @@ export default function ProfilePage() {
 
     try {
       const formData = new FormData();
-      formData.append('firstname', form.firstname);
-      formData.append('lastname', form.lastname);
+      formData.append('firstname', form.officeName);
+      formData.append('lastname', ''); // unused for shared office accounts
       formData.append('email', form.email);
       formData.append('contact', form.contact);
       formData.append('address', form.address);
-      if (imageFile) formData.append('image', imageFile);
 
       const res = await axios.put(`${API}/api/profile`, formData, {
         headers: {
@@ -168,14 +140,11 @@ export default function ProfilePage() {
 
       const updated = res.data.user;
       localStorage.setItem('admin', JSON.stringify(updated));
-      setCurrentImage(updated.image);
-      setImageFile(null);
-      setPreview(null);
-      setMessage({ type: 'success', text: 'Profile updated successfully.' });
+      setMessage({ type: 'success', text: 'Account info updated successfully.' });
       setEditing(false);
     } catch (err) {
       console.log(err);
-      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update profile.' });
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update account info.' });
     } finally {
       setSaving(false);
     }
@@ -222,43 +191,22 @@ export default function ProfilePage() {
 
   return (
     <div className="page profile-page">
-      <h1>My Profile</h1>
+      <h1>Account Settings</h1>
 
       <div className="profile-layout">
         {/* ── Left: identity card ─────────────────────────────── */}
         <div className="card profile-identity-card">
-          <div className={`profile-banner ${ROLE_BANNER_CLASSES[role] || 'banner-admin'}`} />
+          <div className={`profile-banner ${ROLE_BANNER_CLASSES[role] || 'banner-verifier'}`} />
 
           <div className="profile-avatar-wrap">
-            {preview ? (
-              <img src={preview} alt="preview" className="profile-avatar-lg" />
-            ) : currentImage ? (
-              <img src={getImageUrl(currentImage)} alt="profile" className="profile-avatar-lg" />
-            ) : (
-              <div className="profile-avatar-lg profile-avatar-fallback">{initials}</div>
-            )}
-            {editing && (
-              <button
-                type="button"
-                className="avatar-edit-btn"
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Change profile photo"
-              >
-                <CameraIcon />
-              </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              hidden
-            />
+            {/* Shared office/desk accounts don't represent one person, so
+                there's no photo — always the initials avatar. */}
+            <div className="profile-avatar-lg profile-avatar-fallback">{initials}</div>
           </div>
 
           <div className="profile-identity-body">
-            <div className="profile-name">{fullName}</div>
-            <div className={`badge ${ROLE_BADGE_CLASSES[role] || 'badge-admin'} profile-role-badge`}>
+            <div className="profile-name">{displayName}</div>
+            <div className={`badge ${ROLE_BADGE_CLASSES[role] || 'badge-verifier'} profile-role-badge`}>
               <ShieldIcon width={12} height={12} /> {ROLE_LABELS[role] || role || 'Staff'}
             </div>
 
@@ -288,12 +236,12 @@ export default function ProfilePage() {
         <div className="card profile-details-card">
           <div className="profile-details-header">
             <div>
-              <h2>Personal Information</h2>
-              <p>Keep your account details accurate and up to date.</p>
+              <h2>Office Information</h2>
+              <p>Keep this office&rsquo;s contact details accurate and up to date.</p>
             </div>
             {!editing && (
               <button type="button" className="btn-outline" onClick={() => setEditing(true)}>
-                <PencilIcon /> Edit profile
+                <PencilIcon /> Edit info
               </button>
             )}
           </div>
@@ -306,13 +254,9 @@ export default function ProfilePage() {
 
           {!editing ? (
             <div className="profile-view-grid">
-              <div className="profile-view-field">
-                <label>First name</label>
-                <div className="profile-view-value">{form.firstname || '—'}</div>
-              </div>
-              <div className="profile-view-field">
-                <label>Last name</label>
-                <div className="profile-view-value">{form.lastname || '—'}</div>
+              <div className="profile-view-field profile-view-field-wide">
+                <label>Office / unit name</label>
+                <div className="profile-view-value">{form.officeName || '—'}</div>
               </div>
               <div className="profile-view-field profile-view-field-wide">
                 <label>Email address</label>
@@ -329,25 +273,15 @@ export default function ProfilePage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div className="profile-form-grid">
-                <div className="form-group">
-                  <label>First name</label>
-                  <input
-                    type="text"
-                    value={form.firstname}
-                    onChange={e => setForm({ ...form, firstname: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Last name</label>
-                  <input
-                    type="text"
-                    value={form.lastname}
-                    onChange={e => setForm({ ...form, lastname: e.target.value })}
-                    required
-                  />
-                </div>
+              <div className="form-group">
+                <label>Office / unit name</label>
+                <input
+                  type="text"
+                  value={form.officeName}
+                  onChange={e => setForm({ ...form, officeName: e.target.value })}
+                  placeholder="e.g. Cabuyao Police Station"
+                  required
+                />
               </div>
 
               <div className="form-group">
@@ -379,11 +313,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Profile photo</label>
-                <input type="file" accept="image/*" onChange={handleImageChange} />
-              </div>
-
               <div className="form-buttons">
                 <button type="button" className="btn-outline" onClick={cancelEdit} disabled={saving}>
                   Cancel
@@ -402,7 +331,7 @@ export default function ProfilePage() {
         <div className="profile-details-header">
           <div>
             <h2><LockIcon /> Password &amp; Security</h2>
-            <p>Change the password used to sign in to this account.</p>
+            <p>Change the password used to sign in to this office account.</p>
           </div>
           {!changingPw && (
             <button type="button" className="btn-outline" onClick={() => setChangingPw(true)}>

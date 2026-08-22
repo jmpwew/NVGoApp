@@ -33,12 +33,24 @@ export default function Header({ onToggleNav }) {
     catch { return {}; }
   })();
 
-  const initials = (admin.name || admin.email || 'Admin')
+  // Verifier and office accounts (police/bfp/medical) are shared logins, so
+  // they get the lighter "Account Settings" page instead of the
+  // self-editable profile — see AccountPage.jsx / App.jsx.
+  const isOfficeRole = ['verifier', 'police', 'bfp', 'medical'].includes(admin.role);
+  const profilePath = isOfficeRole ? '/account' : '/profile';
+
+  // Login only ever returns firstname/lastname, never "name" — build the
+  // display name from those instead (previously always fell back to
+  // "Admin User" for everyone since admin.name was always undefined).
+  const displayName = `${admin.firstname || ''} ${admin.lastname || ''}`.trim() || admin.email || 'Admin User';
+
+  const initials = displayName
     .split(' ')
+    .filter(Boolean)
     .map(w => w[0])
     .join('')
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase() || 'AD';
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -237,11 +249,11 @@ export default function Header({ onToggleNav }) {
           {profileOpen && (
             <div className="header-popover profile-popover">
               <div className="profile-popover-info">
-                <div className="profile-popover-name">{admin.name || 'Admin User'}</div>
+                <div className="profile-popover-name">{displayName}</div>
                 <div className="profile-popover-email">{admin.email || ''}</div>
               </div>
-              <button className="popover-item" onClick={() => { setProfileOpen(false); navigate('/profile'); }}>
-                <UserIcon /> View profile
+              <button className="popover-item" onClick={() => { setProfileOpen(false); navigate(profilePath); }}>
+                <UserIcon /> {isOfficeRole ? 'Account settings' : 'View profile'}
               </button>
               <button className="popover-item popover-item-danger" onClick={handleLogout}>
                 <LogoutIcon /> Logout
