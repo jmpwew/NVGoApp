@@ -3,7 +3,7 @@ const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
-// staff roles that admins are allowed to create from the admin panel
+
 const STAFF_ROLES = ['admin', 'verifier', 'police', 'bfp', 'medical'];
 
 
@@ -51,7 +51,6 @@ exports.getUserGrowth = async (req, res) => {
        ORDER BY month`
     );
 
-    // fill in every month (1-12) so the chart always has 12 points
     const counts = Array(12).fill(0);
     result.rows.forEach(row => {
       counts[row.month - 1] = row.count;
@@ -70,7 +69,7 @@ exports.getUserGrowth = async (req, res) => {
 
 
 
-// recent activity feed for the notification bell (unresolved reports + unread support messages)
+
 exports.getRecentActivity = async (req, res) => {
   try {
     const reports = await pool.query(
@@ -238,7 +237,28 @@ exports.getAllUsers = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+    const targetId = parseInt(req.params.id, 10);
+
+    // block dkete remaining admin
+   
+    if (targetId === req.user.id) {
+      return res.status(400).json({ message: 'You cannot delete your own account while logged in.' });
+    }
+
+    const target = await pool.query('SELECT role FROM users WHERE id = $1', [targetId]);
+    if (target.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // block deleting the last remaining admin — would lock everyone out of the panel
+    if (target.rows[0].role === 'admin') {
+      const adminCount = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+      if (parseInt(adminCount.rows[0].count, 10) <= 1) {
+        return res.status(400).json({ message: 'Cannot delete the last remaining admin account.' });
+      }
+    }
+
+    await pool.query('DELETE FROM users WHERE id = $1', [targetId]);
     res.json({ message: 'User deleted' });
   } catch (err) {
     console.error(err);
@@ -246,7 +266,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// create a staff account (admin, verifier, or office: police/bfp/medical)
+// create a staff account 
 exports.createStaffUser = async (req, res) => {
   try {
     const { firstname, lastname, email, password, contact, address, role } = req.body;

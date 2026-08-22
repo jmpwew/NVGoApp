@@ -42,6 +42,16 @@
   color: #1B8A4C;
 }
 
+.you-tag {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
 /* Add Staff Account modal */
 .users-modal-overlay {
   position: fixed;

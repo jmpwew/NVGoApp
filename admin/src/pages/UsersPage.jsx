@@ -31,17 +31,21 @@ const emptyForm = {
 
 export default function UsersPage() {
   const [users, setUsers]     = useState([]);
-  const [tab, setTab]         = useState('users'); // 'users' | 'staff'
+  const [tab, setTab]         = useState('users');
   const [search, setSearch]   = useState('');
   const [form, setForm]       = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving]   = useState(false);
   const [formError, setFormError] = useState('');
 
-  const [deleteTarget, setDeleteTarget] = useState(null); // user object pending deletion
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const token = localStorage.getItem('token');
+  const currentAdmin = (() => {
+    try { return JSON.parse(localStorage.getItem('admin') || '{}'); } catch { return {}; }
+  })();
 
   useEffect(() => {
     fetchUsers();
@@ -65,7 +69,7 @@ export default function UsersPage() {
     try {
       const trimmed = form.name.trim();
       const [firstname, ...rest] = trimmed.split(/\s+/);
-      const lastname = rest.join(' ') || firstname; // fallback if only one word given
+      const lastname = rest.join(' ') || firstname; 
 
       await axios.post(`${API}/api/admin/users`, {
         ...form,
@@ -98,6 +102,7 @@ export default function UsersPage() {
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
+    setDeleteError('');
     try {
       await axios.delete(`${API}/api/admin/users/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -106,7 +111,7 @@ export default function UsersPage() {
       setDeleteTarget(null);
     } catch (err) {
       console.log(err);
-      alert('Failed to delete user.');
+      setDeleteError(err.response?.data?.message || 'Failed to delete user.');
     } finally {
       setDeleting(false);
     }
@@ -188,9 +193,13 @@ export default function UsersPage() {
                 </td>
                 <td>{new Date(u.created_at).toLocaleDateString()}</td>
                 <td>
-                  <button className="btn-red" onClick={() => setDeleteTarget(u)}>
-                    Delete
-                  </button>
+                  {u.id === currentAdmin.id ? (
+                    <span className="you-tag">You</span>
+                  ) : (
+                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(u); }}>
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))
@@ -292,15 +301,17 @@ export default function UsersPage() {
         open={!!deleteTarget}
         title="Delete this user?"
         message={
-          deleteTarget
-            ? `This will permanently delete ${deleteTarget.firstname} ${deleteTarget.lastname} (${deleteTarget.email}) and all of their reports. This action cannot be undone.`
-            : ''
+          deleteError
+            ? deleteError
+            : deleteTarget
+              ? `This will permanently delete ${deleteTarget.firstname} ${deleteTarget.lastname} (${deleteTarget.email}) and all of their reports. This action cannot be undone.`
+              : ''
         }
         confirmLabel="Delete"
         tone="danger"
         loading={deleting}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
       />
     </div>
   );
