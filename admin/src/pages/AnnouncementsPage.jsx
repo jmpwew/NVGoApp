@@ -4,6 +4,7 @@ import './NewsPage.css';
 
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
+import ConfirmModal from '../components/ConfirmModal';
 
 const emptyForm = { title: '', message: '', urgency: 'info', is_active: true, duration_hours: '' };
 
@@ -41,9 +42,16 @@ export default function AnnouncementsPage() {
   const [form, setForm]           = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm]   = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [formError, setFormError] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview]     = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -70,13 +78,15 @@ export default function AnnouncementsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setFormError('');
+    setSaving(true);
     try {
       const formData = new FormData();
       formData.append('title', form.title);
       formData.append('message', form.message);
       formData.append('urgency', form.urgency);
       formData.append('is_active', form.is_active);
-  
+      // '' explicitly clears any existing expiration when editing.
       formData.append('duration_hours', form.duration_hours);
       if (imageFile) formData.append('image', imageFile);
 
@@ -94,7 +104,9 @@ export default function AnnouncementsPage() {
       fetchAnnouncements();
     } catch (err) {
       console.log(err);
-      alert('Failed to save announcement.');
+      setFormError(err.response?.data?.message || 'Failed to save announcement.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -110,8 +122,8 @@ export default function AnnouncementsPage() {
     setCurrentImage(item.image);
     setImageFile(null);
     setPreview(null);
+    setFormError('');
     setShowForm(true);
-    window.scrollTo(0, 0);
   }
 
   function cancelForm() {
@@ -121,18 +133,25 @@ export default function AnnouncementsPage() {
     setImageFile(null);
     setPreview(null);
     setCurrentImage(null);
+    setFormError('');
+    setSaving(false);
   }
 
-  async function deleteAnnouncement(id) {
-    if (!confirm('Delete this announcement?')) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await axios.delete(`${API}/api/admin/announcements/${id}`, {
+      await axios.delete(`${API}/api/admin/announcements/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setList(prev => prev.filter(a => a.id !== id));
+      setList(prev => prev.filter(a => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err) {
       console.log(err);
-      alert('Failed to delete announcement.');
+      setDeleteError(err.response?.data?.message || 'Failed to delete announcement.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -140,111 +159,10 @@ export default function AnnouncementsPage() {
     <div className="page">
       <div className="section-header">
         <h1>Announcements</h1>
-        {!showForm && (
-          <button className="btn-green" onClick={() => setShowForm(true)}>
-            + Add Announcement
-          </button>
-        )}
+        <button className="btn-green" onClick={() => { setForm(emptyForm); setEditingId(null); setFormError(''); setShowForm(true); }}>
+          + Add Announcement
+        </button>
       </div>
-
-      {showForm && (
-        <div className="news-form">
-          <h2>{editingId ? 'Edit Announcement' : 'Add New Announcement'}</h2>
-          <form onSubmit={handleSubmit}>
-
-            <div className="form-group">
-              <label>Title</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g. Typhoon Warning for Nueva Valencia"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Urgency</label>
-              <select
-                value={form.urgency}
-                onChange={e => setForm({ ...form, urgency: e.target.value })}
-              >
-                <option value="info">Info — routine notice</option>
-                <option value="warning">Warning — heads up, be cautious</option>
-                <option value="emergency">Emergency — urgent, act now</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Duration</label>
-              <select
-                value={form.duration_hours}
-                onChange={e => setForm({ ...form, duration_hours: e.target.value })}
-              >
-                {(editingId ? EDIT_DURATION_OPTIONS : NEW_DURATION_OPTIONS).map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
-                After this time, the announcement is automatically hidden from the app.
-              </p>
-            </div>
-
-            <div className="form-group">
-              <label>Message</label>
-              <textarea
-                value={form.message}
-                onChange={e => setForm({ ...form, message: e.target.value })}
-                placeholder="Write the full announcement here..."
-                required
-                style={{ minHeight: '140px' }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>
-                Image {editingId && currentImage && '— leave empty to keep current image'}
-              </label>
-              <input type="file" accept="image/*" onChange={handleImageChange} />
-
-              {preview && (
-                <div style={{ marginTop: '10px' }}>
-                  <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>New image preview:</p>
-                  <img src={preview} alt="preview" className="image-preview" />
-                </div>
-              )}
-              {!preview && currentImage && (
-                <div style={{ marginTop: '10px' }}>
-                  <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Current image:</p>
-                  <img src={getImageUrl(currentImage)} alt="current" className="image-preview" />
-                </div>
-              )}
-            </div>
-
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={form.is_active}
-                onChange={e => setForm({ ...form, is_active: e.target.checked })}
-                style={{ width: 'auto' }}
-              />
-              <label htmlFor="is_active" style={{ margin: 0 }}>
-                Active — visible in the app's Home screen carousel right now
-              </label>
-            </div>
-
-            <div className="form-buttons">
-              <button type="submit" className="btn-green">
-                {editingId ? 'Save Changes' : 'Post Announcement'}
-              </button>
-              <button type="button" className="btn-gray" onClick={cancelForm}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       <table>
         <thead>
@@ -299,7 +217,7 @@ export default function AnnouncementsPage() {
                   <td>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button className="btn-gray" onClick={() => startEdit(a)}>Edit</button>
-                      <button className="btn-red" onClick={() => deleteAnnouncement(a.id)}>Delete</button>
+                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(a); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -308,6 +226,129 @@ export default function AnnouncementsPage() {
           )}
         </tbody>
       </table>
+
+      {/* Add/Edit announcement modal */}
+      {showForm && (
+        <div className="announcement-modal-overlay" onClick={cancelForm}>
+          <div className="announcement-modal" onClick={e => e.stopPropagation()}>
+            <h2>{editingId ? 'Edit Announcement' : 'Add New Announcement'}</h2>
+            <form onSubmit={handleSubmit}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Title</label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={e => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. Typhoon Warning for Nueva Valencia"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Urgency</label>
+                  <select
+                    value={form.urgency}
+                    onChange={e => setForm({ ...form, urgency: e.target.value })}
+                  >
+                    <option value="info">Info — routine notice</option>
+                    <option value="warning">Warning — heads up, be cautious</option>
+                    <option value="emergency">Emergency — urgent, act now</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Duration</label>
+                  <select
+                    value={form.duration_hours}
+                    onChange={e => setForm({ ...form, duration_hours: e.target.value })}
+                  >
+                    {(editingId ? EDIT_DURATION_OPTIONS : NEW_DURATION_OPTIONS).map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
+                    Auto-hides from the app after this time.
+                  </p>
+                </div>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '22px' }}>
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={form.is_active}
+                    onChange={e => setForm({ ...form, is_active: e.target.checked })}
+                    style={{ width: 'auto' }}
+                  />
+                  <label htmlFor="is_active" style={{ margin: 0 }}>
+                    Active now
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Message</label>
+                <textarea
+                  value={form.message}
+                  onChange={e => setForm({ ...form, message: e.target.value })}
+                  placeholder="Write the full announcement here..."
+                  required
+                  style={{ minHeight: '140px' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  Image {editingId && currentImage && '— leave empty to keep current image'}
+                </label>
+                <input type="file" accept="image/*" onChange={handleImageChange} />
+
+                {preview && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>New image preview:</p>
+                    <img src={preview} alt="preview" className="image-preview" />
+                  </div>
+                )}
+                {!preview && currentImage && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Current image:</p>
+                    <img src={getImageUrl(currentImage)} alt="current" className="image-preview" />
+                  </div>
+                )}
+              </div>
+
+              <div className="form-buttons">
+                <button type="submit" className="btn-green" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Post Announcement'}
+                </button>
+                <button type="button" className="btn-gray" onClick={cancelForm} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this announcement?"
+        message={
+          deleteError
+            ? deleteError
+            : deleteTarget
+              ? `This will permanently delete "${deleteTarget.title}". This action cannot be undone.`
+              : ''
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+      />
     </div>
   );
 }
