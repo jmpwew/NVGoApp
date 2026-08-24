@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 import { API } from '../config';
+import ConfirmModal from '../components/ConfirmModal';
 
 const TYPE_OPTIONS = [
   { value: 'info',   label: 'Info'   },
@@ -24,10 +25,14 @@ export default function NotificationsPage() {
   const [users, setUsers]                 = useState([]);
   const [loading, setLoading]             = useState(true);
   const [sending, setSending]             = useState(false);
-  const [successMsg, setSuccessMsg]       = useState('');
   const [errorMsg, setErrorMsg]           = useState('');
-  const [viewing, setViewing]             = useState(null); // notification currently shown in modal
-  const [editingId, setEditingId]         = useState(null); // notification id currently being edited, or null
+  const [showForm, setShowForm]           = useState(false); 
+  const [viewing, setViewing]             = useState(null);  
+  const [editingId, setEditingId]         = useState(null);  
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -68,16 +73,23 @@ export default function NotificationsPage() {
       type:    n.type || 'info',
       user_id: n.user_id || '',
     });
-    setSuccessMsg('');
     setErrorMsg('');
-    // scroll the form into view since it's above the table
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowForm(true);
   }
 
-  function cancelEdit() {
+  function openSendForm() {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setErrorMsg('');
+    setShowForm(true);
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setErrorMsg('');
+    setSending(false);
   }
 
   async function handleSend(e) {
@@ -88,7 +100,6 @@ export default function NotificationsPage() {
     }
     setSending(true);
     setErrorMsg('');
-    setSuccessMsg('');
     try {
       const payload = {
         title:   form.title.trim(),
@@ -99,18 +110,11 @@ export default function NotificationsPage() {
 
       if (editingId) {
         await axios.put(`${API}/api/admin/notifications/${editingId}`, payload, { headers });
-        setSuccessMsg(`Notification #${editingId} updated.`);
-        setEditingId(null);
       } else {
         await axios.post(`${API}/api/admin/notifications`, payload, { headers });
-        setSuccessMsg(
-          payload.user_id
-            ? `Notification sent to user #${payload.user_id}.`
-            : 'Broadcast notification sent to all users.'
-        );
       }
 
-      setForm(EMPTY_FORM);
+      cancelForm();
       fetchAll();
     } catch (err) {
       console.error(err);
@@ -120,15 +124,20 @@ export default function NotificationsPage() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this notification?')) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await axios.delete(`${API}/api/admin/notifications/${id}`, { headers });
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      if (editingId === id) cancelEdit(); // don't leave a stale edit form open
+      await axios.delete(`${API}/api/admin/notifications/${deleteTarget.id}`, { headers });
+      setNotifications(prev => prev.filter(n => n.id !== deleteTarget.id));
+      if (editingId === deleteTarget.id) cancelForm(); 
+      setDeleteTarget(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to delete notification.');
+      setDeleteError('Failed to delete notification.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -145,117 +154,19 @@ export default function NotificationsPage() {
 
   return (
     <div className="page">
-      <h1>Notifications</h1>
-      <p style={{ color: '#6b7280', marginTop: -8, marginBottom: 24, fontSize: 14 }}>
-        Send announcements, alerts, or updates to all users or a specific user.
-      </p>
-
-      {/* ── Send / Edit Form ── */}
-      <div style={formCardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111', margin: 0 }}>
-            {editingId ? `Edit Notification #${editingId}` : 'Send a Notification'}
-          </h2>
-          {editingId && (
-            <button type="button" onClick={cancelEdit} style={cancelEditBtnStyle}>
-              Cancel edit
-            </button>
-          )}
+      <div className="section-header">
+        <div>
+          <h1 style={{ marginBottom: 4 }}>Notifications</h1>
+          <p style={{ color: '#6b7280', margin: 0, fontSize: 14 }}>
+            Send announcements, alerts, or updates to all users or a specific user.
+          </p>
         </div>
-
-        {successMsg && (
-          <div style={alertStyle('#dcfce7', '#16a34a')}>{successMsg}</div>
-        )}
-        {errorMsg && (
-          <div style={alertStyle('#fee2e2', '#dc2626')}>{errorMsg}</div>
-        )}
-
-        <form onSubmit={handleSend}>
-          <div style={rowStyle}>
-            {/* Recipient */}
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Recipient</label>
-              <select
-                name="user_id"
-                value={form.user_id}
-                onChange={handleChange}
-                style={inputStyle}
-              >
-                <option value="">All Users (Broadcast)</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.firstname} {u.lastname} ({u.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Type */}
-            <div style={{ ...fieldStyle, maxWidth: 160 }}>
-              <label style={labelStyle}>Type</label>
-              <select
-                name="type"
-                value={form.type}
-                onChange={handleChange}
-                style={inputStyle}
-              >
-                {TYPE_OPTIONS.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Title */}
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Title</label>
-            <input
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              placeholder="e.g. Typhoon Advisory"
-              maxLength={255}
-              style={inputStyle}
-            />
-          </div>
-
-          {/* Message */}
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Message</label>
-            <textarea
-              name="body"
-              value={form.body}
-              onChange={handleChange}
-              placeholder="Write your notification message here..."
-              rows={3}
-              style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              type="submit"
-              disabled={sending}
-              style={sendBtnStyle(sending)}
-            >
-              {sending
-                ? (editingId ? 'Saving…' : 'Sending…')
-                : (editingId ? 'Save Changes' : 'Send Notification')}
-            </button>
-            {editingId && (
-              <button type="button" onClick={cancelEdit} style={secondaryBtnStyle}>
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
+        <button className="btn-green" onClick={openSendForm}>
+          + Send Notification
+        </button>
       </div>
 
       {/* ── Notification History ── */}
-      <h2 style={{ fontSize: 16, fontWeight: 700, margin: '28px 0 12px', color: '#111' }}>
-        Notification History
-      </h2>
-
       {loading ? (
         <p style={{ color: '#6b7280' }}>Loading…</p>
       ) : notifications.length === 0 ? (
@@ -306,7 +217,7 @@ export default function NotificationsPage() {
                       </button>
                       <button
                         className="btn-red"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}
+                        onClick={(e) => { e.stopPropagation(); setDeleteError(''); setDeleteTarget(n); }}
                       >
                         Delete
                       </button>
@@ -317,6 +228,99 @@ export default function NotificationsPage() {
             })}
           </tbody>
         </table>
+      )}
+
+      {/* ── Send / Edit modal ── */}
+      {showForm && (
+        <div style={modalOverlayStyle} onClick={cancelForm}>
+          <div style={modalCardStyle} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111', margin: '0 0 18px' }}>
+              {editingId ? `Edit Notification #${editingId}` : 'Send a Notification'}
+            </h2>
+
+            {errorMsg && (
+              <div style={alertStyle('#fee2e2', '#dc2626')}>{errorMsg}</div>
+            )}
+
+            <form onSubmit={handleSend}>
+              <div style={rowStyle}>
+                {/* Recipient */}
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>Recipient</label>
+                  <select
+                    name="user_id"
+                    value={form.user_id}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  >
+                    <option value="">All Users (Broadcast)</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.firstname} {u.lastname} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Type */}
+                <div style={{ ...fieldStyle, maxWidth: 160 }}>
+                  <label style={labelStyle}>Type</label>
+                  <select
+                    name="type"
+                    value={form.type}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  >
+                    {TYPE_OPTIONS.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Title</label>
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder="e.g. Typhoon Advisory"
+                  maxLength={255}
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Message */}
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Message</label>
+                <textarea
+                  name="body"
+                  value={form.body}
+                  onChange={handleChange}
+                  placeholder="Write your notification message here..."
+                  rows={3}
+                  style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  type="submit"
+                  disabled={sending}
+                  style={sendBtnStyle(sending)}
+                >
+                  {sending
+                    ? (editingId ? 'Saving…' : 'Sending…')
+                    : (editingId ? 'Save Changes' : 'Send Notification')}
+                </button>
+                <button type="button" onClick={cancelForm} style={secondaryBtnStyle} disabled={sending}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* ── Full Notification Modal ── */}
@@ -372,19 +376,29 @@ export default function NotificationsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this notification?"
+        message={
+          deleteError
+            ? deleteError
+            : deleteTarget
+              ? `This will permanently delete "${deleteTarget.title}". This action cannot be undone.`
+              : ''
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+      />
     </div>
   );
 }
 
-/* ── Inline styles ── */
-const formCardStyle = {
-  background: '#fff',
-  border: '1px solid #e5e7eb',
-  borderRadius: 10,
-  padding: '24px 28px',
-  marginBottom: 8,
-  maxWidth: 720,
-};
+
 const rowStyle   = { display: 'flex', gap: 16, flexWrap: 'wrap' };
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14, flex: 1, minWidth: 200 };
 const labelStyle = { fontSize: 13, fontWeight: 600, color: '#374151' };
@@ -420,15 +434,6 @@ const secondaryBtnStyle = {
   fontSize: 14,
   cursor: 'pointer',
 };
-const cancelEditBtnStyle = {
-  background: 'none',
-  border: 'none',
-  color: '#6b7280',
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: 'pointer',
-  padding: 0,
-};
 const editBtnStyle = {
   background: '#e8f4fd',
   color: '#1a73e8',
@@ -455,8 +460,7 @@ function badgeStyle(bg, color) {
   };
 }
 
-// single-line ellipsis cell — pairs with the truncate() helper so long
-// unbroken strings never spill into neighboring columns
+
 function cellClampStyle(fontWeight = 400, color = '#111') {
   return {
     fontWeight,
@@ -475,7 +479,7 @@ const modalOverlayStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 100,
+  zIndex: 200,
   padding: 20,
 };
 

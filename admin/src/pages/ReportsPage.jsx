@@ -121,7 +121,6 @@ export default function ReportsPage() {
       <div className="page-header-row">
         <div>
           <h1>Reports</h1>
-          <p className="page-subtitle">Full trail: reporter → verifier → office action, in one place.</p>
         </div>
         <div className="live-chip">
           <span className={`live-chip-dot ${reports.filter(r => r.status === 'pending').length === 0 ? 'calm' : ''}`} />

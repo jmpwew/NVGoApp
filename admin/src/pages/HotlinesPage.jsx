@@ -3,6 +3,7 @@ import axios from 'axios';
 import './HotlinesPage.css';
 
 import { API } from '../config';
+import ConfirmModal from '../components/ConfirmModal';
 
 const emptyForm = { name: '', number: '', category: 'General' };
 
@@ -22,6 +23,13 @@ export default function HotlinesPage() {
   const [form, setForm]           = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm]   = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const token = localStorage.getItem('token');
 
   useEffect(() => { fetchHotlines(); }, []);
@@ -39,6 +47,8 @@ export default function HotlinesPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setFormError('');
+    setSaving(true);
     try {
       if (editingId) {
         await axios.put(`${API}/api/hotlines/${editingId}`, form, {
@@ -53,33 +63,42 @@ export default function HotlinesPage() {
       fetchHotlines();
     } catch (err) {
       console.log(err);
-      alert('Failed to save hotline.');
+      setFormError(err.response?.data?.message || 'Failed to save hotline.');
+    } finally {
+      setSaving(false);
     }
   }
 
   function startEdit(item) {
     setForm({ name: item.name, number: item.number, category: item.category });
     setEditingId(item.id);
+    setFormError('');
     setShowForm(true);
-    window.scrollTo(0, 0);
   }
 
   function cancelForm() {
     setForm(emptyForm);
     setEditingId(null);
     setShowForm(false);
+    setFormError('');
+    setSaving(false);
   }
 
-  async function deleteHotline(id) {
-    if (!confirm('Delete this hotline?')) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await axios.delete(`${API}/api/hotlines/${id}`, {
+      await axios.delete(`${API}/api/hotlines/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setHotlines(prev => prev.filter(h => h.id !== id));
+      setHotlines(prev => prev.filter(h => h.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err) {
       console.log(err);
-      alert('Failed to delete hotline.');
+      setDeleteError(err.response?.data?.message || 'Failed to delete hotline.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -87,62 +106,10 @@ export default function HotlinesPage() {
     <div className="page">
       <div className="section-header">
         <h1>Emergency Hotlines</h1>
-        {!showForm && (
-          <button className="btn-green" onClick={() => setShowForm(true)}>
-            + Add Hotline
-          </button>
-        )}
+        <button className="btn-green" onClick={() => { setForm(emptyForm); setEditingId(null); setFormError(''); setShowForm(true); }}>
+          + Add Hotline
+        </button>
       </div>
-
-      {/* Form */}
-      {showForm && (
-        <div className="hotline-form">
-          <h2>{editingId ? 'Edit Hotline' : 'Add New Hotline'}</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. BFP, Police, MDRMMC"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Number</label>
-                <input
-                  type="text"
-                  value={form.number}
-                  onChange={e => setForm({ ...form, number: e.target.value })}
-                  placeholder="e.g. 09398129676"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Category</label>
-                <select
-                  value={form.category}
-                  onChange={e => setForm({ ...form, category: e.target.value })}
-                >
-                  {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="form-buttons">
-              <button type="submit" className="btn-green">
-                {editingId ? 'Save Changes' : 'Add Hotline'}
-              </button>
-              <button type="button" className="btn-gray" onClick={cancelForm}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {/* Table */}
       <table>
@@ -176,7 +143,7 @@ export default function HotlinesPage() {
                   <td>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button className="btn-gray" onClick={() => startEdit(h)}>Edit</button>
-                      <button className="btn-red" onClick={() => deleteHotline(h.id)}>Delete</button>
+                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(h); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -185,6 +152,78 @@ export default function HotlinesPage() {
           )}
         </tbody>
       </table>
+
+      {/* Add/Edit hotline modal */}
+      {showForm && (
+        <div className="hotline-modal-overlay" onClick={cancelForm}>
+          <div className="hotline-modal" onClick={e => e.stopPropagation()}>
+            <h2>{editingId ? 'Edit Hotline' : 'Add New Hotline'}</h2>
+            <form onSubmit={handleSubmit}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder="e.g. BFP, Police, MDRMMC"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Number</label>
+                  <input
+                    type="text"
+                    value={form.number}
+                    onChange={e => setForm({ ...form, number: e.target.value })}
+                    placeholder="e.g. 09398129676"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    value={form.category}
+                    onChange={e => setForm({ ...form, category: e.target.value })}
+                  >
+                    {CATEGORIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="btn-green" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Add Hotline'}
+                </button>
+                <button type="button" className="btn-gray" onClick={cancelForm} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this hotline?"
+        message={
+          deleteError
+            ? deleteError
+            : deleteTarget
+              ? `This will permanently delete "${deleteTarget.name}" (${deleteTarget.number}). This action cannot be undone.`
+              : ''
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+      />
     </div>
   );
 }
