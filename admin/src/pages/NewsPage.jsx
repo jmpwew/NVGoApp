@@ -4,6 +4,7 @@ import './NewsPage.css';
 
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
+import ConfirmModal from '../components/ConfirmModal';
 
 const emptyForm = { title: '', content: '', category: 'announcement' };
 
@@ -12,9 +13,16 @@ export default function NewsPage() {
   const [form, setForm]           = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm]   = useState(false);
-  const [imageFile, setImageFile] = useState(null);       // new file selected
-  const [preview, setPreview]     = useState(null);       // preview of new file
-  const [currentImage, setCurrentImage] = useState(null); // existing image when editing
+  const [saving, setSaving]       = useState(false);
+  const [formError, setFormError] = useState('');
+  const [imageFile, setImageFile] = useState(null);     
+  const [preview, setPreview]     = useState(null);       
+  const [currentImage, setCurrentImage] = useState(null); 
+
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -32,7 +40,7 @@ export default function NewsPage() {
     }
   }
 
-  // When user picks an image, show a preview
+
   function handleImageChange(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -42,8 +50,9 @@ export default function NewsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setFormError('');
+    setSaving(true);
     try {
-     
       const formData = new FormData();
       formData.append('title', form.title);
       formData.append('content', form.content);
@@ -72,18 +81,20 @@ export default function NewsPage() {
       fetchNews();
     } catch (err) {
       console.log(err);
-      alert('Failed to save news.');
+      setFormError(err.response?.data?.message || 'Failed to save news.');
+    } finally {
+      setSaving(false);
     }
   }
 
   function startEdit(item) {
     setForm({ title: item.title, content: item.content, category: item.category });
     setEditingId(item.id);
-    setCurrentImage(item.image); // keep track of existing image
+    setCurrentImage(item.image); 
     setImageFile(null);
     setPreview(null);
+    setFormError('');
     setShowForm(true);
-    window.scrollTo(0, 0);
   }
 
   function cancelForm() {
@@ -93,18 +104,25 @@ export default function NewsPage() {
     setImageFile(null);
     setPreview(null);
     setCurrentImage(null);
+    setFormError('');
+    setSaving(false);
   }
 
-  async function deleteNews(id) {
-    if (!confirm('Delete this news post?')) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await axios.delete(`${API}/api/admin/news/${id}`, {
+      await axios.delete(`${API}/api/admin/news/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNewsList(prev => prev.filter(n => n.id !== id));
+      setNewsList(prev => prev.filter(n => n.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (err) {
       console.log(err);
-      alert('Failed to delete news.');
+      setDeleteError(err.response?.data?.message || 'Failed to delete news.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -112,94 +130,10 @@ export default function NewsPage() {
     <div className="page">
       <div className="section-header">
         <h1>News</h1>
-        {!showForm && (
-          <button className="btn-green" onClick={() => setShowForm(true)}>
-            + Add News
-          </button>
-        )}
+        <button className="btn-green" onClick={() => { setForm(emptyForm); setEditingId(null); setFormError(''); setShowForm(true); }}>
+          + Add News
+        </button>
       </div>
-
-      {/* Create / Edit form */}
-      {showForm && (
-        <div className="news-form">
-          <h2>{editingId ? 'Edit News' : 'Add New Post'}</h2>
-          <form onSubmit={handleSubmit}>
-
-            <div className="form-group">
-              <label>Title</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-                placeholder="News title"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category</label>
-              <select
-                value={form.category}
-                onChange={e => setForm({ ...form, category: e.target.value })}
-              >
-                <option value="announcement">Announcement</option>
-                <option value="weather">Weather</option>
-                <option value="crime">Crime</option>
-                <option value="health">Health</option>
-                <option value="environment">Environment</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Content</label>
-              <textarea
-                value={form.content}
-                onChange={e => setForm({ ...form, content: e.target.value })}
-                placeholder="Write the news content here..."
-                required
-                style={{ minHeight: '140px' }}
-              />
-            </div>
-
-            {/* Image upload */}
-            <div className="form-group">
-              <label>
-                Image {editingId && currentImage && '— leave empty to keep current image'}
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-
-              {/* Preview of newly selected image */}
-              {preview && (
-                <div style={{ marginTop: '10px' }}>
-                  <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>New image preview:</p>
-                  <img src={preview} alt="preview" className="image-preview" />
-                </div>
-              )}
-
-              {/* Show existing image if editing and no new file picked */}
-              {!preview && currentImage && (
-                <div style={{ marginTop: '10px' }}>
-                  <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Current image:</p>
-                  <img src={getImageUrl(currentImage)} alt="current" className="image-preview" />
-                </div>
-              )}
-            </div>
-
-            <div className="form-buttons">
-              <button type="submit" className="btn-green">
-                {editingId ? 'Save Changes' : 'Post News'}
-              </button>
-              <button type="button" className="btn-gray" onClick={cancelForm}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {/* News table */}
       <table>
@@ -241,7 +175,7 @@ export default function NewsPage() {
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button className="btn-gray" onClick={() => startEdit(n)}>Edit</button>
-                    <button className="btn-red" onClick={() => deleteNews(n.id)}>Delete</button>
+                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(n); }}>Delete</button>
                   </div>
                 </td>
               </tr>
@@ -249,6 +183,109 @@ export default function NewsPage() {
           )}
         </tbody>
       </table>
+
+      {/* Add/Edit news modal */}
+      {showForm && (
+        <div className="news-modal-overlay" onClick={cancelForm}>
+          <div className="news-modal" onClick={e => e.stopPropagation()}>
+            <h2>{editingId ? 'Edit News' : 'Add New Post'}</h2>
+            <form onSubmit={handleSubmit}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div className="form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={e => setForm({ ...form, title: e.target.value })}
+                  placeholder="News title"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  value={form.category}
+                  onChange={e => setForm({ ...form, category: e.target.value })}
+                >
+                  <option value="announcement">Announcement</option>
+                  <option value="weather">Weather</option>
+                  <option value="crime">Crime</option>
+                  <option value="health">Health</option>
+                  <option value="environment">Environment</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Content</label>
+                <textarea
+                  value={form.content}
+                  onChange={e => setForm({ ...form, content: e.target.value })}
+                  placeholder="Write the news content here..."
+                  required
+                  style={{ minHeight: '140px' }}
+                />
+              </div>
+
+              {/* Image upload */}
+              <div className="form-group">
+                <label>
+                  Image {editingId && currentImage && '— leave empty to keep current image'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+
+                {/* Preview of newly selected image */}
+                {preview && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>New image preview:</p>
+                    <img src={preview} alt="preview" className="image-preview" />
+                  </div>
+                )}
+
+                {/* Show existing image if editing and no new file picked */}
+                {!preview && currentImage && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Current image:</p>
+                    <img src={getImageUrl(currentImage)} alt="current" className="image-preview" />
+                  </div>
+                )}
+              </div>
+
+              <div className="form-buttons">
+                <button type="submit" className="btn-green" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Post News'}
+                </button>
+                <button type="button" className="btn-gray" onClick={cancelForm} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this news post?"
+        message={
+          deleteError
+            ? deleteError
+            : deleteTarget
+              ? `This will permanently delete "${deleteTarget.title}". This action cannot be undone.`
+              : ''
+        }
+        confirmLabel="Delete"
+        tone="danger"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+      />
     </div>
   );
 }
