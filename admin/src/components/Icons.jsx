@@ -1,5 +1,4 @@
-// Small dependency-free SVG icons used in the header and sidebar.
-// Kept as simple stroke icons so the admin panel doesn't need an icon font.
+
 
 export function MenuIcon(props) {
   return (

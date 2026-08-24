@@ -5,13 +5,36 @@ import './NewsPage.css';
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
 
-const emptyForm = { title: '', message: '', urgency: 'info', is_active: true };
+const emptyForm = { title: '', message: '', urgency: 'info', is_active: true, duration_hours: '' };
 
 const URGENCY_META = {
   info:      { label: 'Info',      bg: '#cfe2ff', color: '#084298' },
   warning:   { label: 'Warning',   bg: '#ffe8b3', color: '#935e00' },
   emergency: { label: 'Emergency', bg: '#f8d7da', color: '#842029' },
 };
+
+const NEW_DURATION_OPTIONS = [
+  { value: '',    label: 'No expiration' },
+  { value: '12',  label: '12 hours' },
+  { value: '24',  label: '24 hours' },
+  { value: '48',  label: '48 hours' },
+  { value: '72',  label: '72 hours' },
+  { value: '168', label: '7 days' },
+];
+
+
+const EDIT_DURATION_OPTIONS = [
+  { value: 'keep', label: 'Keep current expiration' },
+  ...NEW_DURATION_OPTIONS,
+];
+
+function formatExpiry(expiresAt, isActive) {
+  if (!expiresAt) return isActive ? '—' : 'Expired';
+  const date = new Date(expiresAt);
+  const isPast = date.getTime() <= Date.now();
+  const formatted = date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  return isPast ? `Expired ${formatted}` : `Expires ${formatted}`;
+}
 
 export default function AnnouncementsPage() {
   const [list, setList]           = useState([]);
@@ -53,6 +76,8 @@ export default function AnnouncementsPage() {
       formData.append('message', form.message);
       formData.append('urgency', form.urgency);
       formData.append('is_active', form.is_active);
+  
+      formData.append('duration_hours', form.duration_hours);
       if (imageFile) formData.append('image', imageFile);
 
       if (editingId) {
@@ -74,7 +99,13 @@ export default function AnnouncementsPage() {
   }
 
   function startEdit(item) {
-    setForm({ title: item.title, message: item.message, urgency: item.urgency, is_active: item.is_active });
+    setForm({
+      title: item.title,
+      message: item.message,
+      urgency: item.urgency,
+      is_active: item.is_active,
+      duration_hours: 'keep',
+    });
     setEditingId(item.id);
     setCurrentImage(item.image);
     setImageFile(null);
@@ -145,6 +176,21 @@ export default function AnnouncementsPage() {
             </div>
 
             <div className="form-group">
+              <label>Duration</label>
+              <select
+                value={form.duration_hours}
+                onChange={e => setForm({ ...form, duration_hours: e.target.value })}
+              >
+                {(editingId ? EDIT_DURATION_OPTIONS : NEW_DURATION_OPTIONS).map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>
+                After this time, the announcement is automatically hidden from the app.
+              </p>
+            </div>
+
+            <div className="form-group">
               <label>Message</label>
               <textarea
                 value={form.message}
@@ -209,12 +255,13 @@ export default function AnnouncementsPage() {
             <th>Urgency</th>
             <th>Status</th>
             <th>Date Posted</th>
+            <th>Expiry</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {list.length === 0 ? (
-            <tr><td colSpan="7">No announcements yet.</td></tr>
+            <tr><td colSpan="8">No announcements yet.</td></tr>
           ) : (
             list.map(a => {
               const um = URGENCY_META[a.urgency] || URGENCY_META.info;
@@ -246,6 +293,9 @@ export default function AnnouncementsPage() {
                     </span>
                   </td>
                   <td>{new Date(a.created_at).toLocaleDateString()}</td>
+                  <td style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap' }}>
+                    {formatExpiry(a.expires_at, a.is_active)}
+                  </td>
                   <td>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button className="btn-gray" onClick={() => startEdit(a)}>Edit</button>

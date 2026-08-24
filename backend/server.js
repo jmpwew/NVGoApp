@@ -72,3 +72,10 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+/* ANNOUNCEMENT EXPIRY SWEEP */
+// Auto-hides announcements once their duration runs out, even if nobody
+// happens to load the admin panel or the app right at that moment.
+const expireAnnouncements = require('./utils/expireAnnouncements');
+expireAnnouncements(); // run once on boot
+setInterval(expireAnnouncements, 5 * 60 * 1000); // then every 5 minutes

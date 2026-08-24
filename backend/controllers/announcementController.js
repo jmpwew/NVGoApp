@@ -1,10 +1,10 @@
 const pool = require('../config/db');
+const expireAnnouncements = require('../utils/expireAnnouncements');
 
-// GET /api/announcements
-// Active announcements only, most urgent first, newest first within the
-// same urgency level. This is what the Home screen carousel reads from.
+
 exports.getActiveAnnouncements = async (req, res) => {
   try {
+    await expireAnnouncements();
     const result = await pool.query(
       `SELECT id, title, message, image, urgency, created_at
        FROM announcements

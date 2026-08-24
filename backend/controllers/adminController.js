@@ -388,8 +388,22 @@ exports.deleteNews = async (req, res) => {
 
 // Announcements
 
+const expireAnnouncements = require('../utils/expireAnnouncements');
+
+// Duration options exposed in the admin UI, in hours. `null`/omitted means
+// "no expiration" — the announcement stays active until manually hidden.
+const VALID_DURATION_HOURS = [12, 24, 48, 72, 168]; // 168h = 7 days
+
+function computeExpiresAt(durationHours) {
+  if (durationHours === undefined || durationHours === null || durationHours === '') return null;
+  const hours = Number(durationHours);
+  if (!Number.isFinite(hours) || hours <= 0) return null;
+  return new Date(Date.now() + hours * 60 * 60 * 1000);
+}
+
 exports.getAllAnnouncements = async (req, res) => {
   try {
+    await expireAnnouncements(); // sweep first so the table reflects reality
     const result = await pool.query('SELECT * FROM announcements ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
@@ -400,16 +414,17 @@ exports.getAllAnnouncements = async (req, res) => {
 
 exports.createAnnouncement = async (req, res) => {
   try {
-    const { title, message, urgency, is_active } = req.body;
+    const { title, message, urgency, is_active, duration_hours } = req.body;
     const image = req.file
       ? await uploadToSupabase(req.file, 'announcement-images')
       : null;
     const active = is_active === undefined ? true : is_active === 'true' || is_active === true;
+    const expiresAt = computeExpiresAt(duration_hours);
 
     const result = await pool.query(
-      `INSERT INTO announcements (title, message, image, urgency, is_active, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [title, message, image, urgency || 'info', active, req.user.id]
+      `INSERT INTO announcements (title, message, image, urgency, is_active, created_by, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [title, message, image, urgency || 'info', active, req.user.id, expiresAt]
     );
     const announcement = result.rows[0];
 
@@ -441,23 +456,28 @@ exports.createAnnouncement = async (req, res) => {
 
 exports.updateAnnouncement = async (req, res) => {
   try {
-    const { title, message, urgency, is_active } = req.body;
+    const { title, message, urgency, is_active, duration_hours } = req.body;
     const image = req.file
       ? await uploadToSupabase(req.file, 'announcement-images')
       : null;
     const active = is_active === undefined ? true : is_active === 'true' || is_active === true;
 
-    const result = image
-      ? await pool.query(
-          `UPDATE announcements SET title=$1, message=$2, urgency=$3, is_active=$4, image=$5, updated_at=NOW()
-           WHERE id=$6 RETURNING *`,
-          [title, message, urgency, active, image, req.params.id]
-        )
-      : await pool.query(
-          `UPDATE announcements SET title=$1, message=$2, urgency=$3, is_active=$4, updated_at=NOW()
-           WHERE id=$5 RETURNING *`,
-          [title, message, urgency, active, req.params.id]
-        );
+ 
+    const touchExpiry = duration_hours !== undefined && duration_hours !== 'keep';
+    const expiresAt = touchExpiry ? computeExpiresAt(duration_hours) : undefined;
+
+    const setClauses = ['title=$1', 'message=$2', 'urgency=$3', 'is_active=$4'];
+    const values = [title, message, urgency, active];
+
+    if (image) { values.push(image); setClauses.push(`image=$${values.length}`); }
+    if (touchExpiry) { values.push(expiresAt); setClauses.push(`expires_at=$${values.length}`); }
+    setClauses.push('updated_at=NOW()');
+    values.push(req.params.id);
+
+    const result = await pool.query(
+      `UPDATE announcements SET ${setClauses.join(', ')} WHERE id=$${values.length} RETURNING *`,
+      values
+    );
 
     res.json(result.rows[0]);
   } catch (err) {
