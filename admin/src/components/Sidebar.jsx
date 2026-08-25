@@ -50,6 +50,9 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
               <NavLink to="/hotlines"      onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span>Emergency Hotlines</span>
               </NavLink>
+              <NavLink to="/transparency"  onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Transparency Board</span>
+              </NavLink>
             </>
           )}
 
@@ -65,9 +68,7 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
             </NavLink>
           )}
 
-          {/* Only 'admin' is an individually-issued login — verifier and
-              office accounts are shared, so they get "Account Settings"
-              (see AccountPage.jsx) instead of a self-editable profile. */}
+          
           {['verifier', 'police', 'bfp', 'medical'].includes(role) ? (
             <NavLink to="/account" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               <span>Account Settings</span>

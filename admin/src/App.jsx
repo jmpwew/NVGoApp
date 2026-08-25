@@ -10,6 +10,7 @@ import AnnouncementsPage from './pages/AnnouncementsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SupportPage from './pages/SupportPage';
 import HotlinesPage from './pages/HotlinesPage';
+import TransparencyBoardPage from './pages/TransparencyBoardPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountPage from './pages/AccountPage';
 import VerifierDashboard from './pages/VerifierDashboard';
@@ -107,11 +108,12 @@ export default function App() {
         <Route path="/notifications" element={<RoleRoute allow={['admin']}><NotificationsPage /></RoleRoute>} />
         <Route path="/support" element={<RoleRoute allow={['admin']}><SupportPage /></RoleRoute>} />
         <Route path="/hotlines" element={<RoleRoute allow={['admin']}><HotlinesPage /></RoleRoute>} />
+        <Route path="/transparency" element={<RoleRoute allow={['admin']}><TransparencyBoardPage /></RoleRoute>} />
 
         {/* Verifier */}
         <Route path="/verifier"  element={<RoleRoute allow={['verifier']}><VerifierDashboard /></RoleRoute>} />
 
-        {/* Offices: police | bfp | medical share one dashboard, filtered server-side by role */}
+        {/* officesz */}
         <Route path="/office"    element={<RoleRoute allow={['police', 'bfp', 'medical']}><OfficeDashboard /></RoleRoute>} />
 
         {/* Admin: individual account, personal profile */}

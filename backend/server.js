@@ -35,6 +35,7 @@ const supportRoutes = require('./routes/supportRoutes');
 const hotlineRoutes = require('./routes/hotlineRoutes');
 const deleteAccountRoute = require('./routes/deleteAccountRoute');
 const changeEmailRoute = require('./routes/changeEmailRoute');
+const transparencyRoutes = require('./routes/transparencyRoutes');
 
 app.use('/api/auth', deleteAccountRoute);
 
@@ -53,6 +54,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/auth/password', changePasswordRoute);
 app.use('/api/profile/email', changeEmailRoute);
 app.use('/api/hotlines', hotlineRoutes);
+app.use('/api/transparency', transparencyRoutes);
 
 
 
@@ -73,9 +75,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-/* ANNOUNCEMENT EXPIRY SWEEP */
-// Auto-hides announcements once their duration runs out, even if nobody
-// happens to load the admin panel or the app right at that moment.
+
 const expireAnnouncements = require('./utils/expireAnnouncements');
-expireAnnouncements(); // run once on boot
-setInterval(expireAnnouncements, 5 * 60 * 1000); // then every 5 minutes
+expireAnnouncements(); 
+setInterval(expireAnnouncements, 5 * 60 * 1000); 
