@@ -134,8 +134,164 @@
   margin-bottom: 18px;
 }
 
+/* ---------- Fund breakdown ---------- */
+.tb-fund-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tb-fund-row:last-of-type {
+  border-bottom: none;
+}
+
+.tb-fund-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #222;
+}
+
+.tb-fund-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #eee;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.tb-fund-bar-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: #F5C400;
+}
+
+.tb-fund-totals {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.tb-fund-total-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tb-fund-total-label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tb-fund-total-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #222;
+}
+
+/* ---------- Documents ---------- */
+.tb-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tb-doc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.tb-doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tb-doc-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #222;
+}
+
+.tb-doc-title a {
+  color: #1B8A4C;
+  text-decoration: none;
+}
+
+.tb-doc-title a:hover {
+  text-decoration: underline;
+}
+
+.tb-doc-meta {
+  font-size: 11px;
+  color: #999;
+}
+
+.tb-doc-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Filters ---------- */
+.tb-filter-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.tb-filter-row select {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 12.5px;
+  color: #333;
+  background: white;
+}
+
+/* ---------- Item card extras ---------- */
+.tb-item-meta {
+  font-size: 11.5px;
+  color: #888;
+  margin: 0 0 6px;
+}
+
+.tb-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #eee;
+  margin: 4px 0 8px;
+  overflow: hidden;
+}
+
+.tb-progress-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: #1B8A4C;
+}
+
 @media (max-width: 700px) {
   .tb-item-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .tb-fund-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tb-fund-totals {
+    flex-wrap: wrap;
+    gap: 14px;
   }
 }

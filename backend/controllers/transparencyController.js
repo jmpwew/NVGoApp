@@ -1,6 +1,8 @@
 const pool = require('../config/db');
 const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
+const FUND_TYPES = ['general', 'dev_fund', 'sef', 'gad', 'drrm'];
+
 // ---------- BOARD ----------
 
 // GET /api/transparency  (public)
@@ -17,17 +19,19 @@ exports.getPublicBoard = async (req, res) => {
       return res.status(404).json({ message: 'Transparency board is not published yet.' });
     }
 
-    const infrastructure = await pool.query(
-      'SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'
-    );
-    const accomplishments = await pool.query(
-      'SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'
-    );
+    const [funds, infrastructure, accomplishments, documents] = await Promise.all([
+      pool.query('SELECT * FROM transparency_funds ORDER BY fund_type ASC'),
+      pool.query('SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_documents ORDER BY sort_order ASC, id ASC'),
+    ]);
 
     res.json({
       board,
+      funds: funds.rows,
       infrastructure: infrastructure.rows,
       accomplishments: accomplishments.rows,
+      documents: documents.rows,
     });
   } catch (err) {
     console.error(err);
@@ -45,17 +49,19 @@ exports.getAdminBoard = async (req, res) => {
     );
     const board = boardResult.rows[0];
 
-    const infrastructure = await pool.query(
-      'SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'
-    );
-    const accomplishments = await pool.query(
-      'SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'
-    );
+    const [funds, infrastructure, accomplishments, documents] = await Promise.all([
+      pool.query('SELECT * FROM transparency_funds ORDER BY fund_type ASC'),
+      pool.query('SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_documents ORDER BY sort_order ASC, id ASC'),
+    ]);
 
     res.json({
       board,
+      funds: funds.rows,
       infrastructure: infrastructure.rows,
       accomplishments: accomplishments.rows,
+      documents: documents.rows,
     });
   } catch (err) {
     console.error(err);
@@ -64,14 +70,18 @@ exports.getAdminBoard = async (req, res) => {
 };
 
 // PUT /api/transparency  (admin)
+// Updates the board header info: LGU name, reporting period, accountable
+// official, data source note, and publish state. Budget figures live in
+// transparency_funds now, not here.
 exports.updateBoard = async (req, res) => {
   try {
     const {
       lgu_name,
       reporting_period,
-      total_budget,
-      budget_spent,
-      budget_remaining,
+      official_name,
+      official_position,
+      data_as_of,
+      source_note,
       is_published,
     } = req.body;
 
@@ -79,19 +89,21 @@ exports.updateBoard = async (req, res) => {
       `UPDATE transparency_board
        SET lgu_name = $1,
            reporting_period = $2,
-           total_budget = $3,
-           budget_spent = $4,
-           budget_remaining = $5,
-           is_published = $6,
+           official_name = $3,
+           official_position = $4,
+           data_as_of = $5,
+           source_note = $6,
+           is_published = $7,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = 1
        RETURNING *`,
       [
         lgu_name,
         reporting_period,
-        total_budget || 0,
-        budget_spent || 0,
-        budget_remaining || 0,
+        official_name || null,
+        official_position || null,
+        data_as_of || null,
+        source_note || null,
         is_published === true || is_published === 'true',
       ]
     );
@@ -103,12 +115,96 @@ exports.updateBoard = async (req, res) => {
   }
 };
 
+// ---------- FUNDS ----------
+
+// PUT /api/transparency/funds  (admin)
+// Body: { funds: [{ fund_type, allocated, spent, remaining }, ...] }
+// Updates all five fund rows in one call so the form can save as a unit.
+exports.updateFunds = async (req, res) => {
+  try {
+    const { funds } = req.body;
+    if (!Array.isArray(funds)) {
+      return res.status(400).json({ message: 'funds must be an array' });
+    }
+
+    const updated = [];
+    for (const f of funds) {
+      if (!FUND_TYPES.includes(f.fund_type)) continue;
+      const result = await pool.query(
+        `UPDATE transparency_funds
+         SET allocated = $1, spent = $2, remaining = $3
+         WHERE fund_type = $4
+         RETURNING *`,
+        [f.allocated || 0, f.spent || 0, f.remaining || 0, f.fund_type]
+      );
+      if (result.rows[0]) updated.push(result.rows[0]);
+    }
+
+    touchBoardUpdatedAt();
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ---------- DOCUMENTS ----------
+
+// POST /api/transparency/documents  (admin)  — field name: 'file'
+exports.createDocument = async (req, res) => {
+  try {
+    const { title, sort_order } = req.body;
+    if (!title) return res.status(400).json({ message: 'Title is required' });
+    if (!req.file) return res.status(400).json({ message: 'A file is required' });
+    if (req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Only PDF files are allowed' });
+    }
+
+    const file_url = await uploadToSupabase(req.file, 'transparency-documents');
+
+    const result = await pool.query(
+      `INSERT INTO transparency_documents (title, file_url, sort_order)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [title, file_url, sort_order || 0]
+    );
+
+    touchBoardUpdatedAt();
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// DELETE /api/transparency/documents/:id  (admin)
+exports.deleteDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM transparency_documents WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    touchBoardUpdatedAt();
+    res.json({ message: 'Document deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // ---------- INFRASTRUCTURE ----------
 
 // POST /api/transparency/infrastructure  (admin)
 exports.createInfrastructure = async (req, res) => {
   try {
-    const { name, status, cost, sort_order } = req.body;
+    const {
+      name, status, cost, sort_order,
+      category, barangay, progress_percent, target_completion_date,
+    } = req.body;
     if (!name) return res.status(400).json({ message: 'Name is required' });
 
     const image = req.file
@@ -116,10 +212,21 @@ exports.createInfrastructure = async (req, res) => {
       : null;
 
     const result = await pool.query(
-      `INSERT INTO transparency_infrastructure (name, status, cost, image, sort_order)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO transparency_infrastructure
+         (name, status, cost, image, sort_order, category, barangay, progress_percent, target_completion_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [name, status || 'ongoing', cost || null, image, sort_order || 0]
+      [
+        name,
+        status || 'ongoing',
+        cost || null,
+        image,
+        sort_order || 0,
+        category || null,
+        barangay || null,
+        progress_percent === '' || progress_percent == null ? null : progress_percent,
+        target_completion_date || null,
+      ]
     );
 
     touchBoardUpdatedAt();
@@ -134,7 +241,10 @@ exports.createInfrastructure = async (req, res) => {
 exports.updateInfrastructure = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, status, cost, sort_order } = req.body;
+    const {
+      name, status, cost, sort_order,
+      category, barangay, progress_percent, target_completion_date,
+    } = req.body;
 
     const existing = await pool.query(
       'SELECT * FROM transparency_infrastructure WHERE id = $1',
@@ -150,10 +260,22 @@ exports.updateInfrastructure = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE transparency_infrastructure
-       SET name = $1, status = $2, cost = $3, image = $4, sort_order = $5
-       WHERE id = $6
+       SET name = $1, status = $2, cost = $3, image = $4, sort_order = $5,
+           category = $6, barangay = $7, progress_percent = $8, target_completion_date = $9
+       WHERE id = $10
        RETURNING *`,
-      [name, status, cost || null, image, sort_order ?? existing.rows[0].sort_order, id]
+      [
+        name,
+        status,
+        cost || null,
+        image,
+        sort_order ?? existing.rows[0].sort_order,
+        category || null,
+        barangay || null,
+        progress_percent === '' || progress_percent == null ? null : progress_percent,
+        target_completion_date || null,
+        id,
+      ]
     );
 
     touchBoardUpdatedAt();
@@ -188,7 +310,7 @@ exports.deleteInfrastructure = async (req, res) => {
 // POST /api/transparency/accomplishments  (admin)
 exports.createAccomplishment = async (req, res) => {
   try {
-    const { title, description, sort_order } = req.body;
+    const { title, description, sort_order, category } = req.body;
     if (!title) return res.status(400).json({ message: 'Title is required' });
 
     const image = req.file
@@ -196,10 +318,10 @@ exports.createAccomplishment = async (req, res) => {
       : null;
 
     const result = await pool.query(
-      `INSERT INTO transparency_accomplishments (title, description, image, sort_order)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO transparency_accomplishments (title, description, image, sort_order, category)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [title, description || '', image, sort_order || 0]
+      [title, description || '', image, sort_order || 0, category || null]
     );
 
     touchBoardUpdatedAt();
@@ -214,7 +336,7 @@ exports.createAccomplishment = async (req, res) => {
 exports.updateAccomplishment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, sort_order } = req.body;
+    const { title, description, sort_order, category } = req.body;
 
     const existing = await pool.query(
       'SELECT * FROM transparency_accomplishments WHERE id = $1',
@@ -230,10 +352,10 @@ exports.updateAccomplishment = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE transparency_accomplishments
-       SET title = $1, description = $2, image = $3, sort_order = $4
-       WHERE id = $5
+       SET title = $1, description = $2, image = $3, sort_order = $4, category = $5
+       WHERE id = $6
        RETURNING *`,
-      [title, description, image, sort_order ?? existing.rows[0].sort_order, id]
+      [title, description, image, sort_order ?? existing.rows[0].sort_order, category || null, id]
     );
 
     touchBoardUpdatedAt();
@@ -263,9 +385,9 @@ exports.deleteAccomplishment = async (req, res) => {
   }
 };
 
-// Bumps the board's updated_at whenever an itemized list changes, so the
-// "last updated" label on the public board stays accurate even if admin
-// only edited an infrastructure item and not the budget fields.
+// Bumps the board's updated_at whenever an itemized list or the fund
+// breakdown changes, so the "last updated" label on the public board stays
+// accurate even if admin only edited a sub-section.
 function touchBoardUpdatedAt() {
   pool.query(
     `UPDATE transparency_board SET updated_at = CURRENT_TIMESTAMP WHERE id = 1`

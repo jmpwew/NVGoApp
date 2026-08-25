@@ -7,6 +7,9 @@ const {
   getPublicBoard,
   getAdminBoard,
   updateBoard,
+  updateFunds,
+  createDocument,
+  deleteDocument,
   createInfrastructure,
   updateInfrastructure,
   deleteInfrastructure,
@@ -21,6 +24,13 @@ router.get('/', getPublicBoard);
 // Admin — full board (published or not) + edit
 router.get('/admin', verifyAdmin, getAdminBoard);
 router.put('/', verifyAdmin, updateBoard);
+
+// Admin — fund breakdown (General Fund / 20% Dev Fund / SEF / GAD / DRRM)
+router.put('/funds', verifyAdmin, updateFunds);
+
+// Admin — downloadable official documents (PDFs)
+router.post('/documents', verifyAdmin, upload.single('file'), createDocument);
+router.delete('/documents/:id', verifyAdmin, deleteDocument);
 
 // Admin — infrastructure items
 router.post('/infrastructure', verifyAdmin, upload.single('image'), createInfrastructure);
