@@ -138,7 +138,7 @@ const step = StyleSheet.create({
 
 
 export default function RegisterScreen({ navigation }) {
-  const [page, setPage] = useState(0); // 0 = personal, 1 = account
+  const [page, setPage] = useState(0); 
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname]= useState('');
   const [contact, setContact]  = useState('');
@@ -148,7 +148,7 @@ export default function RegisterScreen({ navigation }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [slowNotice, setSlowNotice] = useState(false);
-  const [alertInfo, setAlertInfo] = useState(null); // { title, message } | null
+  const [alertInfo, setAlertInfo] = useState(null); 
 
   const notify = (title, message) => setAlertInfo({ title, message });
 
@@ -218,7 +218,7 @@ export default function RegisterScreen({ navigation }) {
           onPress={() => page === 1 ? setPage(0) : navigation.goBack()}
           hitSlop={8}
         >
-          <IcBack/>
+          <IcBack stroke={C.text}/>
         </TouchableOpacity>
         <Text style={s.navTitle}>Create Account</Text>
         <View style={{ width: 34 }}/>
@@ -300,7 +300,7 @@ export default function RegisterScreen({ navigation }) {
               }
             />
 
-            {/* Password requirements checklist — shown up front, updates live */}
+          
             <View style={s.pwChecklist}>
               {PASSWORD_RULES.map(rule => {
                 const met = rule.test(password);

@@ -76,7 +76,6 @@ const NewsCard = ({ item, onPress, catConfig }) => (
     {/* left: text */}
     <View style={s.newsBody}>
       <View style={[s.catTag, { backgroundColor: catConfig.bg }]}>
-        <View style={[s.catDot, { backgroundColor: catConfig.color }]}/>
         <Text style={[s.catTagTxt, { color: catConfig.color }]}>
           {catConfig.label.toUpperCase()}
         </Text>
@@ -376,7 +375,6 @@ const s = StyleSheet.create({
 
   /* Category tag on row */
   catTag:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 6, alignSelf: 'flex-start' },
-  catDot:    { width: 5, height: 5, borderRadius: 3 },
   catTagTxt: { fontSize: 8, fontWeight: '800', letterSpacing: 0.4 },
 
   /* Meta */

@@ -61,7 +61,7 @@ function NotifCard({ item, onOpen, onDelete }) {
           </Text>
           <Text style={s.cardTime}>{formatTime(item.created_at)}</Text>
         </View>
-        {/* Full announcement/news text shown up to 3 lines, then "…" if longer */}
+    
         <Text style={s.cardMsg} numberOfLines={3} ellipsizeMode="tail">{item.body}</Text>
       </View>
 
@@ -112,7 +112,7 @@ export default function NotificationsScreen({ navigation }) {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const markRead = async (id) => {
-    // Optimistic update
+
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     try {
       const token = await AsyncStorage.getItem('token');
@@ -128,8 +128,7 @@ export default function NotificationsScreen({ navigation }) {
   const openNotification = (item) => {
     if (!item.is_read) markRead(item.id);
 
-    // Announcement/news notifications open the real detail screen (full
-    // content + picture, same view as browsing the Home/News feed).
+
     if (item.related_type === 'announcement') {
       navigation.navigate('AnnouncementDetail', {
         announcement: {
@@ -296,7 +295,7 @@ export default function NotificationsScreen({ navigation }) {
   );
 }
 
-/* ─── Styles ─────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   root:         { flex: 1, backgroundColor: C.bg },
   scroll:       { flex: 1 },
@@ -333,7 +332,6 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
     borderRadius: 14,
     borderWidth: 1,
-    borderLeftWidth: 4,
     borderColor: C.border,
     padding: 12,
     marginBottom: 10,

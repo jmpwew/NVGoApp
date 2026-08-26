@@ -17,7 +17,7 @@ export default function DeleteAccountScreen({ navigation }) {
   const [confirmed, setConfirmed]   = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [alertInfo, setAlertInfo]   = useState(null); // { title, message, tone, onOk } | null
+  const [alertInfo, setAlertInfo]   = useState(null); 
 
   const notify = (title, message, tone = 'error', onOk) =>
     setAlertInfo({ title, message, tone, onOk });
@@ -217,7 +217,7 @@ const s = StyleSheet.create({
 
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginTop: 8, marginBottom: 6, marginLeft: 2 },
 
-  warningCard:  { backgroundColor: '#FEF2F2', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FECACA', borderLeftWidth: 3.5, borderLeftColor: C.red, gap: 10 },
+  warningCard:  { backgroundColor: '#FEF2F2', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FECACA', gap: 10 },
   warningRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   warningDot:   { fontSize: 11, color: C.red, fontWeight: '800', marginTop: 1 },
   warningTxt:   { flex: 1, fontSize: 12, color: '#7F1D1D', lineHeight: 17 },

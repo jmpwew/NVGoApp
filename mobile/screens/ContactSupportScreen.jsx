@@ -12,9 +12,9 @@ import { IcBack, IcPhone, IcMail, IcFB, IcUser, IcMsg, IcSend} from '../constant
 
 
 // channel card
-function ChannelCard({ icon, label, value, onPress, iconBg, borderColor }) {
+function ChannelCard({ icon, label, value, onPress, iconBg }) {
   return (
-    <TouchableOpacity style={[s.channelCard, { borderLeftColor: borderColor }]} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={s.channelCard} onPress={onPress} activeOpacity={0.8}>
       <View style={[s.channelIcon, { backgroundColor: iconBg }]}>{icon}</View>
       <View style={s.channelBody}>
         <Text style={s.channelLabel}>{label}</Text>
@@ -247,7 +247,7 @@ const s = StyleSheet.create({
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginBottom: 6, marginLeft: 2, marginTop: 4 },
 
   channelGroup: { backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
-  channelCard:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14, gap: 12, borderLeftWidth: 4 },
+  channelCard:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14, gap: 12 },
   channelIcon:  { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   channelBody:  { flex: 1 },
   channelLabel: { fontSize: 11, fontWeight: '700', color: C.muted, letterSpacing: 0.3, marginBottom: 2 },
@@ -266,7 +266,7 @@ const s = StyleSheet.create({
   sendAnotherBtn: { borderWidth: 1.5, borderColor: C.green, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 24 },
   sendAnotherTxt: { color: C.green, fontSize: 13, fontWeight: '800' },
 
-  hoursCard:    { backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16, borderLeftWidth: 4, borderLeftColor: C.skyDk },
+  hoursCard:    { backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 16 },
   hoursTitle:   { fontSize: 13, fontWeight: '800', color: C.text, marginBottom: 8 },
   hoursRow:     { fontSize: 12, color: C.sub, marginBottom: 4, lineHeight: 18 },
 });

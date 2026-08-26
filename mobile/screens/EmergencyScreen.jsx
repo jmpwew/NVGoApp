@@ -25,8 +25,6 @@ export default function EmergencyScreen({ navigation }) {
   const [hotlines, setHotlines]     = useState([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // true when what's on screen came from cache, not a fresh fetch
-  const [isOffline, setIsOffline]   = useState(false);
   const [confirmCall, setConfirmCall] = useState(null); // { name, number } | null
   const [offlineAlert, setOfflineAlert] = useState(false);
 
@@ -50,7 +48,6 @@ export default function EmergencyScreen({ navigation }) {
       const data = await res.json();
 
       setHotlines(data);
-      setIsOffline(false);
 
       // Save a copy so we have something to show next time the network/API is down
       AsyncStorage.setItem(HOTLINES_CACHE_KEY, JSON.stringify(data)).catch((e) =>
@@ -60,7 +57,6 @@ export default function EmergencyScreen({ navigation }) {
       console.log(e);
       // Couldn't reach the server — fall back to whatever we last saved
       const hadCache = await loadCachedHotlines();
-      setIsOffline(true);
       if (!hadCache) {
         setOfflineAlert(true);
       }
@@ -116,14 +112,6 @@ export default function EmergencyScreen({ navigation }) {
             />
           }
         >
-          {isOffline && hotlines.length > 0 && (
-            <View style={s.offlineBanner}>
-              <Text style={s.offlineBannerText}>
-                Showing saved hotlines — couldn't refresh. Pull down to try again.
-              </Text>
-            </View>
-          )}
-
           {hotlines.length === 0 ? (
             <View style={s.emptyWrap}>
               <Text style={s.emptyTitle}>No hotlines available</Text>
@@ -171,7 +159,7 @@ export default function EmergencyScreen({ navigation }) {
         title={`Call ${confirmCall?.name}`}
         message={`You are about to call ${confirmCall?.number}.`}
         confirmLabel="Call Now"
-        tone="danger"
+        tone="default"
         onConfirm={() => {
           Linking.openURL(`tel:${confirmCall.number}`);
           setConfirmCall(null);
@@ -242,17 +230,6 @@ const s = StyleSheet.create({
   /* Loading */
   loadWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
   loadTxt:  { color: C.muted, fontSize: 13 },
-
-  /* Offline banner */
-  offlineBanner: {
-    backgroundColor: '#FFF8E1',
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#F9A825',
-    padding: 12,
-    marginBottom: 8,
-  },
-  offlineBannerText: { fontSize: 12, color: '#7B6000', lineHeight: 18 },
 
   /* Empty state */
   emptyWrap:  { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 24 },

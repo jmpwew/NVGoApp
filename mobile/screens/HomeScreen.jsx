@@ -7,7 +7,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { requestLocationPermission } from '../utils/locationPermission';
-import { IcReport, IcNews, IcPhone, IcMore, IcBell, IcUser, IcChevron, IcWarn, IcSOS, IcLogout, IcProfile} from '../constants/icons';
+import { IcReport, IcNews, IcPhone, IcMore, IcBell, IcUser, IcChevron, IcWarn, IcSOS, IcLogout, IcProfile, IcDefaultAvatar} from '../constants/icons';
 
   
 const { width } = Dimensions.get('window');
@@ -42,6 +42,7 @@ export default function HomeScreen({ navigation }) {
   const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmEmergencyCall, setConfirmEmergencyCall] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => { loadUser(); fetchWeather(); fetchLatestNews(); fetchAnnouncements();
 
@@ -53,6 +54,7 @@ export default function HomeScreen({ navigation }) {
     const stored = await AsyncStorage.getItem('user');
     setUser(stored ? JSON.parse(stored) : null);  
     setUserLoaded(true);
+    setImgFailed(false);
   };
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -104,9 +106,7 @@ export default function HomeScreen({ navigation }) {
       const data = await res.json();
       setAnnouncements(data);
 
-      // Always land back on the first (highest-priority / newest) card
-      // so a freshly-posted announcement is visible immediately instead
-      // of being hidden wherever the carousel was last scrolled to.
+ 
       setAnnouncementIndex(0);
       requestAnimationFrame(() => {
         announcementListRef.current?.scrollToOffset({ offset: 0, animated: false });
@@ -152,14 +152,20 @@ export default function HomeScreen({ navigation }) {
             )}
             {user ? (
               <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)} activeOpacity={0.85}>
-                <Image
-                  source={
-                    user?.image
-                      ? { uri: getImageUrl(user.image) }
-                      : require('../assets/default-avatar.png')
-                  }
-                  style={s.avatar}
-                />
+                {user?.image && !imgFailed ? (
+                  <Image
+                    source={{ uri: getImageUrl(user.image) }}
+                    style={s.avatar}
+                    onError={(e) => {
+                      console.warn('Header avatar failed to load:', getImageUrl(user.image), e.nativeEvent?.error);
+                      setImgFailed(true);
+                    }}
+                  />
+                ) : (
+                  <View style={[s.avatar, s.avatarSvgWrap]}>
+                    <IcDefaultAvatar size={32}/>
+                  </View>
+                )}
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={s.iconBtn} onPress={() => navigation.navigate('Login')}>
@@ -436,6 +442,7 @@ const s = StyleSheet.create({
   iconBtn:     { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   notifDot:    { position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: 4, backgroundColor: C.yellow, borderWidth: 1.5, borderColor: C.greenDk },
   avatar:      { width: 36, height: 36, borderRadius: 11, borderWidth: 2, borderColor: C.yellow },
+  avatarSvgWrap: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 
   /* Logged-in greeting */
   greetCard:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.11)', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
@@ -469,7 +476,7 @@ const s = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 36, gap: 16 },
 
   /* Alert */
-  alert:       { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.yellowBg, borderRadius: 12, padding: 11, paddingHorizontal: 13, borderWidth: 1, borderColor: '#f0e088', borderLeftWidth: 3.5, borderLeftColor: C.yellow },
+  alert:       { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.yellowBg, borderRadius: 12, padding: 11, paddingHorizontal: 13, borderWidth: 1, borderColor: '#f0e088' },
   alertTxt:    { flex: 1, fontSize: 11, color: '#5a4800', fontWeight: '600', lineHeight: 16 },
 
   /* Section */

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Image, ScrollView,
-  StatusBar, Platform, ActivityIndicator,
+  StatusBar, Platform, ActivityIndicator, Modal, Pressable,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 import api_url from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
-import { IcBack, IcCamera, IcSave, IcLock, IcMail, IcChevron} from '../constants/icons';
+import { IcBack, IcCamera, IcSave, IcLock, IcMail, IcChevron, IcDefaultAvatar, IcTrash, IcImage} from '../constants/icons';
 import AlertModal from '../utils/AlertModal';
 
 
@@ -52,7 +52,10 @@ export default function EditProfileScreen({ navigation }) {
   const [address, setAddress] = useState('');
   const [image, setImage] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [photoMenuVisible, setPhotoMenuVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone } | null
 
   const notify = (title, message, tone = 'error') => setAlertInfo({ title, message, tone });
@@ -76,6 +79,9 @@ export default function EditProfileScreen({ navigation }) {
       setContact(u.contact || '');
       setAddress(u.address || '');
       setCurrentImage(u.image || null);
+      setImage(null);
+      setRemoveImage(false);
+      setImgFailed(false);
   
 
     } catch (err) {
@@ -84,11 +90,23 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const pickImage = async () => {
+    setPhotoMenuVisible(false);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 1,
     });
-    if (!result.canceled) setImage(result.assets[0]);
+    if (!result.canceled) {
+      setImage(result.assets[0]);
+      setRemoveImage(false);
+      setImgFailed(false);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoMenuVisible(false);
+    setImage(null);
+    setCurrentImage(null);
+    setRemoveImage(true);
   };
 
   const saveProfile = async () => {
@@ -112,6 +130,8 @@ export default function EditProfileScreen({ navigation }) {
         name: `profile_${Date.now()}.jpg`,
         type: 'image/jpeg',
       });
+    } else if (removeImage) {
+      formData.append('remove_image', 'true');
     }
 
     const res = await fetch(`${api_url}/api/profile`, {
@@ -126,6 +146,10 @@ export default function EditProfileScreen({ navigation }) {
       if (!data.user) { notify('Error', 'No user data returned.', 'error'); return; }
 
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      setImage(null);
+      setRemoveImage(false);
+      setCurrentImage(data.user.image || null);
+      setImgFailed(false);
       notify('Success', 'Profile updated!', 'success');
       navigation.goBack();
     } catch (err) {
@@ -139,8 +163,8 @@ export default function EditProfileScreen({ navigation }) {
   const avatarSource = image
     ? { uri: image.uri }
     : currentImage
-      ? { uri: getImageUrl(currentImage, true) }
-      : require('../assets/default-avatar.png');
+      ? { uri: getImageUrl(currentImage) }
+      : null;
 
   /* rednerr */
   return (
@@ -165,13 +189,61 @@ export default function EditProfileScreen({ navigation }) {
         {/*avatar */}
         <View style={s.avatarSection}>
           <View style={s.avatarWrap}>
-            <Image source={avatarSource} style={s.avatar}/>
-            <TouchableOpacity style={s.cameraBtn} onPress={pickImage} activeOpacity={0.85}>
+            {avatarSource && !imgFailed ? (
+              <Image
+                source={avatarSource}
+                style={s.avatar}
+                onError={(e) => {
+                  console.warn('Edit profile avatar failed to load:', avatarSource?.uri, e.nativeEvent?.error);
+                  setImgFailed(true);
+                }}
+              />
+            ) : (
+              <View style={[s.avatar, s.avatarSvgWrap]}>
+                <IcDefaultAvatar size={84}/>
+              </View>
+            )}
+            <TouchableOpacity style={s.cameraBtn} onPress={() => setPhotoMenuVisible(true)} activeOpacity={0.85}>
               <IcCamera/>
             </TouchableOpacity>
           </View>
-          <Text style={s.changePicTxt}>Tap to change photo</Text>
+          <TouchableOpacity onPress={() => setPhotoMenuVisible(true)}>
+            <Text style={s.changePicTxt}>Tap to change photo</Text>
+          </TouchableOpacity>
         </View>
+
+        <Modal
+          visible={photoMenuVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPhotoMenuVisible(false)}
+        >
+          <Pressable style={s.menuOverlay} onPress={() => setPhotoMenuVisible(false)}>
+            <Pressable style={s.menuCard} onPress={() => {}}>
+              <Text style={s.menuTitle}>Profile Photo</Text>
+
+              <TouchableOpacity style={s.menuItem} onPress={pickImage} activeOpacity={0.75}>
+                <IcImage/>
+                <Text style={s.menuItemTxt}>Choose Photo</Text>
+              </TouchableOpacity>
+
+              {avatarSource && (
+                <>
+                  <View style={s.menuDivider}/>
+                  <TouchableOpacity style={s.menuItem} onPress={removePhoto} activeOpacity={0.75}>
+                    <IcTrash/>
+                    <Text style={[s.menuItemTxt, { color: C.red }]}>Remove Photo</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              <View style={s.menuDivider}/>
+              <TouchableOpacity style={s.menuItem} onPress={() => setPhotoMenuVisible(false)} activeOpacity={0.75}>
+                <Text style={[s.menuItemTxt, { color: C.muted }]}>Cancel</Text>
+              </TouchableOpacity>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         {/*  Personal info  */}
         <Text style={s.secLabel}>PERSONAL INFO</Text>
@@ -311,8 +383,17 @@ const s = StyleSheet.create({
   avatarSection:{ alignItems: 'center', paddingVertical: 20 },
   avatarWrap:   { position: 'relative' },
   avatar:       { width: 90, height: 90, borderRadius: 26, borderWidth: 3, borderColor: C.yellow },
+  avatarSvgWrap:{ alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cameraBtn:    { position: 'absolute', bottom: -4, right: -4, width: 30, height: 30, borderRadius: 10, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.greenDk },
   changePicTxt: { marginTop: 10, fontSize: 12, color: C.muted },
+
+  /* Photo options menu */
+  menuOverlay:  { flex: 1, backgroundColor: 'rgba(13,33,22,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  menuCard:     { width: '100%', maxWidth: 320, backgroundColor: C.card, borderRadius: 16, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  menuTitle:    { fontSize: 12, fontWeight: '800', color: C.muted, letterSpacing: 0.5, textAlign: 'center', paddingVertical: 12 },
+  menuItem:     { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 18 },
+  menuItemTxt:  { fontSize: 14, fontWeight: '700', color: C.text },
+  menuDivider:  { height: 1, backgroundColor: C.border, marginHorizontal: 10 },
 
   /* Section label */
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginTop: 8, marginBottom: 6, marginLeft: 2 },

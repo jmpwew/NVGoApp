@@ -1,9 +1,9 @@
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Platform
+  TouchableOpacity, StatusBar, Platform, Linking
 } from 'react-native';
 import { C } from '../constants/colors';
-import { IcBack, IcPermit, IcClock} from '../constants/icons';
+import { IcBack, IcPermit, IcClock, IcCoin } from '../constants/icons';
 
 
 
@@ -28,18 +28,33 @@ export default function MoreFeaturesScreen({ navigation }) {
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Business Permit */}
+        {/* eLGU Online Services */}
         <TouchableOpacity
           style={s.featureCard}
           activeOpacity={0.82}
-          onPress={() => {/* future navigation */}}
+          onPress={() => Linking.openURL('https://elgu-nueva-valencia-guimaras.e.gov.ph/')}
         >
           <View style={[s.iconWrap, { backgroundColor: C.yellowBg }]}>
             <IcPermit />
           </View>
           <View style={s.featureBody}>
-            <Text style={s.featureName}>Business Permit</Text>
-            <Text style={s.featureDesc}>Apply and track your business permit online.</Text>
+            <Text style={s.featureName}>eLGU Online Services</Text>
+            <Text style={s.featureDesc}>Access permits and other LGU services online.</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Transparency Board */}
+        <TouchableOpacity
+          style={s.featureCard}
+          activeOpacity={0.82}
+          onPress={() => navigation.navigate('TransparencyBoard')}
+        >
+          <View style={[s.iconWrap, { backgroundColor: C.yellowBg }]}>
+            <IcCoin />
+          </View>
+          <View style={s.featureBody}>
+            <Text style={s.featureName}>Transparency Board</Text>
+            <Text style={s.featureDesc}>View the LGU's budget, infrastructure, and accomplishments.</Text>
           </View>
         </TouchableOpacity>
 

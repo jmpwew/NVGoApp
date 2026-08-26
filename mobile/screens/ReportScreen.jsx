@@ -30,7 +30,7 @@ export default function ReportScreen() {
   const [editingName, setEditingName] = useState(false);
   const [editingContact, setEditingContact] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
-  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone, onOk } | null
+  const [alertInfo, setAlertInfo] = useState(null); 
 
   const notify = (title, message, tone = 'error', onOk) =>
     setAlertInfo({ title, message, tone, onOk });
@@ -447,7 +447,7 @@ const s = StyleSheet.create({
   headerSub:    { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 3 },
   scroll:       { flex: 1 },
   scrollContent:{ padding: 16, paddingBottom: 48, gap: 8 },
-  guestBanner:  { backgroundColor: '#FFF8E1', borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#F9A825', padding: 12, marginBottom: 4 },
+  guestBanner:  { backgroundColor: '#FFF8E1', borderRadius: 12, padding: 12, marginBottom: 4 },
   guestBannerText: { fontSize: 12, color: '#7B6000', lineHeight: 18 },
   secLabel:     { fontSize: 10, fontWeight: '800', color: C.muted, letterSpacing: 1.2, marginTop: 10, marginBottom: 6, marginLeft: 2 },
   fieldEditBtn: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: C.greenLt, flexShrink: 0 },

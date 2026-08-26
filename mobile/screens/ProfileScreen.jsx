@@ -6,7 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
-import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcLogout, IcLogin, IcChevron, IcCamera, IcShield, IcLock, IcTrash } from '../constants/icons';
+import { IcBell2, IcUserEdit, IcReport, IcSupport, IcInfo, IcHelp, IcLogout, IcLogin, IcChevron, IcCamera, IcShield, IcLock, IcTrash, IcDefaultAvatar } from '../constants/icons';
 
 import {C} from '../constants/colors';
 import ConfirmModal from '../utils/ConfirmModal';
@@ -30,7 +30,9 @@ const MenuItem = ({ icon, label, iconBg, onPress, danger, last }) => (
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const [alertInfo, setAlertInfo] = useState(null); // { title, message, tone } | null
+  const [alertInfo, setAlertInfo] = useState(null);
+  const [loginPrompt, setLoginPrompt] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   const notify = (title, message, tone = 'info') => setAlertInfo({ title, message, tone });
 
@@ -43,12 +45,12 @@ export default function ProfileScreen({ navigation }) {
   const loadUser = async () => {
     const stored = await AsyncStorage.getItem('user');
     setUser(stored ? JSON.parse(stored) : null);
+    setImgFailed(false);
   };
 
   const requireLogin = (callback) => {
     if (!user) {
-      notify('Login Required', 'Please log in first.', 'info');
-      navigation.navigate('Login');
+      setLoginPrompt(true);
       return;
     }
     callback();
@@ -69,7 +71,7 @@ export default function ProfileScreen({ navigation }) {
    
 
 
-  const imageUrl = getImageUrl(user?.image, true);
+  const imageUrl = getImageUrl(user?.image);
 
   return (
     <View style={s.root}>
@@ -87,14 +89,20 @@ export default function ProfileScreen({ navigation }) {
           <View style={s.orb2}/>
 
           <View style={s.avatarWrap}>
-            <Image
-              source={
-                imageUrl
-                  ? { uri: imageUrl }
-                  : require('../assets/default-avatar.png')
-              }
-              style={s.avatar}
-            />
+            {imageUrl && !imgFailed ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={s.avatar}
+                onError={(e) => {
+                  console.warn('Profile avatar failed to load:', imageUrl, e.nativeEvent?.error);
+                  setImgFailed(true);
+                }}
+              />
+            ) : (
+              <View style={[s.avatar, s.avatarSvgWrap]}>
+                <IcDefaultAvatar size={86}/>
+              </View>
+            )}
             {user && (
               <TouchableOpacity
                 style={s.cameraBtn}
@@ -165,17 +173,16 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => navigation.navigate('ContactSupport')}
           />
           <MenuItem
-            icon={<IcInfo/>}
+            icon={<IcHelp/>}
             iconBg={C.skyBg}
             label="FAQs / How to Use"
-            onPress={() => notify('Coming Soon', 'FAQs will be available soon.', 'info')}
+            onPress={() => navigation.navigate('FAQ')}
           />
           <MenuItem
             icon={<IcInfo/>}
             iconBg={C.skyBg}
             label="About NVGo"
-            onPress={() => notify('NVGo', 'Nueva Valencia Go\nVersion 1.0.0', 'info')}
-            last
+            onPress={() => navigation.navigate('About')}
           />
         </View>
 
@@ -235,6 +242,19 @@ export default function ProfileScreen({ navigation }) {
         onCancel={() => setConfirmLogout(false)}
       />
 
+      <ConfirmModal
+        visible={loginPrompt}
+        title="Login Required"
+        message="Please log in first."
+        confirmLabel="Login"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          setLoginPrompt(false);
+          navigation.navigate('Login');
+        }}
+        onCancel={() => setLoginPrompt(false)}
+      />
+
       <AlertModal
         visible={!!alertInfo}
         title={alertInfo?.title}
@@ -265,12 +285,13 @@ const s = StyleSheet.create({
 
   avatarWrap:   { position: 'relative', marginBottom: 14 },
   avatar:       { width: 92, height: 92, borderRadius: 28, borderWidth: 3, borderColor: C.yellow },
+  avatarSvgWrap:{ alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cameraBtn:    { position: 'absolute', bottom: -4, right: -4, width: 28, height: 28, borderRadius: 9, backgroundColor: C.green, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: C.greenDk },
 
   heroName:     { color: '#fff', fontSize: 20, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
   heroSub:      { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 12 },
 
-  guestBanner:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.yellowBg, marginHorizontal: 16, marginTop: 16, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.yellowDk + '30', borderLeftWidth: 3.5, borderLeftColor: C.yellowDk },
+  guestBanner:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: C.yellowBg, marginHorizontal: 16, marginTop: 16, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.yellowDk + '30' },
   guestTitle:   { fontSize: 13, fontWeight: '700', color: C.text },
   guestSub:     { fontSize: 11, color: C.muted, marginTop: 2 },
   loginNowBtn:  { backgroundColor: C.green, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 16 },

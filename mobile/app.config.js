@@ -20,7 +20,7 @@ export default ({ config }) => ({
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#F5C400"
       },
       edgeToEdgeEnabled: true,
       googleServicesFile: "./google-services.json",

@@ -17,6 +17,15 @@ export const IcChevron = ({ s = 7, c = C.border }) => (
   </Svg>
 );
 
+// Default avatar (SVG placeholder used when a user has no profile photo)
+export const IcDefaultAvatar = ({ size = 36, bg = C.green, c = '#fff' }) => (
+  <Svg width={size} height={size} viewBox="0 0 36 36" fill="none">
+    <Rect x="0" y="0" width="36" height="36" rx="11" fill={bg}/>
+    <Circle cx="18" cy="14.5" r="6" fill={c}/>
+    <Path d="M5 33c1.4-7.6 7.2-12 13-12s11.6 4.4 13 12" fill={c}/>
+  </Svg>
+);
+
 // User / Auth 
 export const IcUser = ({ s = 18, c = C.green }) => (
   <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
@@ -92,6 +101,15 @@ export const IcCamera = ({ s = 18, c = '#136835' }) => (
     <Path d="M3 8.5A2.5 2.5 0 015.5 6H7l1.5-2h5L15 6h1.5A2.5 2.5 0 0119 8.5v7a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 013 15.5v-7z"
       stroke={c} strokeWidth="1.4"/>
     <Circle cx="11" cy="12" r="2.8" stroke={c} strokeWidth="1.3"/>
+  </Svg>
+);
+
+export const IcImage = ({ s = 18, c = C.green }) => (
+  <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
+    <Rect x="2" y="3" width="14" height="12" rx="2.5" stroke={c} strokeWidth="1.4"/>
+    <Circle cx="6.2" cy="7" r="1.4" stroke={c} strokeWidth="1.3"/>
+    <Path d="M3 13l4-4 2.5 2.5L13 8l2 2.5" stroke={c} strokeWidth="1.3"
+      strokeLinecap="round" strokeLinejoin="round"/>
   </Svg>
 );
 
@@ -219,6 +237,23 @@ export const IcPermit = ({ s = 26, c = C.yellowDk }) => (
   </Svg>
 );
 
+export const IcCoin = ({ s = 26, c = C.yellowDk }) => (
+  <Svg width={s} height={s} viewBox="0 0 26 26" fill="none">
+    <Circle cx="13" cy="13" r="9.5" stroke={c} strokeWidth="1.6"/>
+    <Path d="M13 8v10M15.8 10.2c0-1.2-1.3-2-2.8-2s-2.8.8-2.8 1.9c0 2.7 5.6 1.3 5.6 4 0 1.1-1.3 1.9-2.8 1.9s-2.8-.8-2.8-2"
+      stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+export const IcBuilding = ({ s = 18, c = C.green }) => (
+  <Svg width={s} height={s} viewBox="0 0 20 20" fill="none">
+    <Rect x="4" y="3" width="12" height="15" rx="1.4" stroke={c} strokeWidth="1.5"/>
+    <Path d="M7 6.5h1.6M11.4 6.5H13M7 9.5h1.6M11.4 9.5H13M7 12.5h1.6M11.4 12.5H13"
+      stroke={c} strokeWidth="1.3" strokeLinecap="round"/>
+    <Rect x="8" y="14.5" width="4" height="3.5" stroke={c} strokeWidth="1.3"/>
+  </Svg>
+);
+
 export const IcSOS = ({ c = '#fff' }) => (
   <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
     <Circle cx="12" cy="12" r="9" stroke={c} strokeWidth="1.7"/>
@@ -262,6 +297,16 @@ export const IcInfo = ({ s = 18, c = C.skyDk }) => (
     <Circle cx="9" cy="9" r="7" stroke={c} strokeWidth="1.4"/>
     <Path d="M9 8v5" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
     <Circle cx="9" cy="5.5" r="1" fill={c}/>
+  </Svg>
+);
+
+export const IcHelp = ({ s = 18, c = C.skyDk }) => (
+  <Svg width={s} height={s} viewBox="0 0 18 18" fill="none">
+    <Path d="M2.5 4.2c0-1 .8-1.7 1.7-1.7h9.6c1 0 1.7.8 1.7 1.7v6.3c0 1-.8 1.7-1.7 1.7H8.2L4.8 15v-2.8H4.2c-1 0-1.7-.8-1.7-1.7V4.2z"
+      stroke={c} strokeWidth="1.4" strokeLinejoin="round"/>
+    <Path d="M6.9 6.3c0-1.1.9-1.8 1.9-1.8s1.9.6 1.9 1.7c0 1.3-1.9 1.3-1.9 2.9"
+      stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    <Circle cx="8.8" cy="10.8" r="0.9" fill={c}/>
   </Svg>
 );
 

@@ -6,13 +6,25 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api_url from '../utils/api';
 import { getImageUrl } from '../utils/getImageUrl';
-import { IcEdit, IcBack} from '../constants/icons';
+import { IcEdit, IcBack, IcDefaultAvatar, IcCheck } from '../constants/icons';
 
 
 import {C} from '../constants/colors';
 
+// Role → theme, mirrors the color coding used in the web admin panel
+// (blue = admin, purple = verifier, and each office keeps its own color).
+const ROLE_THEME = {
+  admin:    { label: 'Administrator',      header: '#084298', badgeBg: '#CFE2FF', badgeText: '#084298' },
+  verifier: { label: 'Verifier',           header: '#6D28D9', badgeBg: '#EDE4FF', badgeText: '#6D28D9' },
+  police:   { label: 'Police',             header: '#1D4ED8', badgeBg: '#DBE7FF', badgeText: '#1D4ED8' },
+  bfp:      { label: 'BFP (Fire)',         header: '#C2410C', badgeBg: '#FFE1D6', badgeText: '#C2410C' },
+  medical:  { label: 'Medical / Ambulance',header: '#BE123C', badgeBg: '#FFD9E3', badgeText: '#BE123C' },
+};
+const DEFAULT_THEME = { label: 'Resident', header: C.greenDk, badgeBg: C.greenLt, badgeText: C.green };
 
-
+function getTheme(role) {
+  return ROLE_THEME[role] || DEFAULT_THEME;
+}
 
 const InfoRow = ({ label, value }) => (
   <View style={s.row}>
@@ -24,6 +36,7 @@ const InfoRow = ({ label, value }) => (
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
+  const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -34,16 +47,18 @@ export default function ProfileScreen({ navigation }) {
   const loadUser = async () => {
     const stored = await AsyncStorage.getItem('user');
     if (stored) setUser(JSON.parse(stored));
+    setImgFailed(false);
   };
 
   const imageUrl = getImageUrl(user?.image);
+  const theme = getTheme(user?.role);
 
   return (
     <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor={C.greenDk}/>
+      <StatusBar barStyle="light-content" backgroundColor={theme.header}/>
 
       {/*Header */}
-      <View style={s.header}>
+      <View style={[s.header, { backgroundColor: theme.header }]}>
         <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()}>
           <IcBack/>
         </TouchableOpacity>
@@ -60,17 +75,27 @@ export default function ProfileScreen({ navigation }) {
           <>
             {/* Avatar  */}
             <View style={s.avatarSection}>
-              <Image
-                source={
-                  imageUrl
-                    ? { uri: imageUrl }
-                    : require('../assets/default-avatar.png')
-                }
-                style={s.avatar}
-              />
+              {imageUrl && !imgFailed ? (
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={s.avatar}
+                  onError={(e) => {
+                    console.warn('Profile details avatar failed to load:', imageUrl, e.nativeEvent?.error);
+                    setImgFailed(true);
+                  }}
+                />
+              ) : (
+                <View style={[s.avatar, s.avatarSvgWrap]}>
+                  <IcDefaultAvatar size={84}/>
+                </View>
+              )}
               <Text style={s.name}>{user.firstname} {user.lastname}</Text>
-              <View style={s.roleBadge}>
-                <Text style={s.roleText}>{user.role ?? 'Resident'}</Text>
+              <View style={[s.roleBadge, { backgroundColor: theme.badgeBg, borderColor: theme.badgeBg }]}>
+                <Text style={[s.roleText, { color: theme.badgeText }]}>{theme.label}</Text>
+              </View>
+              <View style={s.statusRow}>
+                <IcCheck s={13} c={C.green}/>
+                <Text style={s.statusText}>Active account</Text>
               </View>
             </View>
 
@@ -80,7 +105,7 @@ export default function ProfileScreen({ navigation }) {
               <View style={s.divider}/>
               <InfoRow label="Contact"  value={user.contact} />
               <View style={s.divider}/>
-              <InfoRow label="Address"  value={`${user.address}, Nueva Valencia, Guimaras`} />
+              <InfoRow label="Address"  value={user.address ? `${user.address}, Nueva Valencia, Guimaras` : null} />
             </View>
 
             {/*Edit button */}
@@ -125,9 +150,12 @@ const s = StyleSheet.create({
   /* Avatar section */
   avatarSection:{ alignItems: 'center', marginBottom: 24, paddingTop: 8 },
   avatar:       { width: 90, height: 90, borderRadius: 26, borderWidth: 3, borderColor: C.yellow, marginBottom: 12 },
+  avatarSvgWrap:{ alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   name:         { fontSize: 19, fontWeight: '800', color: C.text, letterSpacing: -0.3 },
   roleBadge:    { marginTop: 6, backgroundColor: C.greenLt, borderRadius: 20, paddingVertical: 4, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
   roleText:     { fontSize: 11, fontWeight: '700', color: C.green, textTransform: 'capitalize' },
+  statusRow:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
+  statusText:   { fontSize: 11.5, fontWeight: '700', color: C.green },
 
   /* Info card */
   card:         { backgroundColor: C.card, borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: C.border, marginBottom: 16 },

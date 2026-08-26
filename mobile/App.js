@@ -26,9 +26,14 @@ import DeleteAccountScreen from './screens/DeleteAccountScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import VerifyOTPScreen from './screens/VerifyOTPScreen';
 import VerifyRegisterOtpScreen from './screens/VerifyRegisterOtpScreen';
+import AboutScreen from './screens/AboutScreen';
+import FAQScreen from './screens/FAQScreen';
+import TransparencyBoardScreen from './screens/TransparencyBoardScreen';
+import TransparencyDetailScreen from './screens/TransparencyDetailScreen';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { requestLocationPermission } from './utils/locationPermission';
+import OfflineBanner from './utils/OfflineBanner';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -50,7 +55,8 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1 }}  edges={['top']}>
-      <NavigationContainer>
+      <OfflineBanner/>
+      <NavigationContainer style={{ flex: 1 }}>
         <Stack.Navigator>
 
           <Stack.Screen
@@ -59,8 +65,8 @@ export default function App() {
             options={{ headerShown: false }}
           />
 
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
 
           <Stack.Screen
             name="Profile"
@@ -137,6 +143,10 @@ export default function App() {
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VerifyOtp" component={VerifyOTPScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VerifyRegisterOtp" component={VerifyRegisterOtpScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="FAQ" component={FAQScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="TransparencyBoard" component={TransparencyBoardScreen} options={{ headerShown: false }}/>
+          <Stack.Screen name="TransparencyDetail" component={TransparencyDetailScreen} options={{ headerShown: false }}/>
 
         </Stack.Navigator>
       </NavigationContainer>
