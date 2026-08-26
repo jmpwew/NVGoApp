@@ -6,5 +6,6 @@ const officeController = require('../controllers/officeController');
 
 router.get('/assignments', verifyOffice, officeController.getMyAssignments);
 router.put('/assignments/:assignmentId', verifyOffice, officeController.updateAssignment);
+router.get('/reports/quarterly', verifyOffice, officeController.getQuarterlyReport);
 
 module.exports = router;

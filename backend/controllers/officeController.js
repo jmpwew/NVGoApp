@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { createAlert } = require('./alertController');
+const { buildQuarterlyReport } = require('../utils/quarterlyReport');
 
 const OFFICE_LABELS = { police: 'Police', bfp: 'BFP (Fire)', medical: 'Medical / Ambulance' };
 const STATUS_LABELS = { ongoing: 'Ongoing', dispatched: 'Unit Dispatched', resolved: 'Resolved' };
@@ -49,6 +50,32 @@ exports.getMyAssignments = async (req, res) => {
   }
 };
 
+
+// GET /api/office/reports/quarterly?year=2026&quarter=1
+// "Generate Quarterly Logs" — scoped to the logged-in office only.
+exports.getQuarterlyReport = async (req, res) => {
+  try {
+    const now = new Date();
+    const year = parseInt(req.query.year) || now.getFullYear();
+    const quarter = parseInt(req.query.quarter) || Math.floor(now.getMonth() / 3) + 1;
+
+    if (quarter < 1 || quarter > 4) {
+      return res.status(400).json({ message: 'Quarter must be between 1 and 4.' });
+    }
+
+    const officeRole = req.user.role;
+    const report = await buildQuarterlyReport(pool, {
+      year,
+      quarter,
+      officeRole,
+      officeLabel: OFFICE_LABELS[officeRole] || officeRole,
+    });
+    res.json(report);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error generating quarterly report' });
+  }
+};
 
 exports.updateAssignment = async (req, res) => {
   try {

@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { createAlert } = require('./alertController');
+const { REPORT_TYPE_VALUES, REPORT_TYPE_LABELS } = require('../utils/reportTypes');
 
 // Reports that still need to be reviewed by a verifier
 
@@ -50,7 +51,7 @@ exports.verifyAndAssign = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { officeRoles } = req.body;
+    const { officeRoles, reportType } = req.body;
     const validRoles = ['police', 'bfp', 'medical'];
 
     if (!Array.isArray(officeRoles) || officeRoles.length === 0) {
@@ -59,16 +60,19 @@ exports.verifyAndAssign = async (req, res) => {
     if (officeRoles.some(r => !validRoles.includes(r))) {
       return res.status(400).json({ message: 'Invalid office selected.' });
     }
+    if (!reportType || !REPORT_TYPE_VALUES.includes(reportType)) {
+      return res.status(400).json({ message: 'Select a report type.' });
+    }
 
     await client.query('BEGIN');
 
-    // mark report as verified move to ongoing
+    // mark report as verified, tag its incident type, move to ongoing
     const reportResult = await client.query(
       `UPDATE reports
-       SET verified_by = $1, verified_at = NOW(), status = 'ongoing'
+       SET verified_by = $1, verified_at = NOW(), status = 'ongoing', report_type = $3
        WHERE id = $2
        RETURNING *`,
-      [req.user.id, id]
+      [req.user.id, id, reportType]
     );
 
     if (reportResult.rows.length === 0) {
@@ -110,7 +114,7 @@ exports.verifyAndAssign = async (req, res) => {
         [
           report.user_id,
           'Report Verified',
-          `Your report has been verified and forwarded to: ${officeRoles.join(', ').toUpperCase()}.`,
+          `Your report (${REPORT_TYPE_LABELS[reportType] || reportType}) has been verified and forwarded to: ${officeRoles.join(', ').toUpperCase()}.`,
           'update',
         ]
       ).catch(err => console.error('insert notification (verify) failed:', err));

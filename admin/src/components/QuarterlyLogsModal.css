@@ -1,0 +1,131 @@
+.quarterly-logs-modal {
+  max-width: 760px;
+  width: 92vw;
+}
+
+.quarterly-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.quarterly-controls select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.quarterly-error {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.quarterly-summary-text {
+  background-color: var(--brand-tint);
+  color: var(--brand-dark);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 4px 0 18px;
+}
+
+.quarterly-chart {
+  width: 100%;
+  height: auto;
+}
+
+.quarterly-chart .axis-label {
+  font-size: 11px;
+  fill: var(--text-muted);
+}
+
+.quarterly-chart .value-label {
+  fill: var(--text-primary);
+  font-weight: 600;
+}
+
+.quarterly-chart .grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.quarterly-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.quarterly-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.quarterly-chart-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.quarterly-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.quarterly-breakdown-table th,
+.quarterly-breakdown-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.quarterly-breakdown-table th:not(:first-child),
+.quarterly-breakdown-table td:not(:first-child) {
+  text-align: center;
+}
+
+.quarterly-breakdown-table thead th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.quarterly-breakdown-total-row td {
+  border-bottom: none;
+  border-top: 2px solid var(--border);
+  background-color: var(--brand-tint);
+}
+
+@media print {
+  .detail-modal-overlay {
+    position: static;
+    background: none;
+  }
+  .quarterly-controls,
+  .detail-modal-actions,
+  .map-modal-close {
+    display: none !important;
+  }
+}

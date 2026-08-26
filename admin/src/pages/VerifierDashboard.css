@@ -4,6 +4,18 @@
   justify-content: flex-start;
 }
 
+/* ── Report type picker (verify modal) ────────────────── */
+.verifier-report-type-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  margin: 6px 0 4px;
+}
+
 /* ── Office picker (verify modal) ─────────────────────── */
 .office-picker {
   display: grid;

@@ -3,11 +3,7 @@ const { uploadToSupabase } = require('../utils/uploadToSupabase');
 
 const FUND_TYPES = ['general', 'dev_fund', 'sef', 'gad', 'drrm'];
 
-// ---------- BOARD ----------
 
-// GET /api/transparency  (public)
-// Only returns the board if it has been published. Citizens should never
-// see a half-filled-in draft.
 exports.getPublicBoard = async (req, res) => {
   try {
     const boardResult = await pool.query(
@@ -41,9 +37,6 @@ exports.getPublicBoard = async (req, res) => {
   }
 };
 
-// GET /api/transparency/admin  (admin)
-// Always returns the full data regardless of publish state, so admin can
-// keep editing a board that isn't live yet.
 exports.getAdminBoard = async (req, res) => {
   try {
     const boardResult = await pool.query(
@@ -74,9 +67,7 @@ exports.getAdminBoard = async (req, res) => {
 };
 
 // PUT /api/transparency  (admin)
-// Updates the board header info: LGU name, reporting period, accountable
-// official, data source note, and publish state. Budget figures live in
-// transparency_funds now, not here.
+
 exports.updateBoard = async (req, res) => {
   try {
     const {
@@ -119,11 +110,7 @@ exports.updateBoard = async (req, res) => {
   }
 };
 
-// ---------- FUNDS ----------
 
-// PUT /api/transparency/funds  (admin)
-// Body: { funds: [{ fund_type, allocated, spent, remaining }, ...] }
-// Updates all five fund rows in one call so the form can save as a unit.
 exports.updateFunds = async (req, res) => {
   try {
     const { funds } = req.body;
@@ -152,9 +139,7 @@ exports.updateFunds = async (req, res) => {
   }
 };
 
-// ---------- DOCUMENTS ----------
 
-// POST /api/transparency/documents  (admin)  — field name: 'file'
 exports.createDocument = async (req, res) => {
   try {
     const { title, sort_order } = req.body;
@@ -483,9 +468,7 @@ exports.deleteSection = async (req, res) => {
   }
 };
 
-// Bumps the board's updated_at whenever an itemized list or the fund
-// breakdown changes, so the "last updated" label on the public board stays
-// accurate even if admin only edited a sub-section.
+
 function touchBoardUpdatedAt() {
   pool.query(
     `UPDATE transparency_board SET updated_at = CURRENT_TIMESTAMP WHERE id = 1`

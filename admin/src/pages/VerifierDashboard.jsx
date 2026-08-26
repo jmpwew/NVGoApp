@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
+import { REPORT_TYPES, REPORT_TYPE_LABELS } from '../constants/reportTypes';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
 import './ReportsPage.css';
@@ -44,6 +45,7 @@ export default function VerifierDashboard() {
   const [selected, setSelected]   = useState(null); // report being reviewed
   const [readOnly, setReadOnly]   = useState(false); // true when viewing a verified report
   const [checked, setChecked]     = useState([]);   // office roles picked
+  const [reportType, setReportType] = useState(''); // incident type picked
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]         = useState(null);
   const [search, setSearch]       = useState('');
@@ -126,6 +128,7 @@ export default function VerifierDashboard() {
     setSelected(report);
     setReadOnly(isReadOnly);
     setChecked([]);
+    setReportType(report.report_type || '');
   }
 
   function toggleOffice(value) {
@@ -135,6 +138,10 @@ export default function VerifierDashboard() {
   }
 
   function requestVerify() {
+    if (!reportType) {
+      setToast({ type: 'error', text: 'Select a report type before submitting.' });
+      return;
+    }
     if (checked.length === 0) {
       setToast({ type: 'error', text: 'Select at least one office before submitting.' });
       return;
@@ -147,7 +154,7 @@ export default function VerifierDashboard() {
     try {
       await axios.put(
         `${API}/api/verifier/reports/${selected.id}/verify`,
-        { officeRoles: checked },
+        { officeRoles: checked, reportType },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPending(prev => prev.filter(r => r.id !== selected.id));
@@ -296,6 +303,9 @@ export default function VerifierDashboard() {
                   </div>
                   <div className="case-card-desc">{r.description}</div>
                   <div className="case-card-meta">
+                    {r.report_type && (
+                      <span className="case-card-meta-item">{REPORT_TYPE_LABELS[r.report_type] || r.report_type}</span>
+                    )}
                     {r.location_note && (
                       <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />{r.location_note}</span>
                     )}
@@ -404,6 +414,11 @@ export default function VerifierDashboard() {
 
             {readOnly ? (
               <>
+                <div className="detail-label">Report type</div>
+                <div className="detail-value" style={{ marginBottom: 10 }}>
+                  {REPORT_TYPE_LABELS[selected.report_type] || selected.report_type || '—'}
+                </div>
+
                 <div className="detail-label">Sent to office(s)</div>
                 <div className="detail-value" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {(selected.office_roles || []).length > 0
@@ -418,7 +433,19 @@ export default function VerifierDashboard() {
               </>
             ) : (
               <>
-                <div className="detail-label">Send to office(s)</div>
+                <div className="detail-label">Report type</div>
+                <select
+                  className="verifier-report-type-select"
+                  value={reportType}
+                  onChange={e => setReportType(e.target.value)}
+                >
+                  <option value="" disabled>Select report type…</option>
+                  {REPORT_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+
+                <div className="detail-label" style={{ marginTop: 14 }}>Send to office(s)</div>
                 <div className="office-picker">
                   {OFFICE_OPTIONS.map(opt => (
                     <button
@@ -448,7 +475,7 @@ export default function VerifierDashboard() {
         open={confirmVerify}
         title="Verify and forward this report?"
         message={
-          `This will send "${selected?.name || 'this report'}" to: ` +
+          `This will tag "${selected?.name || 'this report'}" as ${REPORT_TYPE_LABELS[reportType] || reportType} and send it to: ` +
           checked.map(role => OFFICE_LABELS[role] || role).join(', ') +
           '. This action cannot be undone.'
         }

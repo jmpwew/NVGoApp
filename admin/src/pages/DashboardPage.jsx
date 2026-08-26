@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import UserGrowthChart from '../components/UserGrowthChart';
+import QuarterlyLogsModal from '../components/QuarterlyLogsModal';
 import './DashboardPage.css';
 
 import { API } from '../config';
@@ -76,9 +77,12 @@ export default function DashboardPage() {
           <h1>Dashboard</h1>
           
         </div>
-        <div className="live-chip">
-          <span className={`live-chip-dot ${!stats || stats.pendingReports === 0 ? 'calm' : ''}`} />
-          {stats ? `${stats.pendingReports} pending` : 'Loading…'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="live-chip">
+            <span className={`live-chip-dot ${!stats || stats.pendingReports === 0 ? 'calm' : ''}`} />
+            {stats ? `${stats.pendingReports} pending` : 'Loading…'}
+          </div>
+          <QuarterlyLogsModal endpoint={`${API}/api/admin/reports/quarterly`} />
         </div>
       </div>
 

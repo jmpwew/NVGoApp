@@ -22,6 +22,8 @@ router.delete('/alerts/:id', verifyStaff, alertController.deleteAlert);
 // Reports
 router.get('/reports',verifyAdmin, adminController.getAllReports);
 router.get('/reports/trail', verifyAdmin, adminController.getFullReportTrail);
+router.get('/reports/types', verifyAdmin, adminController.getReportTypes);
+router.get('/reports/quarterly', verifyAdmin, adminController.getQuarterlyReport);
 router.put('/reports/:id/status', verifyAdmin, adminController.updateReportStatus);
 router.delete('/reports/:id', verifyAdmin, adminController.deleteReport);
 

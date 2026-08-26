@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon } from '../components/Icons';
+import QuarterlyLogsModal from '../components/QuarterlyLogsModal';
 import './OfficeDashboard.css';
 import './ReportsPage.css'; 
 import { API } from '../config';
@@ -218,14 +219,16 @@ export default function OfficeDashboard() {
 
   return (
     <div className="page">
-      <div className="office-header">
-        <div className={`office-header-icon ${meta.className}`}>
-          <meta.Icon width={22} height={22} />
+      <div className="office-header" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className={`office-header-icon ${meta.className}`}>
+            <meta.Icon width={22} height={22} />
+          </div>
+          <div>
+            <h1>{meta.label} — response console</h1>
+          </div>
         </div>
-        <div>
-          <h1>{meta.label} — response console</h1>
-          
-        </div>
+        <QuarterlyLogsModal endpoint={`${API}/api/office/reports/quarterly`} />
       </div>
 
       <div className="metric-grid">

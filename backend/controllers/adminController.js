@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const pool = require('../config/db');
 const sendPushNotification = require('../utils/sendPushNotification');
 const { uploadToSupabase } = require('../utils/uploadToSupabase');
+const { REPORT_TYPES, REPORT_TYPE_LABELS } = require('../utils/reportTypes');
+const { buildQuarterlyReport } = require('../utils/quarterlyReport');
 
 
 const STAFF_ROLES = ['admin', 'verifier', 'police', 'bfp', 'medical'];
@@ -69,6 +71,31 @@ exports.getUserGrowth = async (req, res) => {
 
 
 
+
+// GET /api/admin/reports/types — the fixed list the verifier picks from
+exports.getReportTypes = async (req, res) => {
+  res.json(REPORT_TYPES);
+};
+
+// GET /api/admin/reports/quarterly?year=2026&quarter=1
+// "Generate Quarterly Logs" — combined view across all offices.
+exports.getQuarterlyReport = async (req, res) => {
+  try {
+    const now = new Date();
+    const year = parseInt(req.query.year) || now.getFullYear();
+    const quarter = parseInt(req.query.quarter) || Math.floor(now.getMonth() / 3) + 1;
+
+    if (quarter < 1 || quarter > 4) {
+      return res.status(400).json({ message: 'Quarter must be between 1 and 4.' });
+    }
+
+    const report = await buildQuarterlyReport(pool, { year, quarter, officeRole: null });
+    res.json(report);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error generating quarterly report' });
+  }
+};
 
 exports.getRecentActivity = async (req, res) => {
   try {
