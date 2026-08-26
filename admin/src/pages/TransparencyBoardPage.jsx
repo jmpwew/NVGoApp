@@ -824,10 +824,7 @@ export default function TransparencyBoardPage() {
             + Add Section
           </button>
         </div>
-        <p className="tb-item-meta" style={{ marginBottom: 14 }}>
-          Add any other disclosure the LGU wants to publish — Bids &amp; Awards, Citizen's Charter,
-          Key Officials, notices, or anything else — without needing a new page built for it.
-        </p>
+       
 
         {sections.length === 0 ? (
           <p className="tb-empty">No additional sections added yet.</p>
