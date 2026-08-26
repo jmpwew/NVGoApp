@@ -12,7 +12,7 @@ router.get('/users/growth', verifyAdmin, adminController.getUserGrowth);
 
 router.get('/activity', verifyAdmin, adminController.getRecentActivity);
 
-//botification
+//Botification
 router.get('/alerts', verifyStaff, alertController.getFeed);
 router.get('/alerts/unread-count', verifyStaff, alertController.getUnreadCount);
 router.patch('/alerts/read-all', verifyStaff, alertController.markAllRead);
@@ -52,6 +52,7 @@ router.delete('/notifications/:id', verifyAdmin, adminController.deleteNotificat
 // Support
 router.get('/support', verifyAdmin, adminController.getAllSupportMessages);
 router.patch('/support/:id/read', verifyAdmin, adminController.markSupportMessageRead);
+router.post('/support/:id/reply', verifyAdmin, adminController.replySupportMessage);
 router.delete('/support/:id', verifyAdmin, adminController.deleteSupportMessage);
 
 module.exports = router;

@@ -72,7 +72,6 @@ exports.getUserGrowth = async (req, res) => {
 
 
 
-// GET /api/admin/reports/types — the fixed list the verifier picks from
 exports.getReportTypes = async (req, res) => {
   res.json(REPORT_TYPES);
 };
@@ -417,8 +416,7 @@ exports.deleteNews = async (req, res) => {
 
 const expireAnnouncements = require('../utils/expireAnnouncements');
 
-// Duration options exposed in the admin UI, in hours. `null`/omitted means
-// "no expiration" — the announcement stays active until manually hidden.
+
 const VALID_DURATION_HOURS = [12, 24, 48, 72, 168]; // 168h = 7 days
 
 function computeExpiresAt(durationHours) {
@@ -595,6 +593,61 @@ exports.markSupportMessageRead = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error updating message' });
+  }
+};
+
+exports.replySupportMessage = async (req, res) => {
+  try {
+    const { reply } = req.body;
+
+    if (!reply || !reply.trim()) {
+      return res.status(400).json({ message: 'Reply is required' });
+    }
+
+    const msgResult = await pool.query(
+      'SELECT * FROM support_messages WHERE id = $1',
+      [req.params.id]
+    );
+    const supportMessage = msgResult.rows[0];
+
+    if (!supportMessage) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+    if (!supportMessage.user_id) {
+      return res.status(400).json({ message: 'This message was sent by a guest and cannot be replied to' });
+    }
+
+    const result = await pool.query(
+      `UPDATE support_messages
+       SET reply = $1, replied_at = CURRENT_TIMESTAMP, is_read = TRUE
+       WHERE id = $2 RETURNING *`,
+      [reply.trim(), req.params.id]
+    );
+    const updated = result.rows[0];
+
+    const title = 'Support Reply';
+    const body = reply.trim();
+
+    // save to the user's in-app notification history
+    await pool.query(
+      `INSERT INTO notifications (user_id, title, body, type, related_type, related_id)
+       VALUES ($1, $2, $3, 'info', 'support', $4)`,
+      [updated.user_id, title, body, updated.id]
+    ).catch(err => console.error('insert notification (support reply) failed:', err));
+
+    const tokenResult = await pool.query(
+      'SELECT push_token FROM users WHERE id = $1',
+      [updated.user_id]
+    );
+    const pushToken = tokenResult.rows[0]?.push_token;
+    if (pushToken) {
+      await sendPushNotification([pushToken], title, truncateForPush(body));
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error sending reply' });
   }
 };
 

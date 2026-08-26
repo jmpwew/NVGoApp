@@ -4,6 +4,8 @@ const { createAlert } = require('./alertController');
 exports.submitSupportMessage = async (req, res) => {
   try {
     const { name, message } = req.body;
+    // set only when the sender is logged in; guests  can't reply to them
+    const user_id = req.user?.id || null;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Name is required' });
@@ -13,9 +15,9 @@ exports.submitSupportMessage = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO support_messages (name, message)
-       VALUES ($1, $2) RETURNING *`,
-      [name.trim(), message.trim()]
+      `INSERT INTO support_messages (name, message, user_id)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [name.trim(), message.trim(), user_id]
     );
 
     const newMessage = result.rows[0];
