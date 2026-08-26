@@ -16,6 +16,9 @@ const {
   createAccomplishment,
   updateAccomplishment,
   deleteAccomplishment,
+  createSection,
+  updateSection,
+  deleteSection,
 } = require('../controllers/transparencyController');
 
 // Public — mobile app reads the published board
@@ -41,5 +44,10 @@ router.delete('/infrastructure/:id', verifyAdmin, deleteInfrastructure);
 router.post('/accomplishments', verifyAdmin, upload.single('image'), createAccomplishment);
 router.put('/accomplishments/:id', verifyAdmin, upload.single('image'), updateAccomplishment);
 router.delete('/accomplishments/:id', verifyAdmin, deleteAccomplishment);
+
+// Admin — "More" custom sections
+router.post('/sections', verifyAdmin, upload.single('image'), createSection);
+router.put('/sections/:id', verifyAdmin, upload.single('image'), updateSection);
+router.delete('/sections/:id', verifyAdmin, deleteSection);
 
 module.exports = router;

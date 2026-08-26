@@ -22,6 +22,7 @@ const emptyInfraForm = {
 };
 const emptyAccompForm = { title: '', description: '', category: '' };
 const emptyDocForm = { title: '' };
+const emptySectionForm = { title: '', content: '', is_published: true };
 
 const CATEGORY_OPTIONS = [
   'Infrastructure', 'Health', 'Education', 'Disaster Response',
@@ -87,6 +88,18 @@ export default function TransparencyBoardPage() {
   const [accompDeleting, setAccompDeleting] = useState(false);
   const [accompCategoryFilter, setAccompCategoryFilter] = useState('all');
 
+  // ---- more (custom sections) state ----
+  const [sections, setSections] = useState([]);
+  const [sectionForm, setSectionForm] = useState(emptySectionForm);
+  const [sectionEditingId, setSectionEditingId] = useState(null);
+  const [sectionShowForm, setSectionShowForm] = useState(false);
+  const [sectionImageFile, setSectionImageFile] = useState(null);
+  const [sectionPreview, setSectionPreview] = useState(null);
+  const [sectionSaving, setSectionSaving] = useState(false);
+  const [sectionError, setSectionError] = useState('');
+  const [sectionDeleteTarget, setSectionDeleteTarget] = useState(null);
+  const [sectionDeleting, setSectionDeleting] = useState(false);
+
   useEffect(() => { fetchAll(); }, []);
 
   async function fetchAll() {
@@ -95,7 +108,7 @@ export default function TransparencyBoardPage() {
       const res = await axios.get(`${API}/api/transparency/admin`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const { board, funds, infrastructure, accomplishments, documents } = res.data;
+      const { board, funds, infrastructure, accomplishments, documents, sections } = res.data;
       setBoardForm({
         lgu_name: board?.lgu_name || '',
         reporting_period: board?.reporting_period || '',
@@ -110,6 +123,7 @@ export default function TransparencyBoardPage() {
       setInfrastructure(infrastructure || []);
       setAccomplishments(accomplishments || []);
       setDocuments(documents || []);
+      setSections(sections || []);
     } catch (err) {
       console.log(err);
     } finally {
@@ -389,6 +403,80 @@ export default function TransparencyBoardPage() {
     if (accompCategoryFilter !== 'all' && item.category !== accompCategoryFilter) return false;
     return true;
   });
+
+  // ---------------- MORE (custom sections) ----------------
+
+  function handleSectionImageChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSectionImageFile(file);
+    setSectionPreview(URL.createObjectURL(file));
+  }
+
+  function startSectionEdit(item) {
+    setSectionForm({ title: item.title, content: item.content || '', is_published: !!item.is_published });
+    setSectionEditingId(item.id);
+    setSectionImageFile(null);
+    setSectionPreview(item.image ? getImageUrl(item.image) : null);
+    setSectionError('');
+    setSectionShowForm(true);
+  }
+
+  function cancelSectionForm() {
+    setSectionForm(emptySectionForm);
+    setSectionEditingId(null);
+    setSectionImageFile(null);
+    setSectionPreview(null);
+    setSectionShowForm(false);
+    setSectionError('');
+    setSectionSaving(false);
+  }
+
+  async function handleSectionSubmit(e) {
+    e.preventDefault();
+    setSectionError('');
+    setSectionSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', sectionForm.title);
+      formData.append('content', sectionForm.content);
+      formData.append('is_published', sectionForm.is_published);
+      if (sectionImageFile) formData.append('image', sectionImageFile);
+
+      if (sectionEditingId) {
+        await axios.put(`${API}/api/transparency/sections/${sectionEditingId}`, formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await axios.post(`${API}/api/transparency/sections`, formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      cancelSectionForm();
+      fetchAll();
+    } catch (err) {
+      console.log(err);
+      setSectionError(err.response?.data?.message || 'Failed to save this section.');
+    } finally {
+      setSectionSaving(false);
+    }
+  }
+
+  async function confirmSectionDelete() {
+    if (!sectionDeleteTarget) return;
+    setSectionDeleting(true);
+    try {
+      await axios.delete(`${API}/api/transparency/sections/${sectionDeleteTarget.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSections(prev => prev.filter(s => s.id !== sectionDeleteTarget.id));
+      setSectionDeleteTarget(null);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setSectionDeleting(false);
+    }
+  }
 
   if (loading) {
     return <div className="page"><p>Loading transparency board...</p></div>;
@@ -725,6 +813,55 @@ export default function TransparencyBoardPage() {
         )}
       </div>
 
+      {/* ---------------- MORE (custom sections) ---------------- */}
+      <div className="tb-card">
+        <div className="section-header">
+          <h2 className="tb-card-title">More</h2>
+          <button
+            className="btn-green"
+            onClick={() => { setSectionForm(emptySectionForm); setSectionEditingId(null); setSectionImageFile(null); setSectionPreview(null); setSectionError(''); setSectionShowForm(true); }}
+          >
+            + Add Section
+          </button>
+        </div>
+        <p className="tb-item-meta" style={{ marginBottom: 14 }}>
+          Add any other disclosure the LGU wants to publish — Bids &amp; Awards, Citizen's Charter,
+          Key Officials, notices, or anything else — without needing a new page built for it.
+        </p>
+
+        {sections.length === 0 ? (
+          <p className="tb-empty">No additional sections added yet.</p>
+        ) : (
+          <div className="tb-item-grid">
+            {sections.map(item => (
+              <div className="tb-item-card" key={item.id}>
+                {item.image ? (
+                  <img src={getImageUrl(item.image)} alt={item.title} className="tb-item-img" />
+                ) : (
+                  <div className="tb-item-img tb-item-img-empty" />
+                )}
+                <div className="tb-item-body">
+                  <span
+                    className="badge"
+                    style={item.is_published
+                      ? { backgroundColor: '#E8F5EE', color: '#1B8A4C' }
+                      : { backgroundColor: '#F2F2F2', color: '#888' }}
+                  >
+                    {item.is_published ? 'Published' : 'Hidden'}
+                  </span>
+                  <h3>{item.title}</h3>
+                  {item.content && <p className="tb-item-desc">{item.content}</p>}
+                  <div className="tb-item-actions">
+                    <button className="btn-gray" onClick={() => startSectionEdit(item)}>Edit</button>
+                    <button className="btn-red" onClick={() => setSectionDeleteTarget(item)}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* ---- Document upload modal ---- */}
       {docShowForm && (
         <div className="tb-modal-overlay" onClick={cancelDocForm}>
@@ -932,6 +1069,63 @@ export default function TransparencyBoardPage() {
         </div>
       )}
 
+      {/* ---- Section (More) add/edit modal ---- */}
+      {sectionShowForm && (
+        <div className="tb-modal-overlay" onClick={cancelSectionForm}>
+          <div className="tb-modal" onClick={e => e.stopPropagation()}>
+            <h2>{sectionEditingId ? 'Edit Section' : 'Add Section'}</h2>
+            <form onSubmit={handleSectionSubmit}>
+              {sectionError && <div className="error-msg">{sectionError}</div>}
+
+              <div className="form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={sectionForm.title}
+                  onChange={e => setSectionForm({ ...sectionForm, title: e.target.value })}
+                  placeholder="e.g. Bids and Awards"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Content (optional)</label>
+                <textarea
+                  value={sectionForm.content}
+                  onChange={e => setSectionForm({ ...sectionForm, content: e.target.value })}
+                  placeholder="Plain text content for this section"
+                  rows={5}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Image (optional)</label>
+                <input type="file" accept="image/*" onChange={handleSectionImageChange} />
+                {sectionPreview && <img src={sectionPreview} alt="Preview" className="tb-form-preview" />}
+              </div>
+
+              <label className="tb-toggle-row">
+                <input
+                  type="checkbox"
+                  checked={sectionForm.is_published}
+                  onChange={e => setSectionForm({ ...sectionForm, is_published: e.target.checked })}
+                />
+                <span>Publish this section to the mobile app</span>
+              </label>
+
+              <div className="form-buttons">
+                <button type="submit" className="btn-green" disabled={sectionSaving}>
+                  {sectionSaving ? 'Saving...' : sectionEditingId ? 'Save Changes' : 'Add Section'}
+                </button>
+                <button type="button" className="btn-gray" onClick={cancelSectionForm} disabled={sectionSaving}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ---- Delete confirmations ---- */}
       <ConfirmModal
         open={!!docDeleteTarget}
@@ -962,6 +1156,16 @@ export default function TransparencyBoardPage() {
         loading={accompDeleting}
         onConfirm={confirmAccompDelete}
         onCancel={() => setAccompDeleteTarget(null)}
+      />
+      <ConfirmModal
+        open={!!sectionDeleteTarget}
+        title="Delete this section?"
+        message={sectionDeleteTarget ? `This will permanently remove "${sectionDeleteTarget.title}" from the transparency board.` : ''}
+        confirmLabel="Delete"
+        tone="danger"
+        loading={sectionDeleting}
+        onConfirm={confirmSectionDelete}
+        onCancel={() => setSectionDeleteTarget(null)}
       />
     </div>
   );

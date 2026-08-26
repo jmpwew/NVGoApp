@@ -19,11 +19,12 @@ exports.getPublicBoard = async (req, res) => {
       return res.status(404).json({ message: 'Transparency board is not published yet.' });
     }
 
-    const [funds, infrastructure, accomplishments, documents] = await Promise.all([
-      pool.query('SELECT * FROM transparency_funds ORDER BY fund_type ASC'),
+    const [funds, infrastructure, accomplishments, documents, sections] = await Promise.all([
+      pool.query('SELECT * FROM transparency_funds ORDER BY sort_order ASC'),
       pool.query('SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'),
       pool.query('SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'),
       pool.query('SELECT * FROM transparency_documents ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_sections WHERE is_published = true ORDER BY sort_order ASC, id ASC'),
     ]);
 
     res.json({
@@ -32,6 +33,7 @@ exports.getPublicBoard = async (req, res) => {
       infrastructure: infrastructure.rows,
       accomplishments: accomplishments.rows,
       documents: documents.rows,
+      sections: sections.rows,
     });
   } catch (err) {
     console.error(err);
@@ -49,11 +51,12 @@ exports.getAdminBoard = async (req, res) => {
     );
     const board = boardResult.rows[0];
 
-    const [funds, infrastructure, accomplishments, documents] = await Promise.all([
-      pool.query('SELECT * FROM transparency_funds ORDER BY fund_type ASC'),
+    const [funds, infrastructure, accomplishments, documents, sections] = await Promise.all([
+      pool.query('SELECT * FROM transparency_funds ORDER BY sort_order ASC'),
       pool.query('SELECT * FROM transparency_infrastructure ORDER BY sort_order ASC, id ASC'),
       pool.query('SELECT * FROM transparency_accomplishments ORDER BY sort_order ASC, id ASC'),
       pool.query('SELECT * FROM transparency_documents ORDER BY sort_order ASC, id ASC'),
+      pool.query('SELECT * FROM transparency_sections ORDER BY sort_order ASC, id ASC'),
     ]);
 
     res.json({
@@ -62,6 +65,7 @@ exports.getAdminBoard = async (req, res) => {
       infrastructure: infrastructure.rows,
       accomplishments: accomplishments.rows,
       documents: documents.rows,
+      sections: sections.rows,
     });
   } catch (err) {
     console.error(err);
@@ -379,6 +383,100 @@ exports.deleteAccomplishment = async (req, res) => {
     }
     touchBoardUpdatedAt();
     res.json({ message: 'Accomplishment deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ---------- MORE: custom sections ----------
+
+// POST /api/transparency/sections  (admin)
+exports.createSection = async (req, res) => {
+  try {
+    const { title, content, sort_order, is_published } = req.body;
+    if (!title) return res.status(400).json({ message: 'Title is required' });
+
+    const image = req.file
+      ? await uploadToSupabase(req.file, 'transparency-images')
+      : null;
+
+    const result = await pool.query(
+      `INSERT INTO transparency_sections (title, content, image, sort_order, is_published)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        title,
+        content || '',
+        image,
+        sort_order || 0,
+        is_published === false || is_published === 'false' ? false : true,
+      ]
+    );
+
+    touchBoardUpdatedAt();
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// PUT /api/transparency/sections/:id  (admin)
+exports.updateSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, sort_order, is_published } = req.body;
+
+    const existing = await pool.query(
+      'SELECT * FROM transparency_sections WHERE id = $1',
+      [id]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: 'Section not found' });
+    }
+
+    const image = req.file
+      ? await uploadToSupabase(req.file, 'transparency-images')
+      : existing.rows[0].image;
+
+    const result = await pool.query(
+      `UPDATE transparency_sections
+       SET title = $1, content = $2, image = $3, sort_order = $4,
+           is_published = $5, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $6
+       RETURNING *`,
+      [
+        title,
+        content || '',
+        image,
+        sort_order ?? existing.rows[0].sort_order,
+        is_published === true || is_published === 'true',
+        id,
+      ]
+    );
+
+    touchBoardUpdatedAt();
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// DELETE /api/transparency/sections/:id  (admin)
+exports.deleteSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM transparency_sections WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Section not found' });
+    }
+    touchBoardUpdatedAt();
+    res.json({ message: 'Section deleted' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
