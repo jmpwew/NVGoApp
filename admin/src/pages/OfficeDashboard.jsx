@@ -309,6 +309,7 @@ export default function OfficeDashboard() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{a.name || 'Anonymous'}</span>
+                  {a.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   <span className={`badge badge-${a.assignment_status}`}>{STATUS_LABELS[a.assignment_status] || a.assignment_status}</span>
                 </div>
                 <div className="case-card-desc">{a.description}</div>
@@ -373,6 +374,7 @@ export default function OfficeDashboard() {
 
             <h2 className="detail-modal-title">Report Details</h2>
             <span className={`badge badge-${selected.assignment_status}`}>{STATUS_LABELS[selected.assignment_status] || selected.assignment_status}</span>
+            {selected.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
 
             <div className="detail-grid">
               <div>

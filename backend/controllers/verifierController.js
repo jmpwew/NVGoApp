@@ -21,7 +21,7 @@ exports.getPendingReports = async (req, res) => {
   }
 };
 
-// Reports this verifier has already reviewed (for their own history view)
+// Reports this verifier has already reviewed 
 exports.getVerifiedReports = async (req, res) => {
   try {
     const result = await pool.query(
@@ -45,13 +45,13 @@ exports.getVerifiedReports = async (req, res) => {
   }
 };
 
-// Verify a report and assign it to one or more offices in one action.
+
 
 exports.verifyAndAssign = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { officeRoles, reportType } = req.body;
+    const { officeRoles, reportType, isUrgent } = req.body;
     const validRoles = ['police', 'bfp', 'medical'];
 
     if (!Array.isArray(officeRoles) || officeRoles.length === 0) {
@@ -69,10 +69,10 @@ exports.verifyAndAssign = async (req, res) => {
     // mark report as verified, tag its incident type, move to ongoing
     const reportResult = await client.query(
       `UPDATE reports
-       SET verified_by = $1, verified_at = NOW(), status = 'ongoing', report_type = $3
+       SET verified_by = $1, verified_at = NOW(), status = 'ongoing', report_type = $3, is_urgent = $4
        WHERE id = $2
        RETURNING *`,
-      [req.user.id, id, reportType]
+      [req.user.id, id, reportType, !!isUrgent]
     );
 
     if (reportResult.rows.length === 0) {
@@ -80,7 +80,7 @@ exports.verifyAndAssign = async (req, res) => {
       return res.status(404).json({ message: 'Report not found.' });
     }
 
-    // create one assignment row per selected office
+    
     const assignments = [];
     for (const officeRole of officeRoles) {
       const a = await client.query(
@@ -94,7 +94,7 @@ exports.verifyAndAssign = async (req, res) => {
 
     await client.query('COMMIT');
 
-    // let each assigned office know a new case has landed on their desk
+  
     for (const officeRole of officeRoles) {
       createAlert({
         type: 'assignment',

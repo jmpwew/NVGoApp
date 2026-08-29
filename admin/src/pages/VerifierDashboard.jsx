@@ -46,6 +46,7 @@ export default function VerifierDashboard() {
   const [readOnly, setReadOnly]   = useState(false); // true when viewing a verified report
   const [checked, setChecked]     = useState([]);   // office roles picked
   const [reportType, setReportType] = useState(''); // incident type picked
+  const [isUrgent, setIsUrgent]   = useState(false); // urgent/priority flag
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]         = useState(null);
   const [search, setSearch]       = useState('');
@@ -129,6 +130,7 @@ export default function VerifierDashboard() {
     setReadOnly(isReadOnly);
     setChecked([]);
     setReportType(report.report_type || '');
+    setIsUrgent(!!report.is_urgent);
   }
 
   function toggleOffice(value) {
@@ -154,7 +156,7 @@ export default function VerifierDashboard() {
     try {
       await axios.put(
         `${API}/api/verifier/reports/${selected.id}/verify`,
-        { officeRoles: checked, reportType },
+        { officeRoles: checked, reportType, isUrgent },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPending(prev => prev.filter(r => r.id !== selected.id));
@@ -258,6 +260,7 @@ export default function VerifierDashboard() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
+                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   {r.contact && <span className="case-card-time">{r.contact}</span>}
                 </div>
                 <div className="case-card-desc">{r.description}</div>
@@ -299,6 +302,7 @@ export default function VerifierDashboard() {
                 <div className="case-card-body">
                   <div className="case-card-top">
                     <span className="case-card-name">{r.name || 'Anonymous'}</span>
+                    {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                     <span className="badge badge-verifier">verified</span>
                   </div>
                   <div className="case-card-desc">{r.description}</div>
@@ -417,6 +421,7 @@ export default function VerifierDashboard() {
                 <div className="detail-label">Report type</div>
                 <div className="detail-value" style={{ marginBottom: 10 }}>
                   {REPORT_TYPE_LABELS[selected.report_type] || selected.report_type || '—'}
+                  {selected.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
                 </div>
 
                 <div className="detail-label">Sent to office(s)</div>
@@ -444,6 +449,15 @@ export default function VerifierDashboard() {
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
+
+                <button
+                  type="button"
+                  className={`urgent-toggle-btn ${isUrgent ? 'active' : ''}`}
+                  style={{ marginTop: 10 }}
+                  onClick={() => setIsUrgent(v => !v)}
+                >
+                  {isUrgent ? '✓ Urgent / Priority' : 'Mark as Urgent / Priority'}
+                </button>
 
                 <div className="detail-label" style={{ marginTop: 14 }}>Send to office(s)</div>
                 <div className="office-picker">
