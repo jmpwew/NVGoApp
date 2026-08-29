@@ -16,7 +16,7 @@ function currentQuarter() {
 }
 
 /**
- * @param {string} endpoint  full URL, e.g. `${API}/api/admin/reports/quarterly`
+ * @param {string} endpoint  `${API}/api/admin/reports/quarterly`
  * @param {string} buttonLabel  defaults to "Generate Quarterly Logs"
  */
 export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Quarterly Logs' }) {
@@ -148,7 +148,8 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                 )}
 
                 <div className="action-buttons detail-modal-actions">
-                  <button className="btn-gray" onClick={() => window.print()}>Print / Save as PDF</button>
+                  <button className="btn-gray" onClick={() => window.print()}>Print</button>
+                  <button className="btn-gray" onClick={() => window.print()}>Save as PDF</button>
                   <button className="btn-gray" onClick={() => setOpen(false)}>Close</button>
                 </div>
               </>
