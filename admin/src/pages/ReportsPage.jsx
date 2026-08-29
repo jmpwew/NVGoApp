@@ -182,6 +182,7 @@ export default function ReportsPage() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
+                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   {r.contact && <span className="case-card-time">{r.contact}</span>}
                   <span className={`badge badge-${r.status}`}>{STATUS_LABELS[r.status] || r.status}</span>
                 </div>
@@ -262,6 +263,7 @@ export default function ReportsPage() {
 
             <h2 className="detail-modal-title">Report Details</h2>
             <span className={`badge badge-${selectedReport.status}`}>{selectedReport.status}</span>
+            {selectedReport.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
 
             <div className="detail-grid">
               <div>
