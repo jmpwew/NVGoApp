@@ -276,7 +276,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    // block deleting the last remaining admin — would lock everyone out of the panel
+   
     if (target.rows[0].role === 'admin') {
       const adminCount = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
       if (parseInt(adminCount.rows[0].count, 10) <= 1) {
@@ -529,6 +529,7 @@ exports.getAllNotifications = async (req, res) => {
       `SELECT n.*, u.firstname, u.lastname
        FROM notifications n
        LEFT JOIN users u ON n.user_id = u.id
+       WHERE n.source = 'admin'
        ORDER BY n.created_at DESC`
     );
     res.json(result.rows);
@@ -547,8 +548,8 @@ exports.createNotification = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO notifications (user_id, title, body, type)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
+      `INSERT INTO notifications (user_id, title, body, type, source)
+       VALUES ($1, $2, $3, $4, 'admin') RETURNING *`,
       [user_id || null, title, body, type]
     );
 
