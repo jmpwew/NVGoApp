@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import QuarterlyChart from './QuarterlyChart';
 import { REPORT_TYPE_COLORS } from '../constants/reportTypes';
 import './QuarterlyLogsModal.css';
@@ -16,8 +18,8 @@ function currentQuarter() {
 }
 
 /**
- * @param {string} endpoint  `${API}/api/admin/reports/quarterly`
- * @param {string} buttonLabel  defaults to "Generate Quarterly Logs"
+ * @param {string} endpoint  
+ * @param {string} buttonLabel  
  */
 export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Quarterly Logs' }) {
   const [open, setOpen]         = useState(false);
@@ -26,6 +28,8 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
   const [loading, setLoading]   = useState(false);
   const [data, setData]         = useState(null);
   const [error, setError]       = useState('');
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -59,6 +63,47 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
     setData(null);
     setError('');
     generate();
+  }
+
+  async function saveAsPdf() {
+    if (!reportRef.current || !data) return;
+    setExporting(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+      });
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight + margin;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pageHeight - margin * 2);
+      }
+
+      pdf.save(`Quarterly-Logs-Q${quarter}-${year}.pdf`);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      setError('Failed to export PDF. Please try again.');
+    } finally {
+      setExporting(false);
+    }
   }
 
   const years = Array.from({ length: 5 }).map((_, i) => new Date().getFullYear() - i);
@@ -101,6 +146,7 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
 
             {data && (
               <>
+                <div ref={reportRef}>
                 <div className="metric-grid" style={{ marginTop: 4 }}>
                   <div className="metric-card">
                     <div className="metric-card-label">Total resolved reports</div>
@@ -146,10 +192,13 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                     </tbody>
                   </table>
                 )}
+                </div>
 
                 <div className="action-buttons detail-modal-actions">
                   <button className="btn-gray" onClick={() => window.print()}>Print</button>
-                  <button className="btn-gray" onClick={() => window.print()}>Save as PDF</button>
+                  <button className="btn-gray" onClick={saveAsPdf} disabled={exporting}>
+                    {exporting ? <><span className="spinner" /> Saving...</> : 'Save as PDF'}
+                  </button>
                   <button className="btn-gray" onClick={() => setOpen(false)}>Close</button>
                 </div>
               </>
