@@ -276,7 +276,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-   
+    // block deleting the last remaining admin — would lock everyone out of the panel
     if (target.rows[0].role === 'admin') {
       const adminCount = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
       if (parseInt(adminCount.rows[0].count, 10) <= 1) {
@@ -552,6 +552,15 @@ exports.createNotification = async (req, res) => {
        VALUES ($1, $2, $3, $4, 'admin') RETURNING *`,
       [user_id || null, title, body, type]
     );
+
+    // push to the recipient's phone: a specific user, or everyone with a token
+    const tokens = user_id
+      ? await pool.query('SELECT push_token FROM users WHERE id = $1 AND push_token IS NOT NULL', [user_id])
+      : await pool.query('SELECT push_token FROM users WHERE push_token IS NOT NULL');
+    const pushTokens = tokens.rows.map(r => r.push_token);
+    if (pushTokens.length > 0) {
+      await sendPushNotification(pushTokens, title, truncateForPush(body));
+    }
 
     res.json(result.rows[0]);
   } catch (err) {
