@@ -26,22 +26,16 @@ export default function Header({ onToggleNav }) {
   const [markingAll, setMarkingAll]        = useState(false);
   const profileRef = useRef(null);
   const notifRef   = useRef(null);
-  const prevUnreadCount = useRef(null); // null = not fetched yet, so we don't ding on first load
+  const prevUnreadCount = useRef(null); 
 
   const admin = (() => {
     try { return JSON.parse(localStorage.getItem('admin')) || {}; }
     catch { return {}; }
   })();
 
-  // Verifier and office accounts (police/bfp/medical) are shared logins, so
-  // they get the lighter "Account Settings" page instead of the
-  // self-editable profile — see AccountPage.jsx / App.jsx.
   const isOfficeRole = ['verifier', 'police', 'bfp', 'medical'].includes(admin.role);
   const profilePath = isOfficeRole ? '/account' : '/profile';
 
-  // Login only ever returns firstname/lastname, never "name" — build the
-  // display name from those instead (previously always fell back to
-  // "Admin User" for everyone since admin.name was always undefined).
   const displayName = `${admin.firstname || ''} ${admin.lastname || ''}`.trim() || admin.email || 'Admin User';
 
   const initials = displayName
@@ -55,12 +49,48 @@ export default function Header({ onToggleNav }) {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
+  // Ask for os desktop notification permission once
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  function isTabUnfocused() {
+    return document.hidden || !document.hasFocus();
+  }
+
+  async function showDesktopNotification() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+     
+      const res = await axios.get(`${API}/api/admin/alerts`, { headers, params: { limit: 1 } });
+      const latest = res.data?.[0];
+      const title = latest?.title || 'New notification';
+      const body  = latest?.detail || 'You have a new update in NVGo Admin.';
+
+      const desktopNotif = new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        tag: 'nvgo-admin-alert',
+      });
+      desktopNotif.onclick = () => {
+        window.focus();
+        if (latest) handleNotificationClick(latest);
+        desktopNotif.close();
+      };
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async function fetchUnreadCount() {
     try {
       const res = await axios.get(`${API}/api/admin/alerts/unread-count`, { headers });
       const newCount = res.data.count || 0;
       if (prevUnreadCount.current !== null && newCount > prevUnreadCount.current) {
         playNotificationSound();
+        if (isTabUnfocused()) showDesktopNotification();
       }
       prevUnreadCount.current = newCount;
       setUnreadCount(newCount);
@@ -78,8 +108,7 @@ export default function Header({ onToggleNav }) {
     }
   }
 
-  // poll for new notifications / updated unread count in the background
-  // (every staff role now gets its own scoped feed, filtered server-side)
+ 
   useEffect(() => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, POLL_MS);
