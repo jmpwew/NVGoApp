@@ -44,8 +44,7 @@ export default function ReportsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Coming from Dashboard's "Recent reports" -> /reports?reportId=123 opens
-  // that specific report's detail modal directly instead of just the list.
+
   useEffect(() => {
     const reportId = searchParams.get('reportId');
     if (!reportId || reports.length === 0) return;
@@ -53,7 +52,7 @@ export default function ReportsPage() {
     const match = reports.find(r => String(r.id) === reportId);
     if (match) {
       setSelectedReport(match);
-      // clear the query param so refreshing/closing doesn't reopen it
+
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, reports]);
@@ -74,9 +73,7 @@ export default function ReportsPage() {
     }
   }
 
-  // Manual override, kept for edge cases (e.g. false report). Normal flow moves
-  // status automatically: pending -> ongoing (on verify) -> resolved (when every
-  // assigned office resolves).
+
   async function updateStatus(id, status) {
     try {
       await axios.put(`${API}/api/admin/reports/${id}/status`,
@@ -182,8 +179,8 @@ export default function ReportsPage() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
-                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   {r.contact && <span className="case-card-time">{r.contact}</span>}
+                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   <span className={`badge badge-${r.status}`}>{STATUS_LABELS[r.status] || r.status}</span>
                 </div>
                 <div className="case-card-desc">{r.description}</div>

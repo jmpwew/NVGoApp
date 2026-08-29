@@ -40,19 +40,19 @@ export default function VerifierDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [pending, setPending]     = useState([]);
   const [verified, setVerified]   = useState([]);
-  const [view, setView]           = useState('pending'); // 'pending' | 'verified'
+  const [view, setView]           = useState('pending'); 
   const [loading, setLoading]     = useState(true);
-  const [selected, setSelected]   = useState(null); // report being reviewed
-  const [readOnly, setReadOnly]   = useState(false); // true when viewing a verified report
-  const [checked, setChecked]     = useState([]);   // office roles picked
-  const [reportType, setReportType] = useState(''); // incident type picked
-  const [isUrgent, setIsUrgent]   = useState(false); // urgent/priority flag
+  const [selected, setSelected]   = useState(null); 
+  const [readOnly, setReadOnly]   = useState(false); 
+  const [checked, setChecked]     = useState([]);  
+  const [reportType, setReportType] = useState('');
+  const [isUrgent, setIsUrgent]   = useState(false); 
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]         = useState(null);
   const [search, setSearch]       = useState('');
   const [page, setPage]           = useState(1);
   const PAGE_SIZE = 10;
-  const [confirmVerify, setConfirmVerify] = useState(false); // true while the "verify & turnover" confirm dialog is open
+  const [confirmVerify, setConfirmVerify] = useState(false); 
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -260,8 +260,8 @@ export default function VerifierDashboard() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
-                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   {r.contact && <span className="case-card-time">{r.contact}</span>}
+                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                 </div>
                 <div className="case-card-desc">{r.description}</div>
                 <div className="case-card-meta">
@@ -302,8 +302,8 @@ export default function VerifierDashboard() {
                 <div className="case-card-body">
                   <div className="case-card-top">
                     <span className="case-card-name">{r.name || 'Anonymous'}</span>
-                    {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                     <span className="badge badge-verifier">verified</span>
+                    {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   </div>
                   <div className="case-card-desc">{r.description}</div>
                   <div className="case-card-meta">

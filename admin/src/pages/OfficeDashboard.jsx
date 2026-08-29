@@ -42,7 +42,7 @@ export default function OfficeDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [filter, setFilter]           = useState('ongoing'); // ongoing | dispatched | resolved
+  const [filter, setFilter]           = useState('ongoing'); 
   const [search, setSearch]           = useState('');
   const [page, setPage]               = useState(1);
   const PAGE_SIZE = 10;
@@ -68,8 +68,7 @@ export default function OfficeDashboard() {
     setPage(1);
   }, [filter, search]);
 
-  // Coming from a bell notification -> /office?reportId=123 opens that
-  // specific assignment directly instead of just landing on the list.
+
   useEffect(() => {
     const reportId = searchParams.get('reportId');
     if (!reportId || assignments.length === 0) return;
@@ -81,9 +80,7 @@ export default function OfficeDashboard() {
     }
   }, [searchParams, assignments]);
 
-  // Esc closes the detail modal, same as clicking outside it or the ✕.
-  // Skipped while the confirm dialog is open on top of it — that has its
-  // own Esc handling, and we don't want one keypress to close both at once.
+
   useEffect(() => {
     if (!selected || confirmAction) return;
     function handleKeyDown(e) {
@@ -154,8 +151,7 @@ export default function OfficeDashboard() {
     setConfirmAction(null);
   }
 
-  // Saves the action note AND advances the status to 'dispatched' in a single request.
-  // Used by the "Dispatch Unit" button, which only appears while status is 'ongoing'.
+
   async function dispatchUnit(assignmentId) {
     setSaving(true);
     try {
@@ -309,8 +305,8 @@ export default function OfficeDashboard() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{a.name || 'Anonymous'}</span>
-                  {a.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                   <span className={`badge badge-${a.assignment_status}`}>{STATUS_LABELS[a.assignment_status] || a.assignment_status}</span>
+                  {a.is_urgent && <span className="badge badge-urgent">Urgent</span>}
                 </div>
                 <div className="case-card-desc">{a.description}</div>
                 <div className="case-card-meta">
