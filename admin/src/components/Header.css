@@ -184,6 +184,17 @@
   text-decoration: none;
 }
 
+.notif-permission-hint {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #8a6d1a;
+  background: #fff8e6;
+  border: 1px solid #f0e0ad;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
 .notif-empty {
   font-size: 13px;
   color: #999;

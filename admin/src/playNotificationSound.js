@@ -1,11 +1,3 @@
-// Plays a short two-tone "bell" chime using the Web Audio API.
-// No external audio file needed, so there's nothing extra to host or load.
-//
-// Note: browsers block audio until the user has interacted with the page at
-// least once (click, keypress, etc.). On an admin dashboard that's almost
-// always true well before the first new-item poll fires, but if it's ever
-// called before any interaction, it fails silently rather than throwing.
-
 let audioCtx = null;
 
 function getAudioContext() {
@@ -17,11 +9,30 @@ function getAudioContext() {
   return audioCtx;
 }
 
-export default function playNotificationSound() {
+// Call this from a real user-gesture event handler (click/keydown/touchstart).
+// Safe to call repeatedly - a no-op once the context is already running.
+export function unlockAudio() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  } catch (err) {
+    console.log('audio unlock failed:', err);
+  }
+}
+
+export default async function playNotificationSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      // Try to resume (works once the page has had any gesture at all).
+      // If this fails/never resolves - e.g. no gesture has happened yet -
+      // bail out instead of scheduling notes on a frozen clock.
+      await ctx.resume().catch(() => {});
+      if (ctx.state === 'suspended') return;
+    }
 
     const now = ctx.currentTime;
 

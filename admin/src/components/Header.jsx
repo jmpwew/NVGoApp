@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { MenuIcon, SearchIcon, BellIcon, ChevronDownIcon, UserIcon, LogoutIcon } from './Icons';
 import './Header.css';
-import playNotificationSound from '../playNotificationSound';
+import playNotificationSound, { unlockAudio } from '../playNotificationSound';
 
 import { API } from '../config';
 const POLL_MS = 5000;
@@ -24,6 +24,9 @@ export default function Header({ onToggleNav }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount]      = useState(0);
   const [markingAll, setMarkingAll]        = useState(false);
+  const [notifPermission, setNotifPermission] = useState(
+    'Notification' in window ? Notification.permission : 'unsupported'
+  );
   const profileRef = useRef(null);
   const notifRef   = useRef(null);
   const prevUnreadCount = useRef(null); 
@@ -49,12 +52,29 @@ export default function Header({ onToggleNav }) {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Ask for os desktop notification permission once
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    function handleFirstGesture() {
+      unlockAudio();
+      window.removeEventListener('click', handleFirstGesture);
+      window.removeEventListener('keydown', handleFirstGesture);
+      window.removeEventListener('touchstart', handleFirstGesture);
     }
+    window.addEventListener('click', handleFirstGesture);
+    window.addEventListener('keydown', handleFirstGesture);
+    window.addEventListener('touchstart', handleFirstGesture);
+    return () => {
+      window.removeEventListener('click', handleFirstGesture);
+      window.removeEventListener('keydown', handleFirstGesture);
+      window.removeEventListener('touchstart', handleFirstGesture);
+    };
   }, []);
+
+  
+  async function ensureNotificationPermission() {
+    if (!('Notification' in window) || Notification.permission !== 'default') return;
+    const result = await Notification.requestPermission();
+    setNotifPermission(result);
+  }
 
   function isTabUnfocused() {
     return document.hidden || !document.hasFocus();
@@ -221,7 +241,7 @@ export default function Header({ onToggleNav }) {
           <button
             className="icon-btn"
             aria-label="Notifications"
-            onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
+            onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); ensureNotificationPermission(); }}
           >
             <BellIcon />
             {unreadCount > 0 && (
@@ -242,6 +262,12 @@ export default function Header({ onToggleNav }) {
                   </button>
                 )}
               </div>
+              {notifPermission === 'denied' && (
+                <div className="notif-permission-hint">
+                  Desktop alerts are blocked for this site. Enable notifications in your browser's
+                  site settings to get an alert when this tab isn't focused.
+                </div>
+              )}
               {notifications.length === 0 ? (
                 <div className="notif-empty">No notifications yet</div>
               ) : (
