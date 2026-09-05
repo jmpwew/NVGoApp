@@ -747,14 +747,9 @@ export default function TransparencyBoardPage() {
                     </p>
                   )}
                   {item.progress_percent != null && (
-                    <>
-                      <div className="tb-progress-track">
-                        <div className="tb-progress-fill" style={{ width: `${item.progress_percent}%` }} />
-                      </div>
-                      <p className="tb-item-meta">{item.progress_percent}% complete
-                        {item.target_completion_date && ` · Target: ${new Date(item.target_completion_date).toLocaleDateString()}`}
-                      </p>
-                    </>
+                    <p className="tb-item-meta">{item.progress_percent}% complete
+                      {item.target_completion_date && ` · Target: ${new Date(item.target_completion_date).toLocaleDateString()}`}
+                    </p>
                   )}
                   {item.cost != null && item.cost !== '' && (
                     <p className="tb-item-cost">{formatCurrency(item.cost)}</p>
