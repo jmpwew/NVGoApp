@@ -19,6 +19,7 @@ const emptyBoardForm = {
 const emptyInfraForm = {
   name: '', status: 'ongoing', cost: '',
   category: '', barangay: '', progress_percent: '', target_completion_date: '',
+  description: '',
 };
 const emptyAccompForm = { title: '', description: '', category: '' };
 const emptyDocForm = { title: '' };
@@ -251,6 +252,7 @@ export default function TransparencyBoardPage() {
       barangay: item.barangay || '',
       progress_percent: item.progress_percent ?? '',
       target_completion_date: item.target_completion_date ? item.target_completion_date.slice(0, 10) : '',
+      description: item.description || '',
     });
     setInfraEditingId(item.id);
     setInfraImageFile(null);
@@ -282,6 +284,7 @@ export default function TransparencyBoardPage() {
       formData.append('barangay', infraForm.barangay);
       formData.append('progress_percent', infraForm.progress_percent);
       formData.append('target_completion_date', infraForm.target_completion_date);
+      formData.append('description', infraForm.description);
       if (infraImageFile) formData.append('image', infraImageFile);
 
       if (infraEditingId) {
@@ -735,6 +738,9 @@ export default function TransparencyBoardPage() {
                     {item.status === 'completed' ? 'Completed' : 'Ongoing'}
                   </span>
                   <h3>{item.name}</h3>
+                  {!!item.description && (
+                    <p className="tb-item-meta">{item.description}</p>
+                  )}
                   {(item.category || item.barangay) && (
                     <p className="tb-item-meta">
                       {[item.category, item.barangay].filter(Boolean).join(' · ')}
@@ -964,6 +970,16 @@ export default function TransparencyBoardPage() {
                     placeholder="e.g. Brgy. Poblacion"
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description (optional)</label>
+                <textarea
+                  value={infraForm.description}
+                  onChange={e => setInfraForm({ ...infraForm, description: e.target.value })}
+                  placeholder="Short description of the project"
+                  rows={4}
+                />
               </div>
 
               <div className="form-row">
