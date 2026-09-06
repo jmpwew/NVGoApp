@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [growth, setGrowth]   = useState(null);
   const [growthLoading, setGrowthLoading] = useState(true);
   const [metric, setMetric]   = useState('users');
+  const [range, setRange]     = useState('month'); // 'month' | 'day'
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -41,8 +42,8 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetchGrowth(metric);
-  }, [metric]);
+    fetchGrowth(metric, range);
+  }, [metric, range]);
 
   async function fetchStats() {
     try {
@@ -67,12 +68,12 @@ export default function DashboardPage() {
     }
   }
 
-  async function fetchGrowth(m) {
+  async function fetchGrowth(m, r) {
     setGrowthLoading(true);
     try {
       const res = await axios.get(`${API}/api/admin/users/growth`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { metric: m },
+        params: { metric: m, range: r },
       });
       setGrowth(res.data);
     } catch (err) {
@@ -125,7 +126,23 @@ export default function DashboardPage() {
 
       {/* Growth chart with metric tabs */}
       <div className="chart-section">
-        <h2>Growth</h2>
+        <div className="page-header-row" style={{ marginBottom: 0 }}>
+          <h2 style={{ margin: 0 }}>Growth</h2>
+          <div className="range-toggle">
+            <button
+              className={`range-toggle-btn ${range === 'month' ? 'active' : ''}`}
+              onClick={() => setRange('month')}
+            >
+              Per month
+            </button>
+            <button
+              className={`range-toggle-btn ${range === 'day' ? 'active' : ''}`}
+              onClick={() => setRange('day')}
+            >
+              Per day
+            </button>
+          </div>
+        </div>
         <div className="chart-tabs">
           {GROWTH_METRICS.map(m => (
             <button
@@ -139,7 +156,10 @@ export default function DashboardPage() {
           ))}
         </div>
         <div className="chart-subtitle">
-          New {GROWTH_METRICS.find(m => m.key === metric)?.noun} per month{growth ? ` — ${growth.year}` : ''}
+          New {GROWTH_METRICS.find(m => m.key === metric)?.noun} per {range}
+          {growth ? (range === 'day'
+            ? ` — ${new Date(growth.year, (growth.month || 1) - 1).toLocaleString('default', { month: 'long' })} ${growth.year}`
+            : ` — ${growth.year}`) : ''}
         </div>
         {growthLoading || !growth ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
@@ -150,7 +170,7 @@ export default function DashboardPage() {
             <UserGrowthChart
               months={growth.months}
               counts={growth.counts}
-              label={`Bar chart of new ${GROWTH_METRICS.find(m => m.key === metric)?.noun} per month for the current year`}
+              label={`Bar chart of new ${GROWTH_METRICS.find(m => m.key === metric)?.noun} per ${range}${range === 'day' ? ' for the current month' : ' for the current year'}`}
             />
           </div>
         )}

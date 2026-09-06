@@ -32,6 +32,38 @@
   margin-bottom: 12px;
 }
 
+/* ── Month/Day range toggle, top-right of the Growth chart header ── */
+.range-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg, #f1f2f4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  padding: 2px;
+}
+
+.range-toggle-btn {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.range-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.range-toggle-btn.active {
+  background: var(--surface);
+  color: var(--brand-dark);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
 /* ── Metric tabs above the growth chart (same visual pattern as the
    Reports status tabs, scoped here to avoid cross-page CSS coupling) ── */
 .chart-tabs {
