@@ -57,14 +57,6 @@ function AlertIcon(props) {
   );
 }
 
-function PinMark(props) {
-  return (
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
-    </svg>
-  );
-}
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail]       = useState('');
@@ -82,7 +74,7 @@ export default function LoginPage() {
       const res = await axios.post(`${API}/api/auth/login`, { email, password });
       const { token, user } = res.data;
 
-      // Only staff roles may use this panel (not regular mobile app users)
+      
       const allowedRoles = ['admin', 'verifier', 'police', 'bfp', 'medical'];
       if (!allowedRoles.includes(user.role)) {
         setError('You do not have access to this system.');
@@ -113,28 +105,12 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-shell">
 
-        {/* Branding side */}
-        <div className="login-brand">
-          <div className="login-brand-pattern" aria-hidden="true" />
-          <div className="login-brand-content">
-            <div className="brand-mark">
-              <PinMark />
-              <span>NVGo</span>
-            </div>
-            <h2>Emergency &amp; Incident Reporting</h2>
-            <p>Municipality of Nueva Valencia, Guimaras</p>
-
-            <ul className="brand-roles">
-              <li><span className="role-dot role-dot--verifier" />Verifiers review incoming reports</li>
-              <li><span className="role-dot role-dot--responder" />Police, BFP &amp; medical respond in the field</li>
-              <li><span className="role-dot role-dot--admin" />Admins oversee the full system</li>
-            </ul>
-          </div>
-        </div>
-
         {/* Form side */}
         <div className="login-form-side">
           <div className="login-box">
+            <div className="login-box-mark">
+              <span>NVGo</span>
+            </div>
             <h1>Staff Sign In</h1>
             <p className="login-subtitle">Use your assigned NVGo staff account</p>
 
