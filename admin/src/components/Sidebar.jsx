@@ -1,4 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import {
+  BellIcon, ClipboardListIcon, DashboardIcon, MegaphoneIcon, MessageCircleIcon,
+  NewspaperIcon, PhoneIcon, ShieldIcon, UserIcon,
+} from './Icons';
 import './Sidebar.css';
 
 function NavBadge({ count }) {
@@ -13,6 +17,15 @@ const ROLE_LABELS = {
   bfp:     'BFP',
   medical: 'Medical',
 };
+
+function SidebarLink({ to, icon: Icon, children, badge, onClose }) {
+  return (
+    <NavLink to={to} onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+      <span className="nav-link-main"><Icon aria-hidden="true" />{children}</span>
+      <NavBadge count={badge} />
+    </NavLink>
+  );
+}
 
 export default function Sidebar({ isOpen, isCollapsed, onClose, badges = {}, role = 'admin' }) {
   const { pendingReports = 0, unreadSupport = 0 } = badges;
@@ -29,61 +42,37 @@ export default function Sidebar({ isOpen, isCollapsed, onClose, badges = {}, rol
         <nav>
           {role === 'admin' && (
             <>
-              <NavLink to="/dashboard"     onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Dashboard</span>
-              </NavLink>
-              <NavLink to="/reports"       onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Reports</span> <NavBadge count={pendingReports} />
-              </NavLink>
-              <NavLink to="/users"         onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Users</span>
-              </NavLink>
-              <NavLink to="/news"          onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>News</span>
-              </NavLink>
-              <NavLink to="/announcements" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Announcements</span>
-              </NavLink>
-              <NavLink to="/notifications" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Notifications</span>
-              </NavLink>
-              <NavLink to="/support"       onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Support Messages</span> <NavBadge count={unreadSupport} />
-              </NavLink>
-              <NavLink to="/hotlines"      onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Emergency Hotlines</span>
-              </NavLink>
-              <NavLink to="/transparency"  onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Transparency Board</span>
-              </NavLink>
-              <NavLink to="/audit-logs"    onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-                <span>Audit Logs</span>
-              </NavLink>
+              <div className="nav-group-label">Operations</div>
+              <SidebarLink to="/dashboard" icon={DashboardIcon} onClose={onClose}>Dashboard</SidebarLink>
+              <SidebarLink to="/reports" icon={ClipboardListIcon} badge={pendingReports} onClose={onClose}>Reports</SidebarLink>
+              <SidebarLink to="/support" icon={MessageCircleIcon} badge={unreadSupport} onClose={onClose}>Support Messages</SidebarLink>
+              <SidebarLink to="/notifications" icon={BellIcon} onClose={onClose}>Notifications</SidebarLink>
+
+              <div className="nav-group-label">Content</div>
+              <SidebarLink to="/news" icon={NewspaperIcon} onClose={onClose}>News</SidebarLink>
+              <SidebarLink to="/announcements" icon={MegaphoneIcon} onClose={onClose}>Announcements</SidebarLink>
+              <SidebarLink to="/hotlines" icon={PhoneIcon} onClose={onClose}>Emergency Hotlines</SidebarLink>
+
+              <div className="nav-group-label">Administration</div>
+              <SidebarLink to="/users" icon={UserIcon} onClose={onClose}>Users</SidebarLink>
+              <SidebarLink to="/transparency" icon={ShieldIcon} onClose={onClose}>Transparency Board</SidebarLink>
+              <SidebarLink to="/audit-logs" icon={ClipboardListIcon} onClose={onClose}>Audit Logs</SidebarLink>
+              <SidebarLink to="/profile" icon={UserIcon} onClose={onClose}>Profile</SidebarLink>
             </>
           )}
 
           {role === 'verifier' && (
-            <NavLink to="/verifier" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-              <span>Pending Reports</span>
-            </NavLink>
+            <SidebarLink to="/verifier" icon={ClipboardListIcon} onClose={onClose}>Pending Reports</SidebarLink>
           )}
 
           {['police', 'bfp', 'medical'].includes(role) && (
-            <NavLink to="/office" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-              <span>Assigned Reports</span>
-            </NavLink>
+            <SidebarLink to="/office" icon={ClipboardListIcon} onClose={onClose}>Assigned Reports</SidebarLink>
           )}
 
           
           {['verifier', 'police', 'bfp', 'medical'].includes(role) ? (
-            <NavLink to="/account" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-              <span>Account Settings</span>
-            </NavLink>
-          ) : (
-            <NavLink to="/profile" onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-              <span>Profile</span>
-            </NavLink>
-          )}
+            <SidebarLink to="/account" icon={UserIcon} onClose={onClose}>Account Settings</SidebarLink>
+          ) : null}
         </nav>
       </aside>
     </>
