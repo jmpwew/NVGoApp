@@ -3,6 +3,70 @@ import axios from 'axios';
 import './AuditLogsPage.css';
 
 import { API } from '../config';
+import { ChevronDownIcon } from '../components/Icons';
+
+const FIELD_LABELS = {
+  id: 'ID',
+  firstname: 'First name',
+  lastname: 'Last name',
+  email: 'Email',
+  contact: 'Contact number',
+  address: 'Address',
+  role: 'Role',
+  created_at: 'Created at',
+  updated_at: 'Updated at',
+  status: 'Status',
+  title: 'Title',
+  content: 'Content',
+  description: 'Description',
+  name: 'Name',
+  office_role: 'Office',
+  action_note: 'Action note',
+  assigned_at: 'Assigned at',
+  verified_by: 'Verified by',
+  verified_at: 'Verified at',
+  user_id: 'User ID',
+  report_id: 'Report ID',
+};
+
+function formatFieldLabel(key) {
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function isDateLike(key, value) {
+  return typeof value === 'string' && /_at$/.test(key) && !isNaN(Date.parse(value));
+}
+
+function formatFieldValue(key, value) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (isDateLike(key, value)) return new Date(value).toLocaleString();
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+
+function buildDiffRows(before, after) {
+  const keys = [];
+  const seen = new Set();
+  [before, after].forEach(obj => {
+    if (!obj) return;
+    Object.keys(obj).forEach(k => {
+      if (!seen.has(k)) {
+        seen.add(k);
+        keys.push(k);
+      }
+    });
+  });
+  return keys.map(key => {
+    const beforeVal = before ? before[key] : undefined;
+    const afterVal = after ? after[key] : undefined;
+    const changed = before && after && JSON.stringify(beforeVal) !== JSON.stringify(afterVal);
+    return { key, beforeVal, afterVal, changed };
+  });
+}
 
 const ACTION_LABELS = {
   staff_created: 'Staff account created',
@@ -191,9 +255,20 @@ export default function AuditLogsPage() {
           ) : (
             logs.map(log => {
               const isOpen = expandedId === log.id;
+              const hasDetail = !!(log.before_state || log.after_state);
+              const hasBoth = !!(log.before_state && log.after_state);
+              const rows = hasDetail
+                ? buildDiffRows(log.before_state, log.after_state)
+                : [];
+              const changedCount = rows.filter(r => r.changed).length;
+
               return (
                 <>
-                  <tr key={log.id}>
+                  <tr
+                    key={log.id}
+                    className={`audit-row ${hasDetail ? 'audit-row-clickable' : ''} ${isOpen ? 'audit-row-open' : ''}`}
+                    onClick={hasDetail ? () => setExpandedId(isOpen ? null : log.id) : undefined}
+                  >
                     <td style={{ whiteSpace: 'nowrap', fontSize: 13, color: '#666' }}>
                       {new Date(log.created_at).toLocaleString()}
                     </td>
@@ -217,32 +292,72 @@ export default function AuditLogsPage() {
                       {log.reason || '—'}
                     </td>
                     <td>
-                      {(log.before_state || log.after_state) && (
+                      {hasDetail && (
                         <button
-                          className="btn-gray"
-                          onClick={() => setExpandedId(isOpen ? null : log.id)}
+                          className={`audit-toggle-btn ${isOpen ? 'audit-toggle-btn-open' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); setExpandedId(isOpen ? null : log.id); }}
                         >
-                          {isOpen ? 'Hide' : 'Details'}
+                          <span>{isOpen ? 'Hide' : 'Details'}</span>
+                          <ChevronDownIcon className="audit-toggle-chevron" />
                         </button>
                       )}
                     </td>
                   </tr>
                   {isOpen && (
-                    <tr key={`${log.id}-detail`}>
+                    <tr key={`${log.id}-detail`} className="audit-detail-row">
                       <td colSpan="7">
                         <div className="audit-detail">
-                          {log.before_state && (
-                            <div className="audit-detail-col">
-                              <h4>Before</h4>
-                              <pre>{JSON.stringify(log.before_state, null, 2)}</pre>
-                            </div>
-                          )}
-                          {log.after_state && (
-                            <div className="audit-detail-col">
-                              <h4>After</h4>
-                              <pre>{JSON.stringify(log.after_state, null, 2)}</pre>
-                            </div>
-                          )}
+                          <div className="audit-detail-heading">
+                            <span>
+                              {hasBoth
+                                ? 'What changed'
+                                : log.before_state
+                                  ? 'Record snapshot before this action'
+                                  : 'Record snapshot after this action'}
+                            </span>
+                            {hasBoth && (
+                              <span className="audit-detail-changed-count">
+                                {changedCount} field{changedCount === 1 ? '' : 's'} changed
+                              </span>
+                            )}
+                          </div>
+
+                          <table className="audit-diff-table">
+                            <thead>
+                              <tr>
+                                <th>Field</th>
+                                {hasBoth ? (
+                                  <>
+                                    <th>Before</th>
+                                    <th>After</th>
+                                  </>
+                                ) : (
+                                  <th>Value</th>
+                                )}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rows.map(({ key, beforeVal, afterVal, changed }) => (
+                                <tr key={key} className={changed ? 'audit-diff-changed' : ''}>
+                                  <td className="audit-diff-field">{formatFieldLabel(key)}</td>
+                                  {hasBoth ? (
+                                    <>
+                                      <td className={changed ? 'audit-diff-before' : ''}>
+                                        {formatFieldValue(key, beforeVal)}
+                                      </td>
+                                      <td className={changed ? 'audit-diff-after' : ''}>
+                                        {formatFieldValue(key, afterVal)}
+                                      </td>
+                                    </>
+                                  ) : (
+                                    <td>
+                                      {formatFieldValue(key, log.before_state ? beforeVal : afterVal)}
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </td>
                     </tr>
