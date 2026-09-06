@@ -25,6 +25,7 @@ export default function Header({ onToggleNav }) {
   const [search, setSearch]             = useState('');
   const [searchOpen, setSearchOpen]     = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount]      = useState(0);
   const [markingAll, setMarkingAll]        = useState(false);
@@ -157,7 +158,7 @@ export default function Header({ onToggleNav }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // debounced live search across reports, users, and news
+ 
   useEffect(() => {
     if (!canSearch) return;
     const trimmed = search.trim();
@@ -243,7 +244,7 @@ export default function Header({ onToggleNav }) {
 
   async function markOneRead(item) {
     if (item.is_read) return;
-    // optimistic update so the UI feels instant
+ 
     setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, is_read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
     try {
