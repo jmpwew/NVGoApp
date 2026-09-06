@@ -192,6 +192,34 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                     </tbody>
                   </table>
                 )}
+
+                {data.reports && data.reports.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: 14, marginTop: 18 }}>{data.quarterLabel} {'\u2014'} report log</h2>
+                    <table className="quarterly-breakdown-table quarterly-log-table">
+                      <thead>
+                        <tr>
+                          <th>Date verified</th>
+                          <th>Report type</th>
+                          <th>Location</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.reports.map(r => (
+                          <tr key={r.id}>
+                            <td>{r.verifiedAt ? new Date(r.verifiedAt).toLocaleDateString() : '\u2014'}</td>
+                            <td>{r.typeLabel}</td>
+                            <td>
+                              {r.location
+                                ? r.location
+                                : (r.latitude && r.longitude ? `${Number(r.latitude).toFixed(5)}, ${Number(r.longitude).toFixed(5)}` : '\u2014')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
                 </div>
 
                 <div className="action-buttons detail-modal-actions">

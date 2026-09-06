@@ -118,6 +118,19 @@
   background-color: var(--brand-tint);
 }
 
+.quarterly-log-table th:not(:first-child),
+.quarterly-log-table td:not(:first-child) {
+  text-align: left;
+}
+
+.quarterly-log-table td {
+  font-size: 12.5px;
+}
+
+.quarterly-log-table {
+  max-height: none;
+}
+
 @media print {
   .detail-modal-overlay {
     position: static;
