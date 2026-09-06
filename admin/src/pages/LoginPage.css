@@ -73,14 +73,18 @@
 
 .input-icon {
   position: absolute;
-  left: 12px;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
   color: var(--text-muted, #9aa0a6);
   pointer-events: none;
 }
 
-.input-wrap input {
+.login-box .input-wrap input {
   width: 100%;
-  padding: 10px 14px 10px 38px;
+  padding: 10px 14px 10px 40px;
   font-size: 14px;
   font-family: inherit;
   border: 1px solid var(--border-strong, #d7d9dc);
@@ -90,18 +94,17 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.input-wrap input::placeholder {
+.login-box .input-wrap input::placeholder {
   color: var(--text-muted, #9aa0a6);
 }
 
-.input-wrap input:focus {
+.login-box .input-wrap input:focus {
   outline: none;
   border-color: var(--brand, #1B8A4C);
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(27,138,76,0.2));
 }
 
-.password-input-wrap input,
-.input-wrap:has(.password-toggle-btn) input {
+.login-box .input-wrap:has(.password-toggle-btn) input {
   padding-right: 38px;
 }
 
