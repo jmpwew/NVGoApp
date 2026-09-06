@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import './UsersPage.css';
 
 import { API } from '../config';
@@ -30,6 +31,7 @@ const emptyForm = {
 };
 
 export default function UsersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers]     = useState([]);
   const [tab, setTab]         = useState('users');
   const [search, setSearch]   = useState('');
@@ -50,6 +52,16 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
+  }, []);
+
+  
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const searchQuery = searchParams.get('search');
+    if (tabParam === 'staff' || tabParam === 'users') setTab(tabParam);
+    if (searchQuery) setSearch(searchQuery);
+    if (tabParam || searchQuery) setSearchParams({}, { replace: true });
+  
   }, []);
 
   async function fetchUsers() {

@@ -44,6 +44,20 @@ export default function ReportsPage() {
     return () => clearInterval(interval);
   }, []);
 
+  
+  useEffect(() => {
+    const searchQuery = searchParams.get('search');
+    if (searchQuery) {
+      setSearch(searchQuery);
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('search');
+        return next;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   useEffect(() => {
     const reportId = searchParams.get('reportId');

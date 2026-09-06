@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import './NewsPage.css';
 
 import { API } from '../config';
@@ -9,7 +10,9 @@ import ConfirmModal from '../components/ConfirmModal';
 const emptyForm = { title: '', content: '', category: 'announcement' };
 
 export default function NewsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [newsList, setNewsList]   = useState([]);
+  const [search, setSearch]       = useState('');
   const [form, setForm]           = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm]   = useState(false);
@@ -28,6 +31,16 @@ export default function NewsPage() {
 
   useEffect(() => {
     fetchNews();
+  }, []);
+
+ 
+  useEffect(() => {
+    const searchQuery = searchParams.get('search');
+    if (searchQuery) {
+      setSearch(searchQuery);
+      setSearchParams({}, { replace: true });
+    }
+
   }, []);
 
   async function fetchNews() {
@@ -129,6 +142,10 @@ export default function NewsPage() {
     }
   }
 
+  const filteredNews = newsList.filter(n =>
+    `${n.title} ${n.content}`.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="page">
       <div className="section-header">
@@ -136,6 +153,16 @@ export default function NewsPage() {
         <button className="btn-green" onClick={() => { setForm(emptyForm); setEditingId(null); setFormError(''); setShowForm(true); }}>
           + Add News
         </button>
+      </div>
+
+      <div style={{ marginBottom: '16px' }}>
+        <input
+          type="text"
+          placeholder="Search by title or content..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ padding: '8px 10px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '14px', width: '260px', outline: 'none' }}
+        />
       </div>
 
       {/* News table */}
@@ -151,10 +178,10 @@ export default function NewsPage() {
           </tr>
         </thead>
         <tbody>
-          {newsList.length === 0 ? (
-            <tr><td colSpan="6">No news posts yet.</td></tr>
+          {filteredNews.length === 0 ? (
+            <tr><td colSpan="6">{newsList.length === 0 ? 'No news posts yet.' : 'No news posts match your search.'}</td></tr>
           ) : (
-            newsList.map(n => (
+            filteredNews.map(n => (
               <tr key={n.id}>
                 <td>{n.id}</td>
                 <td>
