@@ -2,6 +2,9 @@
   --brand: #1B8A4C;
   --brand-dark: #136835;
   --brand-tint: #eaf7f0;
+  --info: #2563eb;
+  --info-dark: #1d4ed8;
+  --info-bg: #eff6ff;
 
   --surface: #ffffff;
   --surface-muted: #f7f8f7;
@@ -13,6 +16,7 @@
 
   --border: #e7e8ea;
   --border-strong: #d7d9dc;
+  --overlay: rgba(0, 0, 0, 0.55);
 
   --danger: #dc2626;
   --danger-bg: #fdecec;
@@ -35,8 +39,13 @@
   --office-medical: #be123c;
   --office-medical-bg: #ffffff;
 
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius: 10px;
   --radius-lg: 14px;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --focus-ring: 0 0 0 3px rgba(27, 138, 76, 0.2);
 }
 
 * {
@@ -55,36 +64,60 @@ body {
 button {
   cursor: pointer;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 14px;
   font-size: 14px;
+  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.btn-primary,
 .btn-green {
-  background-color: #1B8A4C;
+  background-color: var(--brand);
   color: white;
 }
 
+.btn-primary:hover,
 .btn-green:hover {
-  background-color: #136835;
+  background-color: var(--brand-dark);
 }
 
+.btn-danger,
 .btn-red {
-  background-color: #e74c3c;
+  background-color: var(--danger);
   color: white;
 }
 
+.btn-danger:hover,
 .btn-red:hover {
-  background-color: #c0392b;
+  background-color: #b91c1c;
 }
 
+.btn-secondary,
 .btn-gray {
-  background-color: #ccc;
-  color: #333;
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
 }
 
+.btn-secondary:hover,
 .btn-gray:hover {
-  background-color: #bbb;
+  background-color: var(--surface-muted);
+  border-color: var(--text-muted);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* ── Table ───────────────────────────────────────────── */
@@ -92,7 +125,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   background-color: white;
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -100,11 +133,11 @@ th, td {
   text-align: left;
   padding: 12px 14px;
   font-size: 14px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border);
 }
 
 th {
-  background-color: #f0f0f0;
+  background-color: var(--surface-muted);
   font-weight: 700;
   color: #555;
 }
@@ -121,7 +154,7 @@ tr:hover td {
 .badge {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
 }
@@ -288,9 +321,9 @@ tr:hover td {
 /* ── Card ────────────────────────────────────────────── */
 .card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 20px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ── Form ────────────────────────────────────────────── */
@@ -311,8 +344,8 @@ tr:hover td {
 .form-group textarea {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   outline: none;
 }
@@ -320,7 +353,7 @@ tr:hover td {
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: #1B8A4C;
+  border-color: var(--brand);
 }
 
 .form-group textarea {
