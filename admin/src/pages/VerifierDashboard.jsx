@@ -172,6 +172,30 @@ export default function VerifierDashboard() {
     }
   }
 
+  
+  async function submitReassign() {
+    if (checked.length === 0) {
+      setToast({ type: 'error', text: 'Select at least one office to (re)assign.' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await axios.put(
+        `${API}/api/verifier/reports/${selected.id}/reassign`,
+        { officeRoles: checked },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchVerified();
+      setSelected(null);
+      setToast({ type: 'success', text: 'Report reassigned.' });
+    } catch (err) {
+      console.log(err);
+      setToast({ type: 'error', text: err.response?.data?.message || 'Failed to reassign report.' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
 
   const activeList = view === 'pending' ? pending : verified;
   const filtered = activeList.filter(r =>
@@ -432,8 +456,32 @@ export default function VerifierDashboard() {
                       ))
                     : '—'}
                 </div>
+
+                <div className="detail-label" style={{ marginTop: 14 }}>
+                  Reassign / escalate to office(s)
+                </div>
+                <div className="office-picker">
+                  {OFFICE_OPTIONS.map(opt => (
+                    <button
+                      type="button"
+                      key={opt.value}
+                      className={`office-option office-option-${opt.value} ${checked.includes(opt.value) ? 'selected' : ''}`}
+                      onClick={() => toggleOffice(opt.value)}
+                    >
+                      <span className="office-option-icon"><opt.Icon width={18} height={18} /></span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="detail-value" style={{ marginTop: 4, opacity: 0.7, fontSize: 12 }}>
+                  Picking an office already listed above re-forwards / escalates it instead of adding a duplicate.
+                </div>
+
                 <div className="action-buttons detail-modal-actions">
                   <button className="btn-gray" onClick={() => setSelected(null)}>Close</button>
+                  <button className="btn-green" onClick={submitReassign} disabled={submitting}>
+                    {submitting ? <><span className="spinner" /> Submitting...</> : 'Reassign / Escalate'}
+                  </button>
                 </div>
               </>
             ) : (
