@@ -597,3 +597,22 @@ tr:hover td {
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* Desktop navigation reserves a permanent workspace column. On smaller
+   screens the sidebar remains an overlay drawer, so content keeps its full width. */
+.app-content {
+  min-height: calc(100vh - 64px);
+  margin-left: 240px;
+  transition: margin-left 0.2s ease;
+}
+
+.sidebar-is-collapsed .app-content {
+  margin-left: 0;
+}
+
+@media (max-width: 860px) {
+  .app-content,
+  .sidebar-is-collapsed .app-content {
+    margin-left: 0;
+  }
+}

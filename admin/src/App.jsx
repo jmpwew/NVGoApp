@@ -40,8 +40,17 @@ function homeRouteForRole(role) {
 
 function Layout({ children }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [badges, setBadges]   = useState({ pendingReports: 0, unreadSupport: 0 });
   const role = getStoredRole();
+
+  function toggleNavigation() {
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      setNavOpen(open => !open);
+      return;
+    }
+    setSidebarCollapsed(collapsed => !collapsed);
+  }
 
   useEffect(() => {
   
@@ -72,12 +81,18 @@ function Layout({ children }) {
   }, [role]);
 
   return (
-    <div>
-      <Header onToggleNav={() => setNavOpen(o => !o)} />
-      <Sidebar isOpen={navOpen} onClose={() => setNavOpen(false)} badges={badges} role={role} />
-      <div style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className={sidebarCollapsed ? 'app-shell sidebar-is-collapsed' : 'app-shell'}>
+      <Header onToggleNav={toggleNavigation} />
+      <Sidebar
+        isOpen={navOpen}
+        isCollapsed={sidebarCollapsed}
+        onClose={() => setNavOpen(false)}
+        badges={badges}
+        role={role}
+      />
+      <main className="app-content">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

@@ -14,14 +14,17 @@ const ROLE_LABELS = {
   medical: 'Medical',
 };
 
-export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }) {
+export default function Sidebar({ isOpen, isCollapsed, onClose, badges = {}, role = 'admin' }) {
   const { pendingReports = 0, unreadSupport = 0 } = badges;
 
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
-      <div className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+      <aside
+        className={`sidebar ${isOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}
+        aria-label="Primary navigation"
+      >
         <div className="sidebar-section-label">{ROLE_LABELS[role] || 'Main'}</div>
         <nav>
           {role === 'admin' && (
@@ -82,7 +85,7 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
             </NavLink>
           )}
         </nav>
-      </div>
+      </aside>
     </>
   );
 }
