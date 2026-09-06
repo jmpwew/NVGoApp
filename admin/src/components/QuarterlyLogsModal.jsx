@@ -193,6 +193,28 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                   </table>
                 )}
 
+                {data.barangayBreakdown && data.barangayBreakdown.length > 0 && (
+                  <>
+                    <h2 style={{ fontSize: 14, marginTop: 18 }}>{data.quarterLabel} {'\u2014'} resolved reports by barangay</h2>
+                    <table className="quarterly-breakdown-table quarterly-log-table">
+                      <thead>
+                        <tr>
+                          <th>Barangay</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.barangayBreakdown.map(b => (
+                          <tr key={b.barangay}>
+                            <td>{b.barangay}</td>
+                            <td><strong>{b.count}</strong></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
+
                 {data.reports && data.reports.length > 0 && (
                   <>
                     <h2 style={{ fontSize: 14, marginTop: 18 }}>{data.quarterLabel} {'\u2014'} report log</h2>
@@ -201,6 +223,7 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                         <tr>
                           <th>Date verified</th>
                           <th>Report type</th>
+                          <th>Barangay</th>
                           <th>Location</th>
                         </tr>
                       </thead>
@@ -209,6 +232,7 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                           <tr key={r.id}>
                             <td>{r.verifiedAt ? new Date(r.verifiedAt).toLocaleDateString() : '\u2014'}</td>
                             <td>{r.typeLabel}</td>
+                            <td>{r.barangay || '\u2014'}</td>
                             <td>
                               {r.location
                                 ? r.location
