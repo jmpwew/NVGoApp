@@ -188,7 +188,6 @@ export default function AnnouncementsPage() {
               const um = URGENCY_META[a.urgency] || URGENCY_META.info;
               return (
                 <tr key={a.id}>
-                  <td>{a.id}</td>
                   <td>
                     {a.image ? (
                       <img src={getImageUrl(a.image)} alt="announcement" className="table-thumbnail" />

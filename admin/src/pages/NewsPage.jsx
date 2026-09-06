@@ -183,7 +183,7 @@ export default function NewsPage() {
           ) : (
             filteredNews.map(n => (
               <tr key={n.id}>
-                <td>{n.id}</td>
+               
                 <td>
                   {n.image ? (
                     <img
