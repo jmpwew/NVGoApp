@@ -53,6 +53,9 @@ export default function Sidebar({ isOpen, onClose, badges = {}, role = 'admin' }
               <NavLink to="/transparency"  onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 <span>Transparency Board</span>
               </NavLink>
+              <NavLink to="/audit-logs"    onClick={onClose} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                <span>Audit Logs</span>
+              </NavLink>
             </>
           )}
 

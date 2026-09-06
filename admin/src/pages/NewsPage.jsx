@@ -22,6 +22,7 @@ export default function NewsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
 
   const token = localStorage.getItem('token');
 
@@ -114,10 +115,12 @@ export default function NewsPage() {
     setDeleteError('');
     try {
       await axios.delete(`${API}/api/admin/news/${deleteTarget.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason.trim() },
       });
       setNewsList(prev => prev.filter(n => n.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteReason('');
     } catch (err) {
       console.log(err);
       setDeleteError(err.response?.data?.message || 'Failed to delete news.');
@@ -175,7 +178,7 @@ export default function NewsPage() {
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button className="btn-gray" onClick={() => startEdit(n)}>Edit</button>
-                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(n); }}>Delete</button>
+                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(n); }}>Delete</button>
                   </div>
                 </td>
               </tr>
@@ -283,8 +286,13 @@ export default function NewsPage() {
         confirmLabel="Delete"
         tone="danger"
         loading={deleting}
+        requireReason
+        reasonLabel="Reason for deletion (required)"
+        reasonPlaceholder="e.g. Outdated, published in error, duplicate..."
+        reasonValue={deleteReason}
+        onReasonChange={setDeleteReason}
         onConfirm={confirmDelete}
-        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); setDeleteReason(''); }}
       />
     </div>
   );

@@ -11,6 +11,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import SupportPage from './pages/SupportPage';
 import HotlinesPage from './pages/HotlinesPage';
 import TransparencyBoardPage from './pages/TransparencyBoardPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountPage from './pages/AccountPage';
 import VerifierDashboard from './pages/VerifierDashboard';
@@ -109,6 +110,7 @@ export default function App() {
         <Route path="/support" element={<RoleRoute allow={['admin']}><SupportPage /></RoleRoute>} />
         <Route path="/hotlines" element={<RoleRoute allow={['admin']}><HotlinesPage /></RoleRoute>} />
         <Route path="/transparency" element={<RoleRoute allow={['admin']}><TransparencyBoardPage /></RoleRoute>} />
+        <Route path="/audit-logs" element={<RoleRoute allow={['admin']}><AuditLogsPage /></RoleRoute>} />
 
         {/* Verifier */}
         <Route path="/verifier"  element={<RoleRoute allow={['verifier']}><VerifierDashboard /></RoleRoute>} />

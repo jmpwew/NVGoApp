@@ -29,6 +29,7 @@ export default function HotlinesPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
 
   const token = localStorage.getItem('token');
 
@@ -90,10 +91,12 @@ export default function HotlinesPage() {
     setDeleteError('');
     try {
       await axios.delete(`${API}/api/hotlines/${deleteTarget.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason.trim() },
       });
       setHotlines(prev => prev.filter(h => h.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteReason('');
     } catch (err) {
       console.log(err);
       setDeleteError(err.response?.data?.message || 'Failed to delete hotline.');
@@ -143,7 +146,7 @@ export default function HotlinesPage() {
                   <td>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button className="btn-gray" onClick={() => startEdit(h)}>Edit</button>
-                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(h); }}>Delete</button>
+                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(h); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -221,8 +224,13 @@ export default function HotlinesPage() {
         confirmLabel="Delete"
         tone="danger"
         loading={deleting}
+        requireReason
+        reasonLabel="Reason for deletion (required)"
+        reasonPlaceholder="e.g. Number decommissioned, duplicate entry..."
+        reasonValue={deleteReason}
+        onReasonChange={setDeleteReason}
         onConfirm={confirmDelete}
-        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); setDeleteReason(''); }}
       />
     </div>
   );

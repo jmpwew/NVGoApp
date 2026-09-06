@@ -41,6 +41,7 @@ export default function UsersPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
 
   const token = localStorage.getItem('token');
   const currentAdmin = (() => {
@@ -105,10 +106,12 @@ export default function UsersPage() {
     setDeleteError('');
     try {
       await axios.delete(`${API}/api/admin/users/${deleteTarget.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason.trim() },
       });
       setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteReason('');
     } catch (err) {
       console.log(err);
       setDeleteError(err.response?.data?.message || 'Failed to delete user.');
@@ -196,7 +199,7 @@ export default function UsersPage() {
                   {u.id === currentAdmin.id ? (
                     <span className="you-tag">You</span>
                   ) : (
-                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(u); }}>
+                    <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(u); }}>
                       Delete
                     </button>
                   )}
@@ -310,8 +313,13 @@ export default function UsersPage() {
         confirmLabel="Delete"
         tone="danger"
         loading={deleting}
+        requireReason
+        reasonLabel="Reason for deletion (required)"
+        reasonPlaceholder="e.g. Staff member offboarded, duplicate account, requested by user..."
+        reasonValue={deleteReason}
+        onReasonChange={setDeleteReason}
         onConfirm={confirmDelete}
-        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); setDeleteReason(''); }}
       />
     </div>
   );

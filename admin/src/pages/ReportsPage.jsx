@@ -92,9 +92,15 @@ export default function ReportsPage() {
 
   async function deleteReport(id) {
     if (!confirm('Delete this report?')) return;
+    const reason = prompt('Reason for deleting this report (required for the audit log):');
+    if (!reason || !reason.trim()) {
+      setToast({ type: 'error', text: 'Deletion cancelled — a reason is required.' });
+      return;
+    }
     try {
       await axios.delete(`${API}/api/admin/reports/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: reason.trim() },
       });
       setReports(prev => prev.filter(r => r.id !== id));
       setToast({ type: 'success', text: 'Report deleted.' });

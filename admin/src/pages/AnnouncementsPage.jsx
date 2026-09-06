@@ -51,6 +51,7 @@ export default function AnnouncementsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
 
   const token = localStorage.getItem('token');
 
@@ -143,10 +144,12 @@ export default function AnnouncementsPage() {
     setDeleteError('');
     try {
       await axios.delete(`${API}/api/admin/announcements/${deleteTarget.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason.trim() },
       });
       setList(prev => prev.filter(a => a.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setDeleteReason('');
     } catch (err) {
       console.log(err);
       setDeleteError(err.response?.data?.message || 'Failed to delete announcement.');
@@ -217,7 +220,7 @@ export default function AnnouncementsPage() {
                   <td>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button className="btn-gray" onClick={() => startEdit(a)}>Edit</button>
-                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteTarget(a); }}>Delete</button>
+                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(a); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -346,8 +349,13 @@ export default function AnnouncementsPage() {
         confirmLabel="Delete"
         tone="danger"
         loading={deleting}
+        requireReason
+        reasonLabel="Reason for deletion (required)"
+        reasonPlaceholder="e.g. Event passed, posted in error, superseded..."
+        reasonValue={deleteReason}
+        onReasonChange={setDeleteReason}
         onConfirm={confirmDelete}
-        onCancel={() => { setDeleteTarget(null); setDeleteError(''); }}
+        onCancel={() => { setDeleteTarget(null); setDeleteError(''); setDeleteReason(''); }}
       />
     </div>
   );
