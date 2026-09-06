@@ -108,7 +108,7 @@ export default function AuditLogsPage() {
 
   useEffect(() => {
     fetchLogs(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [filters]);
 
   function updateFilter(key, value) {

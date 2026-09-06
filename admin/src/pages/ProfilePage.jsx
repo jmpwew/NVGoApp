@@ -8,11 +8,7 @@ import {
   MapPinIcon, ShieldIcon, CheckCircleIcon,
 } from '../components/Icons';
 
-// Admin-only page. Verifier/police/bfp/medical are shared office logins and
-// use AccountPage.jsx (route: /account) instead — see App.jsx.
 
-// Inlined locally because Icons.jsx does not export these — avoids
-// "X is not exported by Icons.jsx" build failures on Vercel.
 function CameraIcon(props) {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -105,11 +101,11 @@ export default function ProfilePage() {
   const [preview, setPreview]         = useState(null);
   const [currentImage, setCurrentImage] = useState(stored.image || null);
   const [saving, setSaving]           = useState(false);
-  const [message, setMessage]         = useState(null); // { type: 'success'|'error', text }
+  const [message, setMessage]         = useState(null); 
 
   const [pwForm, setPwForm]           = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving]       = useState(false);
-  const [pwMessage, setPwMessage]     = useState(null); // { type: 'success'|'error', text }
+  const [pwMessage, setPwMessage]     = useState(null); 
   const [changingPw, setChangingPw]   = useState(false);
 
   const fileInputRef = useRef(null);
