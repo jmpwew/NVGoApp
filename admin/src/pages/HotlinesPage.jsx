@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import './HotlinesPage.css';
 
 import { API } from '../config';
 import ConfirmModal from '../components/ConfirmModal';
+import { PhoneIcon } from '../components/Icons';
 
 const emptyForm = { name: '', number: '', category: 'General' };
 
@@ -31,11 +32,25 @@ export default function HotlinesPage() {
   const [deleteError, setDeleteError] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
 
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
   const token = localStorage.getItem('token');
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return hotlines;
+    return hotlines.filter(h =>
+      h.name.toLowerCase().includes(q) ||
+      h.number.toLowerCase().includes(q) ||
+      h.category.toLowerCase().includes(q)
+    );
+  }, [hotlines, search]);
 
   useEffect(() => { fetchHotlines(); }, []);
 
   async function fetchHotlines() {
+    setLoading(true);
     try {
       const res = await axios.get(`${API}/api/hotlines`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -43,6 +58,8 @@ export default function HotlinesPage() {
       setHotlines(res.data);
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -106,55 +123,100 @@ export default function HotlinesPage() {
   }
 
   return (
-    <div className="page">
-      <div className="section-header">
-        <h1>Emergency Hotlines</h1>
+    <div className="page hotlines-page">
+      <div className="page-header-row">
+        <div>
+          <h1>Emergency Hotlines</h1>
+          <p className="page-subtitle">Numbers residents see in the mobile app's emergency screen.</p>
+        </div>
         <button className="btn-green" onClick={() => { setForm(emptyForm); setEditingId(null); setFormError(''); setShowForm(true); }}>
           + Add Hotline
         </button>
       </div>
 
-      {/* Table */}
-      <table>
-        <thead>
-          <tr>
-          
-            <th>Name</th>
-            <th>Number</th>
-            <th>Category</th>
-            <th>Date Added</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {hotlines.length === 0 ? (
-            <tr><td colSpan="6" style={{ textAlign: 'center', color: '#aaa' }}>No hotlines yet.</td></tr>
-          ) : (
-            hotlines.map(h => {
-              const cc = categoryColors[h.category] || categoryColors.General;
-              return (
-                <tr key={h.id}>
-                 
-                  <td style={{ fontWeight: 600 }}>{h.name}</td>
-                  <td style={{ fontFamily: 'monospace', fontSize: 14 }}>{h.number}</td>
-                  <td>
-                    <span className="badge" style={{ backgroundColor: cc.bg, color: cc.color }}>
-                      {h.category}
-                    </span>
-                  </td>
-                  <td>{new Date(h.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button className="btn-gray" onClick={() => startEdit(h)}>Edit</button>
-                      <button className="btn-red" onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(h); }}>Delete</button>
-                    </div>
-                  </td>
+      <div className="filter-pill-bar">
+        <div className="search-input-wrap">
+          <input
+            type="text"
+            placeholder="Search by name, number, or category..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="filter-pill-count">{filtered.length} hotline{filtered.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        {loading ? (
+          <table>
+            <tbody>
+              {[...Array(4)].map((_, i) => (
+                <tr key={i} className="skeleton-row">
+                  <td colSpan="5"><div className="skeleton-bar" /></td>
                 </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+              ))}
+            </tbody>
+          </table>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📞</div>
+            <div className="empty-state-title">
+              {hotlines.length === 0 ? 'No hotlines yet' : 'No hotlines match your search'}
+            </div>
+            <div className="empty-state-text">
+              {hotlines.length === 0
+                ? 'Add the first emergency number residents will see in the app.'
+                : 'Try a different name, number, or category.'}
+            </div>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Number</th>
+                <th>Category</th>
+                <th>Date Added</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(h => {
+                const cc = categoryColors[h.category] || categoryColors.General;
+                return (
+                  <tr key={h.id}>
+                    <td style={{ fontWeight: 600 }}>{h.name}</td>
+                    <td style={{ fontFamily: 'monospace', fontSize: 14 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
+                        <PhoneIcon width={14} height={14} />
+                        {h.number}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="badge" style={{ backgroundColor: cc.bg, color: cc.color }}>
+                        {h.category}
+                      </span>
+                    </td>
+                    <td>{new Date(h.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn-gray" onClick={() => startEdit(h)}>Edit</button>
+                        <button
+                          className="btn-gray"
+                          style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)' }}
+                          onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(h); }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       {/* Add/Edit hotline modal */}
       {showForm && (

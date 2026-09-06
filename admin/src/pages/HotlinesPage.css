@@ -1,3 +1,23 @@
+
+.hotlines-page .card {
+  overflow: hidden;
+}
+
+.hotlines-page .card > table {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.hotlines-page .card > table thead th:first-child,
+.hotlines-page .card > table tbody td:first-child {
+  padding-left: 20px;
+}
+
+.hotlines-page .card > table thead th:last-child,
+.hotlines-page .card > table tbody td:last-child {
+  padding-right: 20px;
+}
+
 .hotline-form {
   background-color: white;
   padding: 20px;
