@@ -154,10 +154,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="page">
-      <div className="section-header">
+      <div className="page-header-row">
         <div>
-          <h1 style={{ marginBottom: 4 }}>Notifications</h1>
-          <p style={{ color: '#6b7280', margin: 0, fontSize: 14 }}>
+          <h1>Notifications</h1>
+          <p className="page-subtitle">
             Send announcements, alerts, or updates to all users or a specific user.
           </p>
         </div>
@@ -209,8 +209,7 @@ export default function NotificationsPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button
-                        className="btn-blue"
-                        style={editBtnStyle}
+                        className="btn-gray"
                         onClick={(e) => { e.stopPropagation(); startEdit(n); }}
                       >
                         Edit
@@ -432,16 +431,6 @@ const secondaryBtnStyle = {
   borderRadius: 7,
   fontWeight: 600,
   fontSize: 14,
-  cursor: 'pointer',
-};
-const editBtnStyle = {
-  background: '#e8f4fd',
-  color: '#1a73e8',
-  border: 'none',
-  borderRadius: 6,
-  padding: '5px 10px',
-  fontSize: 12,
-  fontWeight: 600,
   cursor: 'pointer',
 };
 function alertStyle(bg, color) {

@@ -202,8 +202,7 @@ export default function HotlinesPage() {
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button className="btn-gray" onClick={() => startEdit(h)}>Edit</button>
                         <button
-                          className="btn-gray"
-                          style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)' }}
+                          className="btn-red"
                           onClick={() => { setDeleteError(''); setDeleteReason(''); setDeleteTarget(h); }}
                         >
                           Delete
