@@ -289,8 +289,11 @@ export default function VerifierDashboard() {
                 </div>
                 <div className="case-card-desc">{r.description}</div>
                 <div className="case-card-meta">
+                  {r.barangay && (
+                    <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />Brgy. {r.barangay}</span>
+                  )}
                   {r.location_note && (
-                    <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />{r.location_note}</span>
+                    <span className="case-card-meta-item">{!r.barangay && <MapPinIcon width={13} height={13} />}{r.location_note}</span>
                   )}
                   {r.images && r.images.length > 0 && (
                     <span className="case-card-meta-item"><PhotoIcon width={13} height={13} />{r.images.length}</span>
@@ -334,8 +337,11 @@ export default function VerifierDashboard() {
                     {r.report_type && (
                       <span className="case-card-meta-item">{REPORT_TYPE_LABELS[r.report_type] || r.report_type}</span>
                     )}
+                    {r.barangay && (
+                      <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />Brgy. {r.barangay}</span>
+                    )}
                     {r.location_note && (
-                      <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />{r.location_note}</span>
+                      <span className="case-card-meta-item">{!r.barangay && <MapPinIcon width={13} height={13} />}{r.location_note}</span>
                     )}
                     {(r.office_roles || []).map(role => (
                       <span key={role} className={`badge badge-office-${role}`}>{OFFICE_LABELS[role] || role}</span>
@@ -390,6 +396,10 @@ export default function VerifierDashboard() {
               <div>
                 <div className="detail-label">Contact</div>
                 <div className="detail-value">{selected.contact || '—'}</div>
+              </div>
+              <div>
+                <div className="detail-label">Barangay</div>
+                <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
               </div>
               <div>
                 <div className="detail-label">Location Note</div>
