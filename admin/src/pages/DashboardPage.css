@@ -32,18 +32,48 @@
   margin-bottom: 12px;
 }
 
+/* ── Metric tabs above the growth chart (same visual pattern as the
+   Reports status tabs, scoped here to avoid cross-page CSS coupling) ── */
+.chart-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-tab {
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.chart-tab:hover {
+  color: var(--brand);
+}
+
+.chart-tab.active {
+  color: var(--chart-accent, var(--brand-dark));
+  border-bottom-color: var(--chart-accent, var(--brand-dark));
+}
+
 .user-growth-chart {
   width: 100%;
   height: auto;
 }
 
 .user-growth-chart .bar {
-  fill: var(--brand-dark);
+  fill: var(--chart-accent, var(--brand-dark));
   transition: fill 0.15s ease;
 }
 
 .user-growth-chart .bar:hover {
-  fill: var(--brand);
+  fill: var(--chart-accent, var(--brand));
+  opacity: 0.85;
 }
 
 .user-growth-chart .axis-label {

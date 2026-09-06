@@ -1,4 +1,4 @@
-export default function UserGrowthChart({ months, counts }) {
+export default function UserGrowthChart({ months, counts, label = 'Bar chart of monthly counts for the current year' }) {
   const width   = 720;
   const height  = 240;
   const padding = { top: 20, right: 20, bottom: 28, left: 32 };
@@ -6,7 +6,7 @@ export default function UserGrowthChart({ months, counts }) {
   const chartH  = height - padding.top - padding.bottom;
 
   const max = Math.max(1, ...counts);
-  // round the axis ceiling up to a "nice" number
+
   const niceMax = Math.ceil(max / 5) * 5 || 5;
 
   const barSlot = chartW / counts.length;
@@ -19,7 +19,7 @@ export default function UserGrowthChart({ months, counts }) {
       className="user-growth-chart"
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label="Bar chart of new users per month for the current year"
+      aria-label={label}
     >
       {/* horizontal grid lines */}
       {Array.from({ length: gridLines + 1 }).map((_, i) => {

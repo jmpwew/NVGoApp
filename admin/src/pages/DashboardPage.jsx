@@ -13,27 +13,36 @@ function initials(name) {
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
 }
 
+const GROWTH_METRICS = [
+  { key: 'users',         label: 'Users',         noun: 'users',         color: 'var(--brand-dark)' },
+  { key: 'reports',       label: 'Reports',       noun: 'reports',       color: 'var(--danger)' },
+  { key: 'news',          label: 'News',          noun: 'news posts',    color: 'var(--info)' },
+  { key: 'announcements', label: 'Announcements', noun: 'announcements', color: '#c2410c' },
+];
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [stats, setStats]     = useState(null);
   const [reports, setReports] = useState([]);
   const [growth, setGrowth]   = useState(null);
+  const [growthLoading, setGrowthLoading] = useState(true);
+  const [metric, setMetric]   = useState('users');
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     fetchStats();
     fetchRecentReports();
-    fetchUserGrowth();
 
-    // Keep the metric cards and recent-reports list fresh without a manual
-    // refresh, same 5s cadence as ReportsPage/App.jsx. Growth chart is left
-    // out - monthly signup counts don't need second-by-second freshness.
     const interval = setInterval(() => {
       fetchStats();
       fetchRecentReports();
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    fetchGrowth(metric);
+  }, [metric]);
 
   async function fetchStats() {
     try {
@@ -58,14 +67,18 @@ export default function DashboardPage() {
     }
   }
 
-  async function fetchUserGrowth() {
+  async function fetchGrowth(m) {
+    setGrowthLoading(true);
     try {
       const res = await axios.get(`${API}/api/admin/users/growth`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: { metric: m },
       });
       setGrowth(res.data);
     } catch (err) {
       console.log(err);
+    } finally {
+      setGrowthLoading(false);
     }
   }
 
@@ -110,17 +123,35 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* User growth chart */}
+      {/* Growth chart with metric tabs */}
       <div className="chart-section">
-        <h2>User growth</h2>
-        <div className="chart-subtitle">
-          New users per month{growth ? ` — ${growth.year}` : ''}
+        <h2>Growth</h2>
+        <div className="chart-tabs">
+          {GROWTH_METRICS.map(m => (
+            <button
+              key={m.key}
+              className={`chart-tab ${metric === m.key ? 'active' : ''}`}
+              style={metric === m.key ? { '--chart-accent': m.color } : undefined}
+              onClick={() => setMetric(m.key)}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
-        {growth ? (
-          <UserGrowthChart months={growth.months} counts={growth.counts} />
-        ) : (
+        <div className="chart-subtitle">
+          New {GROWTH_METRICS.find(m => m.key === metric)?.noun} per month{growth ? ` — ${growth.year}` : ''}
+        </div>
+        {growthLoading || !growth ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
             Loading chart...
+          </div>
+        ) : (
+          <div style={{ '--chart-accent': GROWTH_METRICS.find(m => m.key === metric)?.color }}>
+            <UserGrowthChart
+              months={growth.months}
+              counts={growth.counts}
+              label={`Bar chart of new ${GROWTH_METRICS.find(m => m.key === metric)?.noun} per month for the current year`}
+            />
           </div>
         )}
       </div>
