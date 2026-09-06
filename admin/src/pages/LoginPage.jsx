@@ -131,7 +131,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="you@nuevavalencia.gov.ph"
+                    placeholder="admin@gmail.com"
                     autoComplete="email"
                     required
                   />
