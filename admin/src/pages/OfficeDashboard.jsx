@@ -310,8 +310,11 @@ export default function OfficeDashboard() {
                 </div>
                 <div className="case-card-desc">{a.description}</div>
                 <div className="case-card-meta">
+                  {a.barangay && (
+                    <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />Brgy. {a.barangay}</span>
+                  )}
                   {a.location_note && (
-                    <span className="case-card-meta-item"><MapPinIcon width={13} height={13} />{a.location_note}</span>
+                    <span className="case-card-meta-item">{!a.barangay && <MapPinIcon width={13} height={13} />}{a.location_note}</span>
                   )}
                   {a.action_note && (
                     <span className="case-card-meta-item"><ClockIcon width={13} height={13} />{a.action_note}</span>
@@ -380,6 +383,10 @@ export default function OfficeDashboard() {
               <div>
                 <div className="detail-label">Contact</div>
                 <div className="detail-value">{selected.contact || '—'}</div>
+              </div>
+              <div>
+                <div className="detail-label">Barangay</div>
+                <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
               </div>
               <div>
                 <div className="detail-label">Location Note</div>
