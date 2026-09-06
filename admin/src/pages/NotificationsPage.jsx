@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 
 import { API } from '../config';
@@ -35,9 +35,21 @@ export default function NotificationsPage() {
   const [deleteError, setDeleteError] = useState('');
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [search, setSearch] = useState('');
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return notifications;
+    return notifications.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.body || '').toLowerCase().includes(q) ||
+      (n.type || '').toLowerCase().includes(q) ||
+      getUserNamePlain(n.user_id, users).toLowerCase().includes(q)
+    );
+  }, [notifications, users, search]);
 
   useEffect(() => {
     fetchAll();
@@ -153,7 +165,29 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page notifications-page">
+      {/* Scoped styles for this page — table sits inside a .card wrapper
+          (see index.css), so it should be flush/borderless, clipped to the
+          card's own radius. Mirrors the pattern used on HotlinesPage. */}
+      <style>{`
+        .notifications-page .card {
+          overflow: hidden;
+        }
+        .notifications-page .card > table {
+          border-radius: 0;
+          box-shadow: none;
+          table-layout: fixed;
+        }
+        .notifications-page .card > table thead th:first-child,
+        .notifications-page .card > table tbody td:first-child {
+          padding-left: 20px;
+        }
+        .notifications-page .card > table thead th:last-child,
+        .notifications-page .card > table tbody td:last-child {
+          padding-right: 20px;
+        }
+      `}</style>
+
       <div className="page-header-row">
         <div>
           <h1>Notifications</h1>
@@ -167,67 +201,97 @@ export default function NotificationsPage() {
       </div>
 
       {/* ── Notification History ── */}
-      {loading ? (
-        <p style={{ color: '#6b7280' }}>Loading…</p>
-      ) : notifications.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>No notifications sent yet.</p>
-      ) : (
-        <table style={{ tableLayout: 'fixed', width: '100%' }}>
-          <thead>
-            <tr>
-             
-              <th style={{ width: 80 }}>Type</th>
-              <th style={{ width: 150 }}>Title</th>
-              <th>Message</th>
-              <th style={{ width: 170 }}>Recipient</th>
-              <th style={{ width: 150 }}>Sent At</th>
-              <th style={{ width: 130 }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {notifications.map(n => {
-              const tb = TYPE_BADGE[n.type] ?? TYPE_BADGE.info;
-              return (
-                <tr
-                  key={n.id}
-                  onClick={() => setViewing(n)}
-                  style={{ cursor: 'pointer', background: editingId === n.id ? '#f1f8f4' : undefined }}
-                  title="Click to view full notification"
-                >
-                 
-                  <td>
-                    <span style={badgeStyle(tb.bg, tb.color)}>
-                      {n.type}
-                    </span>
-                  </td>
-                  <td style={cellClampStyle(600)}>{truncate(n.title, 40)}</td>
-                  <td style={cellClampStyle(400, '#374151')}>
-                    {truncate(n.body, 80)}
-                  </td>
-                  <td style={cellClampStyle(400)}>{getUserName(n.user_id)}</td>
-                  <td>{new Date(n.created_at).toLocaleString()}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button
-                        className="btn-gray"
-                        onClick={(e) => { e.stopPropagation(); startEdit(n); }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn-red"
-                        onClick={(e) => { e.stopPropagation(); setDeleteError(''); setDeleteTarget(n); }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+      <div className="filter-pill-bar">
+        <div className="search-input-wrap">
+          <input
+            type="text"
+            placeholder="Search by title, message, type, or recipient..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="filter-pill-count">{filtered.length} notification{filtered.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className="card notifications-card" style={{ padding: 0 }}>
+        {loading ? (
+          <table>
+            <tbody>
+              {[...Array(4)].map((_, i) => (
+                <tr key={i} className="skeleton-row">
+                  <td colSpan="6"><div className="skeleton-bar" /></td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              ))}
+            </tbody>
+          </table>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🔔</div>
+            <div className="empty-state-title">
+              {notifications.length === 0 ? 'No notifications sent yet' : 'No notifications match your search'}
+            </div>
+            <div className="empty-state-text">
+              {notifications.length === 0
+                ? 'Notifications you send will show up here.'
+                : 'Try a different title, message, or recipient.'}
+            </div>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 80 }}>Type</th>
+                <th style={{ width: 160 }}>Title</th>
+                <th style={{ width: 320 }}>Message</th>
+                <th style={{ width: 170 }}>Recipient</th>
+                <th style={{ width: 150 }}>Sent At</th>
+                <th style={{ width: 130 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(n => {
+                const tb = TYPE_BADGE[n.type] ?? TYPE_BADGE.info;
+                return (
+                  <tr
+                    key={n.id}
+                    onClick={() => setViewing(n)}
+                    style={{ cursor: 'pointer', background: editingId === n.id ? '#f1f8f4' : undefined }}
+                    title="Click to view full notification"
+                  >
+                    <td>
+                      <span style={badgeStyle(tb.bg, tb.color)}>
+                        {n.type}
+                      </span>
+                    </td>
+                    <td style={cellClampStyle(600)}>{truncate(n.title, 40)}</td>
+                    <td style={cellClampStyle(400, '#374151')}>
+                      {truncate(n.body, 80)}
+                    </td>
+                    <td style={cellClampStyle(400)}>{getUserName(n.user_id)}</td>
+                    <td>{new Date(n.created_at).toLocaleString()}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          className="btn-gray"
+                          onClick={(e) => { e.stopPropagation(); startEdit(n); }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn-red"
+                          onClick={(e) => { e.stopPropagation(); setDeleteError(''); setDeleteTarget(n); }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       {/* ── Send / Edit modal ── */}
       {showForm && (
@@ -397,6 +461,12 @@ export default function NotificationsPage() {
   );
 }
 
+
+function getUserNamePlain(userId, users) {
+  if (!userId) return 'All Users (Broadcast)';
+  const u = users.find(u => u.id === userId);
+  return u ? `${u.firstname} ${u.lastname}` : `User #${userId}`;
+}
 
 const rowStyle   = { display: 'flex', gap: 16, flexWrap: 'wrap' };
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 14, flex: 1, minWidth: 200 };
