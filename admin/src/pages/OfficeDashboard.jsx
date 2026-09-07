@@ -13,12 +13,12 @@ import { getImageUrl } from '../getImageUrl';
 const OFFICE_META = {
   police:  { label: 'Police',               Icon: ShieldIcon, className: 'police' },
   bfp:     { label: 'BFP (Fire)',            Icon: FlameIcon,  className: 'bfp' },
-  medical: { label: 'Medical / Ambulance',   Icon: CrossIcon,  className: 'medical' },
+  medical: { label: 'MDRRMO',   Icon: CrossIcon,  className: 'medical' },
 };
 
 const STATUS_LABELS = {
   ongoing:    'Ongoing',
-  dispatched: 'Unit Dispatched',
+  dispatched: 'Unit Dispatched',  
   resolved:   'Resolved',
 };
 
