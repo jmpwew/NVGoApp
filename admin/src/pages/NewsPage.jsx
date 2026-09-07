@@ -169,7 +169,6 @@ export default function NewsPage() {
       <table>
         <thead>
           <tr>
-            <th>News # </th>
             <th>Image</th>
             <th>Title</th>
             <th>Category</th>

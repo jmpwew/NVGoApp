@@ -170,7 +170,6 @@ export default function AnnouncementsPage() {
       <table>
         <thead>
           <tr>
-            <th>#</th>
             <th>Image</th>
             <th>Title</th>
             <th>Urgency</th>
