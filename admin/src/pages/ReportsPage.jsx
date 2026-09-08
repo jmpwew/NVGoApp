@@ -159,7 +159,6 @@ export default function ReportsPage() {
           <h1>Reports</h1>
         </div>
         <div className="live-chip">
-          <span className={`live-chip-dot ${reports.filter(r => r.status === 'pending').length === 0 ? 'calm' : ''}`} />
           {loading ? 'Loading…' : `${reports.filter(r => r.status === 'pending').length} pending`}
         </div>
       </div>
