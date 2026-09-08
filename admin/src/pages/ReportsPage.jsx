@@ -434,13 +434,15 @@ export default function ReportsPage() {
             </div>
 
             <div className="action-buttons detail-modal-actions">
-              <button
-                className="btn-gray"
-                onClick={() => { updateStatus(selectedReport.id, 'pending'); setSelectedReport(null); }}
-                title="Manual override — normally status is driven by verifier/office actions"
-              >
-                Reset to Pending
-              </button>
+              {selectedReport.status !== 'pending' && (
+                <button
+                  className="btn-gray"
+                  onClick={() => { updateStatus(selectedReport.id, 'pending'); setSelectedReport(null); }}
+                  title="Manual override — normally status is driven by verifier/office actions"
+                >
+                  Reset to Pending
+                </button>
+              )}
               {selectedReport.status !== 'resolved' && (
                 <button
                   className="btn-green"
