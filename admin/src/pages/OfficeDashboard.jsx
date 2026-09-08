@@ -463,7 +463,7 @@ export default function OfficeDashboard() {
                 placeholder="e.g. Unit dispatched, arrived on scene..."
                 rows={3}
               />
-              <div className="office-note-hint">Short status update the User will see in the report trail.</div>
+              <div className="office-note-hint"></div>
             </div>
 
             <div className="action-buttons detail-modal-actions">
