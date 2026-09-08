@@ -441,6 +441,15 @@ export default function ReportsPage() {
               >
                 Reset to Pending
               </button>
+              {selectedReport.status !== 'resolved' && (
+                <button
+                  className="btn-green"
+                  onClick={() => { updateStatus(selectedReport.id, 'resolved'); setSelectedReport(null); }}
+                  title="Manual override — normally status is driven by verifier/office actions"
+                >
+                  Mark Resolved
+                </button>
+              )}
               <button
                 className="btn-red"
                 onClick={() => requestDelete(selectedReport)}
