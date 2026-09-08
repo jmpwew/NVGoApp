@@ -214,7 +214,7 @@ export default function OfficeDashboard() {
   const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
-    <div className="page">
+    <div className={`page office-scope-${meta.className}`}>
       <div className="office-header" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className={`office-header-icon ${meta.className}`}>
@@ -222,6 +222,7 @@ export default function OfficeDashboard() {
           </div>
           <div>
             <h1>{meta.label} — response console</h1>
+            <div className="office-header-subtitle">Reports assigned to your office appear here</div>
           </div>
         </div>
         <QuarterlyLogsModal endpoint={`${API}/api/office/reports/quarterly`} />
@@ -232,7 +233,7 @@ export default function OfficeDashboard() {
           <div className="metric-card-label">Total assigned</div>
           <div className="metric-card-value">{assignments.length}</div>
         </div>
-        <div className={`metric-card office-metric-ongoing-${meta.className}`}>
+        <div className={`metric-card office-metric-ongoing office-metric-ongoing-${meta.className}`}>
           <div className="metric-card-label">Ongoing</div>
           <div className="metric-card-value">{ongoingCount}</div>
         </div>
@@ -455,7 +456,7 @@ export default function OfficeDashboard() {
                 </>
               )}
 
-              <div className="detail-label" style={{ marginTop: 16 }}>Action note (visible to user)</div>
+              <div className="detail-label" style={{ marginTop: 16 }}>Action note (visible to Admin)</div>
               <textarea
                 className="office-note-textarea"
                 value={note}
@@ -463,7 +464,7 @@ export default function OfficeDashboard() {
                 placeholder="e.g. Unit dispatched, arrived on scene..."
                 rows={3}
               />
-              <div className="office-note-hint"></div>
+              <div className="office-note-hint">Short status update the Main Admin will see in the report trail.</div>
             </div>
 
             <div className="action-buttons detail-modal-actions">

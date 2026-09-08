@@ -18,25 +18,65 @@
 .office-header-icon.police  { background-color: var(--office-police-bg); color: var(--office-police); }
 .office-header-icon.bfp    { background-color: var(--office-bfp-bg); color: var(--office-bfp); }
 
-/* Medical keeps a white surface with a red outline, like a medical cross,
-   instead of a filled tint — reads calmer while staying instantly recognizable */
+
 .office-header-icon.medical {
   background-color: var(--office-medical-bg);
   color: var(--office-medical);
   border: 1.5px solid var(--office-medical);
 }
 
-.office-metric-ongoing-police  { background-color: var(--office-police-bg); }
+.office-metric-ongoing-police  { background-color: var(--surface); border: 1.5px solid var(--office-police); }
 .office-metric-ongoing-police .metric-card-value { color: var(--office-police); }
 
-.office-metric-ongoing-bfp { background-color: var(--office-bfp-bg); }
+.office-metric-ongoing-bfp { background-color: var(--surface); border: 1.5px solid var(--office-bfp); }
 .office-metric-ongoing-bfp .metric-card-value { color: var(--office-bfp); }
 
 .office-metric-ongoing-medical {
   background-color: var(--surface);
-  border: 1px solid var(--office-medical);
+  border: 1.5px solid var(--office-medical);
 }
 .office-metric-ongoing-medical .metric-card-value { color: var(--office-medical); }
+
+
+.office-scope-police .report-tab.active {
+  color: var(--office-police);
+  border-bottom-color: var(--office-police);
+}
+.office-scope-police .report-tab.active .report-tab-count {
+  background-color: var(--office-police-bg);
+  color: var(--office-police);
+}
+.office-scope-police .search-input-wrap input:focus {
+  border-color: var(--office-police);
+  box-shadow: 0 0 0 3px var(--office-police-bg);
+}
+
+.office-scope-bfp .report-tab.active {
+  color: var(--office-bfp);
+  border-bottom-color: var(--office-bfp);
+}
+.office-scope-bfp .report-tab.active .report-tab-count {
+  background-color: var(--office-bfp-bg);
+  color: var(--office-bfp);
+}
+.office-scope-bfp .search-input-wrap input:focus {
+  border-color: var(--office-bfp);
+  box-shadow: 0 0 0 3px var(--office-bfp-bg);
+}
+
+.office-scope-medical .report-tab.active {
+  color: var(--office-medical);
+  border-bottom-color: var(--office-medical);
+}
+.office-scope-medical .report-tab.active .report-tab-count {
+  background-color: var(--office-medical-bg);
+  color: var(--office-medical);
+  border: 1px solid var(--office-medical);
+}
+.office-scope-medical .search-input-wrap input:focus {
+  border-color: var(--office-medical);
+  box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12);
+}
 
 
 
