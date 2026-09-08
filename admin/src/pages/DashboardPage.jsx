@@ -92,9 +92,6 @@ export default function DashboardPage() {
           
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="live-chip">
-            {stats ? `${stats.pendingReports} pending` : 'Loading…'}
-          </div>
           <QuarterlyLogsModal endpoint={`${API}/api/admin/reports/quarterly`} />
         </div>
       </div>

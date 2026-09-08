@@ -158,9 +158,6 @@ export default function ReportsPage() {
         <div>
           <h1>Reports</h1>
         </div>
-        <div className="live-chip">
-          {loading ? 'Loading…' : `${reports.filter(r => r.status === 'pending').length} pending`}
-        </div>
       </div>
 
       <div className="report-tabs">
@@ -464,7 +461,7 @@ export default function ReportsPage() {
         loading={deleting}
         requireReason
         reasonLabel="Reason (required for the audit log)"
-        reasonPlaceholder="e.g. Duplicate of report #A-2201"
+        reasonPlaceholder="e.g. Duplicate of report"
         reasonValue={deleteReason}
         onReasonChange={setDeleteReason}
         onConfirm={confirmDelete}
