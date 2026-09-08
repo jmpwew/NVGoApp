@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
 import { REPORT_TYPES, REPORT_TYPE_LABELS } from '../constants/reportTypes';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
@@ -378,166 +378,183 @@ export default function VerifierDashboard() {
       {selected && (
         <div className="detail-modal-overlay" onClick={() => setSelected(null)}>
           <div className="detail-modal" onClick={e => e.stopPropagation()}>
-            <button className="map-modal-close" onClick={() => setSelected(null)}>✕</button>
-
-            <h2 className="detail-modal-title">{readOnly ? 'Verified Report' : 'Review Report'}</h2>
-            {readOnly && (
-              <div className="detail-value" style={{ marginBottom: 4 }}>
-                <span className="badge badge-verifier">verified</span>
-                {' '}Verified on {new Date(selected.verified_at).toLocaleString()}
+            <div className="detail-modal-header">
+              <div className="detail-modal-header-top">
+                <h2 className="detail-modal-title">{readOnly ? 'Verified Report' : 'Review Report'}</h2>
+                <button className="detail-modal-close" onClick={() => setSelected(null)} aria-label="Close">
+                  <CloseIcon width={14} height={14} />
+                </button>
               </div>
-            )}
-
-            <div className="detail-grid">
-              <div>
-                <div className="detail-label">Name</div>
-                <div className="detail-value">{selected.name || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Contact</div>
-                <div className="detail-value">{selected.contact || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Barangay</div>
-                <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Location Note</div>
-                <div className="detail-value">{selected.location_note || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Date Submitted</div>
-                <div className="detail-value">{new Date(selected.created_at).toLocaleString()}</div>
+              <div className="detail-modal-badges">
+                {readOnly && (
+                  <>
+                    <span className="badge badge-verifier">Verified</span>
+                    <span className="detail-value" style={{ fontSize: 12, color: '#999' }}>
+                      on {new Date(selected.verified_at).toLocaleString()}
+                    </span>
+                  </>
+                )}
+                {selected.is_urgent && (
+                  <span className="badge badge-urgent">
+                    <AlertTriangleIcon /> Urgent
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="detail-label">Description</div>
-            <div className="detail-description">{selected.description}</div>
-
-            {selected.images && selected.images.length > 0 && (
-              <>
-                <div className="detail-label">Images</div>
-                <div className="report-images">
-                  {selected.images.map((img, i) => (
-                    <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
-                      <img src={getImageUrl(img)} alt="report" />
-                    </a>
-                  ))}
+            <div className="detail-modal-body">
+              <div className="detail-grid">
+                <div className="detail-info-card">
+                  <div className="detail-label"><UserIcon width={13} height={13} /> Name</div>
+                  <div className="detail-value">{selected.name || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selected.videos && selected.videos.length > 0 && (
-              <>
-                <div className="detail-label">Videos</div>
-                <div className="report-videos">
-                  {selected.videos.map((vid, i) => (
-                    <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
-                  ))}
+                <div className="detail-info-card">
+                  <div className="detail-label"><PhoneIcon width={13} height={13} /> Contact</div>
+                  <div className="detail-value">{selected.contact || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selected.latitude && selected.longitude && (
-              <>
-                <div className="detail-label">Location</div>
-                <div className="detail-map">
-                  <iframe
-                    title="verify-report-map"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.006}%2C${selected.latitude - 0.006}%2C${Number(selected.longitude) + 0.006}%2C${Number(selected.latitude) + 0.006}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`}
-                  />
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Barangay</div>
+                  <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
                 </div>
-              </>
-            )}
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Location Note</div>
+                  <div className="detail-value">{selected.location_note || '—'}</div>
+                </div>
+                <div className="detail-info-card" style={{ gridColumn: '1 / -1' }}>
+                  <div className="detail-label"><ClockIcon width={13} height={13} /> Date Submitted</div>
+                  <div className="detail-value">{new Date(selected.created_at).toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div className="detail-label" style={{ marginTop: 0 }}>Description</div>
+              <div className="detail-description">{selected.description}</div>
+
+              {selected.images && selected.images.length > 0 && (
+                <>
+                  <div className="detail-label"><PhotoIcon width={13} height={13} /> Images</div>
+                  <div className="report-images">
+                    {selected.images.map((img, i) => (
+                      <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                        <img src={getImageUrl(img)} alt="report" />
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {selected.videos && selected.videos.length > 0 && (
+                <>
+                  <div className="detail-label"><VideoIcon width={13} height={13} /> Videos</div>
+                  <div className="report-videos">
+                    {selected.videos.map((vid, i) => (
+                      <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {selected.latitude && selected.longitude && (
+                <>
+                  <div className="detail-label">Location</div>
+                  <div className="detail-map">
+                    <iframe
+                      title="verify-report-map"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.006}%2C${selected.latitude - 0.006}%2C${Number(selected.longitude) + 0.006}%2C${Number(selected.latitude) + 0.006}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`}
+                    />
+                  </div>
+                </>
+              )}
+
+              {readOnly ? (
+                <>
+                  <div className="detail-label">Report type</div>
+                  <div className="detail-value" style={{ marginBottom: 10 }}>
+                    {REPORT_TYPE_LABELS[selected.report_type] || selected.report_type || '—'}
+                  </div>
+
+                  <div className="detail-label">Sent to office(s)</div>
+                  <div className="detail-value" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {(selected.office_roles || []).length > 0
+                      ? selected.office_roles.map(role => (
+                          <span key={role} className={`badge badge-office-${role}`}>{OFFICE_LABELS[role] || role}</span>
+                        ))
+                      : '—'}
+                  </div>
+
+                  <div className="detail-label" style={{ marginTop: 14 }}>
+                    Reassign / escalate to office(s)
+                  </div>
+                  <div className="office-picker">
+                    {OFFICE_OPTIONS.map(opt => (
+                      <button
+                        type="button"
+                        key={opt.value}
+                        className={`office-option office-option-${opt.value} ${checked.includes(opt.value) ? 'selected' : ''}`}
+                        onClick={() => toggleOffice(opt.value)}
+                      >
+                        <span className="office-option-icon"><opt.Icon width={18} height={18} /></span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="detail-value" style={{ marginTop: 4, opacity: 0.7, fontSize: 12 }}>
+                    Picking an office already listed above re-forwards / escalates it instead of adding a duplicate.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="detail-label">Report type</div>
+                  <select
+                    className="verifier-report-type-select"
+                    value={reportType}
+                    onChange={e => setReportType(e.target.value)}
+                  >
+                    <option value="" disabled>Select report type…</option>
+                    {REPORT_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    className={`urgent-toggle-btn ${isUrgent ? 'active' : ''}`}
+                    style={{ marginTop: 10 }}
+                    onClick={() => setIsUrgent(v => !v)}
+                  >
+                    {isUrgent ? '✓ Urgent / Priority' : 'Mark as Urgent / Priority'}
+                  </button>
+
+                  <div className="detail-label" style={{ marginTop: 14 }}>Send to office(s)</div>
+                  <div className="office-picker">
+                    {OFFICE_OPTIONS.map(opt => (
+                      <button
+                        type="button"
+                        key={opt.value}
+                        className={`office-option office-option-${opt.value} ${checked.includes(opt.value) ? 'selected' : ''}`}
+                        onClick={() => toggleOffice(opt.value)}
+                      >
+                        <span className="office-option-icon"><opt.Icon width={18} height={18} /></span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             {readOnly ? (
-              <>
-                <div className="detail-label">Report type</div>
-                <div className="detail-value" style={{ marginBottom: 10 }}>
-                  {REPORT_TYPE_LABELS[selected.report_type] || selected.report_type || '—'}
-                  {selected.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
-                </div>
-
-                <div className="detail-label">Sent to office(s)</div>
-                <div className="detail-value" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {(selected.office_roles || []).length > 0
-                    ? selected.office_roles.map(role => (
-                        <span key={role} className={`badge badge-office-${role}`}>{OFFICE_LABELS[role] || role}</span>
-                      ))
-                    : '—'}
-                </div>
-
-                <div className="detail-label" style={{ marginTop: 14 }}>
-                  Reassign / escalate to office(s)
-                </div>
-                <div className="office-picker">
-                  {OFFICE_OPTIONS.map(opt => (
-                    <button
-                      type="button"
-                      key={opt.value}
-                      className={`office-option office-option-${opt.value} ${checked.includes(opt.value) ? 'selected' : ''}`}
-                      onClick={() => toggleOffice(opt.value)}
-                    >
-                      <span className="office-option-icon"><opt.Icon width={18} height={18} /></span>
-                      <span>{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="detail-value" style={{ marginTop: 4, opacity: 0.7, fontSize: 12 }}>
-                  Picking an office already listed above re-forwards / escalates it instead of adding a duplicate.
-                </div>
-
-                <div className="action-buttons detail-modal-actions">
-                  <button className="btn-gray" onClick={() => setSelected(null)}>Close</button>
-                  <button className="btn-green" onClick={submitReassign} disabled={submitting}>
-                    {submitting ? <><span className="spinner" /> Submitting...</> : 'Reassign / Escalate'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="detail-label">Report type</div>
-                <select
-                  className="verifier-report-type-select"
-                  value={reportType}
-                  onChange={e => setReportType(e.target.value)}
-                >
-                  <option value="" disabled>Select report type…</option>
-                  {REPORT_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  className={`urgent-toggle-btn ${isUrgent ? 'active' : ''}`}
-                  style={{ marginTop: 10 }}
-                  onClick={() => setIsUrgent(v => !v)}
-                >
-                  {isUrgent ? '✓ Urgent / Priority' : 'Mark as Urgent / Priority'}
+              <div className="action-buttons detail-modal-actions">
+                <button className="btn-gray" onClick={() => setSelected(null)}>Close</button>
+                <button className="btn-green" onClick={submitReassign} disabled={submitting}>
+                  {submitting ? <><span className="spinner" /> Submitting...</> : 'Reassign / Escalate'}
                 </button>
-
-                <div className="detail-label" style={{ marginTop: 14 }}>Send to office(s)</div>
-                <div className="office-picker">
-                  {OFFICE_OPTIONS.map(opt => (
-                    <button
-                      type="button"
-                      key={opt.value}
-                      className={`office-option office-option-${opt.value} ${checked.includes(opt.value) ? 'selected' : ''}`}
-                      onClick={() => toggleOffice(opt.value)}
-                    >
-                      <span className="office-option-icon"><opt.Icon width={18} height={18} /></span>
-                      <span>{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="action-buttons detail-modal-actions">
-                  <button className="btn-green" onClick={requestVerify} disabled={submitting}>
-                    {submitting ? <><span className="spinner" /> Submitting...</> : 'Verify & Turnover'}
-                  </button>
-                </div>
-              </>
+              </div>
+            ) : (
+              <div className="action-buttons detail-modal-actions">
+                <button className="btn-green" onClick={requestVerify} disabled={submitting}>
+                  {submitting ? <><span className="spinner" /> Submitting...</> : 'Verify & Turnover'}
+                </button>
+              </div>
             )}
           </div>
         </div>

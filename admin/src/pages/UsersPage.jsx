@@ -14,7 +14,7 @@ const ROLES = [
   { value: 'verifier', label: 'Verifier' },
   { value: 'police',   label: 'Office - Police' },
   { value: 'bfp',      label: 'Office - BFP' },
-  { value: 'medical',  label: 'Office - Medical' },
+  { value: 'MDRRMO',  label: 'Office - MDRRMO' },
 ];
 
 function badgeClass(role) {

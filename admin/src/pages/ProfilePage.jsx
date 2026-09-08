@@ -63,7 +63,7 @@ const ROLE_LABELS = {
   verifier: 'Verifier',
   police:   'Police',
   bfp:      'BFP (Fire)',
-  medical:  'Medical / Ambulance',
+  medical:  'MDRRMO ',
 };
 
 const ROLE_BADGE_CLASSES = {

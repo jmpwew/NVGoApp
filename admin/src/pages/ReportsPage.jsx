@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
 import './ReportsPage.css';
 
 import { API } from '../config';
@@ -11,7 +11,7 @@ import { getImageUrl } from '../getImageUrl';
 const OFFICE_META = {
   police:  { label: 'Police',             Icon: ShieldIcon },
   bfp:     { label: 'BFP (Fire)',          Icon: FlameIcon },
-  medical: { label: 'Medical / Ambulance', Icon: CrossIcon },
+  medical: { label: 'MDRRMO', Icon: CrossIcon },
 };
 
 const STATUS_LABELS = {
@@ -55,7 +55,7 @@ export default function ReportsPage() {
         return next;
       }, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, []);
 
 
@@ -279,107 +279,140 @@ export default function ReportsPage() {
       {selectedReport && (
         <div className="detail-modal-overlay" onClick={() => setSelectedReport(null)}>
           <div className="detail-modal" onClick={e => e.stopPropagation()}>
-            <button className="map-modal-close" onClick={() => setSelectedReport(null)}>
-              ✕
-            </button>
-
-            <h2 className="detail-modal-title">Report Details</h2>
-            <span className={`badge badge-${selectedReport.status}`}>{selectedReport.status}</span>
-            {selectedReport.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
-
-            <div className="detail-grid">
-              <div>
-                <div className="detail-label">Name</div>
-                <div className="detail-value">{selectedReport.name || '—'}</div>
+            <div className="detail-modal-header">
+              <div className="detail-modal-header-top">
+                <h2 className="detail-modal-title">Report Details</h2>
+                <button className="detail-modal-close" onClick={() => setSelectedReport(null)} aria-label="Close">
+                  <CloseIcon width={14} height={14} />
+                </button>
               </div>
-              <div>
-                <div className="detail-label">Contact</div>
-                <div className="detail-value">{selectedReport.contact || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Barangay</div>
-                <div className="detail-value">{selectedReport.barangay ? `Brgy. ${selectedReport.barangay}` : '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Location Note</div>
-                <div className="detail-value">{selectedReport.location_note || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Date Submitted</div>
-                <div className="detail-value">
-                  {new Date(selectedReport.created_at).toLocaleDateString()} {new Date(selectedReport.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
+              <div className="detail-modal-badges">
+                <span className={`badge badge-${selectedReport.status}`}>{selectedReport.status}</span>
+                {selectedReport.is_urgent && (
+                  <span className="badge badge-urgent">
+                    <AlertTriangleIcon /> Urgent
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="detail-label">Description</div>
-            <div className="detail-description">{selectedReport.description}</div>
-
-            {selectedReport.latitude && selectedReport.longitude && (
-              <>
-                <div className="detail-label">Location</div>
-                <div className="detail-map">
-                  <iframe
-                    title="detail-report-map"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedReport.longitude - 0.006}%2C${selectedReport.latitude - 0.006}%2C${Number(selectedReport.longitude) + 0.006}%2C${Number(selectedReport.latitude) + 0.006}&layer=mapnik&marker=${selectedReport.latitude}%2C${selectedReport.longitude}`}
-                  />
+            <div className="detail-modal-body">
+              <div className="detail-grid">
+                <div className="detail-info-card">
+                  <div className="detail-label"><UserIcon width={13} height={13} /> Name</div>
+                  <div className="detail-value">{selectedReport.name || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selectedReport.images && selectedReport.images.length > 0 && (
-              <>
-                <div className="detail-label">Images</div>
-                <div className="report-images">
-                  {selectedReport.images.map((img, i) => (
-                    <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
-                      <img src={getImageUrl(img)} alt="report" />
-                    </a>
-                  ))}
+                <div className="detail-info-card">
+                  <div className="detail-label"><PhoneIcon width={13} height={13} /> Contact</div>
+                  <div className="detail-value">{selectedReport.contact || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selectedReport.videos && selectedReport.videos.length > 0 && (
-              <>
-                <div className="detail-label">Videos</div>
-                <div className="report-videos">
-                  {selectedReport.videos.map((vid, i) => (
-                    <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
-                  ))}
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Barangay</div>
+                  <div className="detail-value">{selectedReport.barangay ? `Brgy. ${selectedReport.barangay}` : '—'}</div>
                 </div>
-              </>
-            )}
-
-            <div className="trail-section">
-              <div className="detail-label" style={{ marginTop: 0 }}>Turnover Trail</div>
-              {selectedReport.verifier ? (
-                <div className="trail-verifier-line" style={{ fontSize: 13 }}>
-                  Verified by <strong>Verifier</strong>{' '}
-                  on {new Date(selectedReport.verifier.verified_at).toLocaleString()}
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Location Note</div>
+                  <div className="detail-value">{selectedReport.location_note || '—'}</div>
                 </div>
-              ) : (
-                <div className="trail-none">Not yet reviewed by a verifier.</div>
+                <div className="detail-info-card" style={{ gridColumn: '1 / -1' }}>
+                  <div className="detail-label"><ClockIcon width={13} height={13} /> Date Submitted</div>
+                  <div className="detail-value">
+                    {new Date(selectedReport.created_at).toLocaleDateString()} {new Date(selectedReport.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-label" style={{ marginTop: 0 }}>Description</div>
+              <div className="detail-description">{selectedReport.description}</div>
+
+              {selectedReport.latitude && selectedReport.longitude && (
+                <>
+                  <div className="detail-label">Location</div>
+                  <div className="detail-map">
+                    <iframe
+                      title="detail-report-map"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedReport.longitude - 0.006}%2C${selectedReport.latitude - 0.006}%2C${Number(selectedReport.longitude) + 0.006}%2C${Number(selectedReport.latitude) + 0.006}&layer=mapnik&marker=${selectedReport.latitude}%2C${selectedReport.longitude}`}
+                    />
+                  </div>
+                </>
               )}
 
-              {selectedReport.assignments && selectedReport.assignments.length > 0 ? (
-                <div className="trail-section-assignments">
-                  {selectedReport.assignments.map(a => {
+              {selectedReport.images && selectedReport.images.length > 0 && (
+                <>
+                  <div className="detail-label"><PhotoIcon width={13} height={13} /> Images</div>
+                  <div className="report-images">
+                    {selectedReport.images.map((img, i) => (
+                      <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                        <img src={getImageUrl(img)} alt="report" />
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {selectedReport.videos && selectedReport.videos.length > 0 && (
+                <>
+                  <div className="detail-label"><VideoIcon width={13} height={13} /> Videos</div>
+                  <div className="report-videos">
+                    {selectedReport.videos.map((vid, i) => (
+                      <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="trail-section">
+                <div className="detail-label" style={{ marginTop: 0 }}>Turnover Trail</div>
+
+                {!selectedReport.verifier && (!selectedReport.assignments || selectedReport.assignments.length === 0) && (
+                  <div className="trail-none">Not yet reviewed by a verifier.</div>
+                )}
+
+                <div className="trail-timeline">
+                  {selectedReport.verifier && (
+                    <div className="trail-timeline-item">
+                      <div className="trail-timeline-rail">
+                        <span className="trail-timeline-dot" style={{ backgroundColor: '#6d28d9' }} />
+                        {selectedReport.assignments && selectedReport.assignments.length > 0 && (
+                          <span className="trail-timeline-line" />
+                        )}
+                      </div>
+                      <div className="trail-timeline-content">
+                        <div className="trail-verifier-line">
+                          Verified by <strong>Verifier</strong>{' '}
+                          on {new Date(selectedReport.verifier.verified_at).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedReport.assignments && selectedReport.assignments.length > 0 && selectedReport.assignments.map((a, i) => {
                     const om = OFFICE_META[a.office_role];
                     const Icon = om?.Icon;
+                    const isLast = i === selectedReport.assignments.length - 1;
                     return (
-                      <div key={a.id} className="trail-assignment-card">
-                        {Icon && <Icon width={16} height={16} />}
-                        <span className={`badge badge-office-${a.office_role}`}>{om ? om.label : a.office_role}</span>
-                        <span className={`badge badge-${a.status}`}>{STATUS_LABELS[a.status] || a.status}</span>
-                        <span className="trail-assignment-card-note">{a.action_note || '—'}</span>
+                      <div key={a.id} className="trail-timeline-item">
+                        <div className="trail-timeline-rail">
+                          <span className="trail-timeline-dot" style={{ backgroundColor: `var(--office-${a.office_role})` }} />
+                          {!isLast && <span className="trail-timeline-line" />}
+                        </div>
+                        <div className="trail-timeline-content">
+                          <div className="trail-assignment-card">
+                            {Icon && <Icon width={15} height={15} />}
+                            <span className={`badge badge-office-${a.office_role}`}>{om ? om.label : a.office_role}</span>
+                            <span className={`badge badge-${a.status}`}>{STATUS_LABELS[a.status] || a.status}</span>
+                            <span className="trail-assignment-card-note">{a.action_note || '—'}</span>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
+
+                  {selectedReport.verifier && (!selectedReport.assignments || selectedReport.assignments.length === 0) && (
+                    <div className="trail-none" style={{ marginTop: 8 }}>No office assigned yet.</div>
+                  )}
                 </div>
-              ) : (
-                selectedReport.verifier && <div className="trail-none" style={{ marginTop: 8 }}>No office assigned yet.</div>
-              )}
+              </div>
             </div>
 
             <div className="action-buttons detail-modal-actions">

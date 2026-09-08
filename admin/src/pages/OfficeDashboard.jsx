@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon, UserIcon, PhoneIcon, PhotoIcon, VideoIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
 import QuarterlyLogsModal from '../components/QuarterlyLogsModal';
 import './OfficeDashboard.css';
 import './ReportsPage.css'; 
@@ -369,89 +369,102 @@ export default function OfficeDashboard() {
       {selected && (
         <div className="detail-modal-overlay" onClick={() => setSelected(null)}>
           <div className="detail-modal" onClick={e => e.stopPropagation()}>
-            <button className="map-modal-close" onClick={() => setSelected(null)}>✕</button>
-
-            <h2 className="detail-modal-title">Report Details</h2>
-            <span className={`badge badge-${selected.assignment_status}`}>{STATUS_LABELS[selected.assignment_status] || selected.assignment_status}</span>
-            {selected.is_urgent && <span className="badge badge-urgent" style={{ marginLeft: 8 }}>Urgent</span>}
-
-            <div className="detail-grid">
-              <div>
-                <div className="detail-label">Name</div>
-                <div className="detail-value">{selected.name || '—'}</div>
+            <div className="detail-modal-header">
+              <div className="detail-modal-header-top">
+                <h2 className="detail-modal-title">Report Details</h2>
+                <button className="detail-modal-close" onClick={() => setSelected(null)} aria-label="Close">
+                  <CloseIcon width={14} height={14} />
+                </button>
               </div>
-              <div>
-                <div className="detail-label">Contact</div>
-                <div className="detail-value">{selected.contact || '—'}</div>
+              <div className="detail-modal-badges">
+                <span className={`badge badge-${selected.assignment_status}`}>{STATUS_LABELS[selected.assignment_status] || selected.assignment_status}</span>
+                {selected.is_urgent && (
+                  <span className="badge badge-urgent">
+                    <AlertTriangleIcon /> Urgent
+                  </span>
+                )}
               </div>
-              <div>
-                <div className="detail-label">Barangay</div>
-                <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Location Note</div>
-                <div className="detail-value">{selected.location_note || '—'}</div>
-              </div>
-              <div>
-                <div className="detail-label">Date Assigned</div>
-                <div className="detail-value">{new Date(selected.assigned_at).toLocaleString()}</div>
-              </div>
-              {selected.assignment_status !== 'ongoing' && (
-                <div>
-                  <div className="detail-label">Last Updated</div>
-                  <div className="detail-value">{new Date(selected.updated_at).toLocaleString()}</div>
-                </div>
-              )}
             </div>
 
-            <div className="detail-label">Description</div>
-            <div className="detail-description">{selected.description}</div>
-
-            {selected.images && selected.images.length > 0 && (
-              <>
-                <div className="detail-label">Images</div>
-                <div className="report-images">
-                  {selected.images.map((img, i) => (
-                    <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
-                      <img src={getImageUrl(img)} alt="report" />
-                    </a>
-                  ))}
+            <div className="detail-modal-body">
+              <div className="detail-grid">
+                <div className="detail-info-card">
+                  <div className="detail-label"><UserIcon width={13} height={13} /> Name</div>
+                  <div className="detail-value">{selected.name || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selected.videos && selected.videos.length > 0 && (
-              <>
-                <div className="detail-label">Videos</div>
-                <div className="report-videos">
-                  {selected.videos.map((vid, i) => (
-                    <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
-                  ))}
+                <div className="detail-info-card">
+                  <div className="detail-label"><PhoneIcon width={13} height={13} /> Contact</div>
+                  <div className="detail-value">{selected.contact || '—'}</div>
                 </div>
-              </>
-            )}
-
-            {selected.latitude && selected.longitude && (
-              <>
-                <div className="detail-label">Location</div>
-                <div className="detail-map">
-                  <iframe
-                    title="office-report-map"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.006}%2C${selected.latitude - 0.006}%2C${Number(selected.longitude) + 0.006}%2C${Number(selected.latitude) + 0.006}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`}
-                  />
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Barangay</div>
+                  <div className="detail-value">{selected.barangay ? `Brgy. ${selected.barangay}` : '—'}</div>
                 </div>
-              </>
-            )}
+                <div className="detail-info-card">
+                  <div className="detail-label"><MapPinIcon width={13} height={13} /> Location Note</div>
+                  <div className="detail-value">{selected.location_note || '—'}</div>
+                </div>
+                <div className="detail-info-card">
+                  <div className="detail-label"><ClockIcon width={13} height={13} /> Date Assigned</div>
+                  <div className="detail-value">{new Date(selected.assigned_at).toLocaleString()}</div>
+                </div>
+                {selected.assignment_status !== 'ongoing' && (
+                  <div className="detail-info-card">
+                    <div className="detail-label"><ClockIcon width={13} height={13} /> Last Updated</div>
+                    <div className="detail-value">{new Date(selected.updated_at).toLocaleString()}</div>
+                  </div>
+                )}
+              </div>
 
-            <div className="detail-label" style={{ marginTop: 16 }}>Action note (visible to Admin)</div>
-            <textarea
-              className="office-note-textarea"
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              placeholder="e.g. Unit dispatched, arrived on scene..."
-              rows={3}
-            />
-            <div className="office-note-hint">Short status update the Main Admin will see in the report trail.</div>
+              <div className="detail-label" style={{ marginTop: 0 }}>Description</div>
+              <div className="detail-description">{selected.description}</div>
+
+              {selected.images && selected.images.length > 0 && (
+                <>
+                  <div className="detail-label"><PhotoIcon width={13} height={13} /> Images</div>
+                  <div className="report-images">
+                    {selected.images.map((img, i) => (
+                      <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer">
+                        <img src={getImageUrl(img)} alt="report" />
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {selected.videos && selected.videos.length > 0 && (
+                <>
+                  <div className="detail-label"><VideoIcon width={13} height={13} /> Videos</div>
+                  <div className="report-videos">
+                    {selected.videos.map((vid, i) => (
+                      <video key={i} src={getImageUrl(vid)} controls preload="metadata" />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {selected.latitude && selected.longitude && (
+                <>
+                  <div className="detail-label">Location</div>
+                  <div className="detail-map">
+                    <iframe
+                      title="office-report-map"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.006}%2C${selected.latitude - 0.006}%2C${Number(selected.longitude) + 0.006}%2C${Number(selected.latitude) + 0.006}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="detail-label" style={{ marginTop: 16 }}>Action note (visible to Admin)</div>
+              <textarea
+                className="office-note-textarea"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                placeholder="e.g. Unit dispatched, arrived on scene..."
+                rows={3}
+              />
+              <div className="office-note-hint">Short status update the Main Admin will see in the report trail.</div>
+            </div>
 
             <div className="action-buttons detail-modal-actions">
               {selected.assignment_status === 'ongoing' ? (
