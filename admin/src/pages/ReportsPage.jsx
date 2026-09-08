@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
+import ConfirmModal from '../components/ConfirmModal';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, TrashIcon } from '../components/Icons';
 import './ReportsPage.css';
 
 import { API } from '../config';
@@ -27,6 +28,16 @@ function initials(name) {
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || '?';
 }
 
+function timeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 export default function ReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reports, setReports]   = useState([]);
@@ -36,6 +47,9 @@ export default function ReportsPage() {
   const [expandedMap, setExpandedMap] = useState(null);     
   const [selectedReport, setSelectedReport] = useState(null); 
   const [toast, setToast]       = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -55,7 +69,7 @@ export default function ReportsPage() {
         return next;
       }, { replace: true });
     }
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -104,23 +118,28 @@ export default function ReportsPage() {
     }
   }
 
-  async function deleteReport(id) {
-    if (!confirm('Delete this report?')) return;
-    const reason = prompt('Reason for deleting this report (required for the audit log):');
-    if (!reason || !reason.trim()) {
-      setToast({ type: 'error', text: 'Deletion cancelled — a reason is required.' });
-      return;
-    }
+  function requestDelete(report) {
+    setDeleteTarget(report);
+    setDeleteReason('');
+  }
+
+  async function confirmDelete() {
+    if (!deleteReason.trim()) return;
+    setDeleting(true);
     try {
-      await axios.delete(`${API}/api/admin/reports/${id}`, {
+      await axios.delete(`${API}/api/admin/reports/${deleteTarget.id}`, {
         headers: { Authorization: `Bearer ${token}` },
-        data: { reason: reason.trim() },
+        data: { reason: deleteReason.trim() },
       });
-      setReports(prev => prev.filter(r => r.id !== id));
+      setReports(prev => prev.filter(r => r.id !== deleteTarget.id));
       setToast({ type: 'success', text: 'Report deleted.' });
+      setDeleteTarget(null);
+      setSelectedReport(null);
     } catch (err) {
       console.log(err);
       setToast({ type: 'error', text: 'Failed to delete report.' });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -199,11 +218,14 @@ export default function ReportsPage() {
               <div className="case-card-body">
                 <div className="case-card-top">
                   <span className="case-card-name">{r.name || 'Anonymous'}</span>
-                  {r.contact && <span className="case-card-time">{r.contact}</span>}
-                  {r.is_urgent && <span className="badge badge-urgent">Urgent</span>}
-                  <span className={`badge badge-${r.status}`}>{STATUS_LABELS[r.status] || r.status}</span>
+                  {r.is_urgent && (
+                    <span className="case-card-urgent-icon" title="Urgent">
+                      <AlertTriangleIcon width={13} height={13} />
+                    </span>
+                  )}
+                  <span className={`badge badge-${r.status} case-card-status`}>{STATUS_LABELS[r.status] || r.status}</span>
                 </div>
-                <div className="case-card-desc">{r.description}</div>
+                <div className="case-card-desc case-card-desc-1line">{r.description}</div>
                 <div className="case-card-meta">
                   {r.barangay && (
                     <span className="case-card-meta-item">
@@ -227,35 +249,35 @@ export default function ReportsPage() {
                     <span className="case-card-meta-item"><VideoIcon width={13} height={13} />{r.videos.length}</span>
                   )}
                   <span>{new Date(r.created_at).toLocaleDateString()}</span>
-                </div>
-                <div className="case-card-trail">
                   {r.verifier ? (
-                    <>
-                      <span className="case-card-trail-label">
-                        Verified by Verifier
-                      </span>
-                      {r.assignments && r.assignments.length > 0 && r.assignments.map(a => {
-                        const om = OFFICE_META[a.office_role];
+                    r.assignments && r.assignments.length > 0 ? (
+                      (() => {
+                        const first = r.assignments[0];
+                        const om = OFFICE_META[first.office_role];
+                        const Icon = om?.Icon;
+                        const extra = r.assignments.length - 1;
                         return (
-                          <span key={a.id} className="case-card-trail-office-group">
-                            <span className={`badge badge-office-${a.office_role}`}>
-                              {om ? om.label : a.office_role} · {STATUS_LABELS[a.status] || a.status}
-                            </span>
-                            {a.action_note && (
-                              <span className="case-card-office-note">{a.action_note}</span>
-                            )}
+                          <span className="case-card-meta-item case-card-trail-summary">
+                            {Icon && <Icon width={13} height={13} />}
+                            <span className={`badge badge-office-${first.office_role}`}>{om ? om.label : first.office_role}</span>
+                            {extra > 0 && <span className="case-card-trail-extra">+{extra}</span>}
                           </span>
                         );
-                      })}
-                    </>
+                      })()
+                    ) : (
+                      <span className="case-card-meta-item case-card-trail-summary case-card-trail-muted">No office assigned yet</span>
+                    )
                   ) : (
-                    <span className="case-card-trail-label">Awaiting verifier</span>
+                    <span className="case-card-meta-item case-card-trail-summary case-card-trail-muted">Awaiting verifier</span>
                   )}
                 </div>
               </div>
+              <span className="case-card-time">{timeAgo(r.created_at)}</span>
               <div className="action-buttons case-card-action" onClick={e => e.stopPropagation()}>
                 <button className="btn-gray" onClick={() => setSelectedReport(r)}>View</button>
-                <button className="btn-red" onClick={() => deleteReport(r.id)}>Delete</button>
+                <button className="case-card-delete-btn" title="Delete report" onClick={() => requestDelete(r)}>
+                  <TrashIcon width={15} height={15} />
+                </button>
               </div>
             </div>
           ))}
@@ -425,7 +447,7 @@ export default function ReportsPage() {
               </button>
               <button
                 className="btn-red"
-                onClick={() => { deleteReport(selectedReport.id); setSelectedReport(null); }}
+                onClick={() => requestDelete(selectedReport)}
               >
                 Delete
               </button>
@@ -433,6 +455,22 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Delete this report?"
+        message={`This removes the report from ${deleteTarget?.name || 'this person'} permanently. This can't be undone.`}
+        confirmLabel="Delete report"
+        tone="danger"
+        loading={deleting}
+        requireReason
+        reasonLabel="Reason (required for the audit log)"
+        reasonPlaceholder="e.g. Duplicate of report #A-2201"
+        reasonValue={deleteReason}
+        onReasonChange={setDeleteReason}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>

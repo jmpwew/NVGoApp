@@ -502,9 +502,20 @@ tr:hover td {
 }
 
 .case-card-name {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   color: var(--text-primary);
+}
+
+.case-card-status {
+  margin-left: auto;
+}
+
+.case-card-urgent-icon {
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .case-card-desc {
@@ -518,6 +529,13 @@ tr:hover td {
   line-height: 1.4;
 }
 
+.case-card-desc-1line {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .case-card-meta {
   display: flex;
   align-items: center;
@@ -525,12 +543,45 @@ tr:hover td {
   margin-top: 4px;
   font-size: 12px;
   color: var(--text-muted);
+  flex-wrap: wrap;
 }
 
 .case-card-meta-item {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.case-card-trail-summary {
+  gap: 6px;
+}
+
+.case-card-trail-extra {
+  color: var(--text-muted);
+}
+
+.case-card-trail-muted {
+  font-style: italic;
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.case-card-delete-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--danger-tint, #fdecec);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.case-card-delete-btn:hover {
+  background-color: var(--danger-border);
 }
 
 .case-card-time {
@@ -605,31 +656,8 @@ tr:hover td {
   border-color: var(--brand);
 }
 
-/* ── Compact turnover-trail summary shown inside a case card ── */
-.case-card-trail {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.case-card-trail-label {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.case-card-trail-office-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.case-card-office-note {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-style: italic;
-}
+/* (case-card-trail styles removed — replaced by the compact
+   single-line trail summary in .case-card-meta) */
 
 /* Desktop navigation reserves a permanent workspace column. On smaller
    screens the sidebar remains an overlay drawer, so content keeps its full width. */

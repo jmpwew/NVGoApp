@@ -221,7 +221,7 @@ export default function OfficeDashboard() {
             <meta.Icon width={22} height={22} />
           </div>
           <div>
-            <h1>{meta.label} — response console</h1>
+            <h1>{meta.label} — Response Console</h1>
             <div className="office-header-subtitle">Reports assigned to your office appear here</div>
           </div>
         </div>
