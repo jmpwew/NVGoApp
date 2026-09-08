@@ -456,7 +456,7 @@ export default function OfficeDashboard() {
                 </>
               )}
 
-              <div className="detail-label" style={{ marginTop: 16 }}>Action note (visible to Admin)</div>
+              <div className="detail-label" style={{ marginTop: 16 }}>Action note (Visible to users)</div>
               <textarea
                 className="office-note-textarea"
                 value={note}
@@ -464,7 +464,7 @@ export default function OfficeDashboard() {
                 placeholder="e.g. Unit dispatched, arrived on scene..."
                 rows={3}
               />
-              <div className="office-note-hint">Short status update the Main Admin will see in the report trail.</div>
+              <div className="office-note-hint"></div>
             </div>
 
             <div className="action-buttons detail-modal-actions">

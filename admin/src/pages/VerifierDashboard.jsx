@@ -215,7 +215,6 @@ export default function VerifierDashboard() {
           
         </div>
         <div className="live-chip">
-          <span className={`live-chip-dot ${pending.length === 0 ? 'calm' : ''}`} />
           {loading ? 'Loading…' : `${pending.length} awaiting review`}
         </div>
       </div>
