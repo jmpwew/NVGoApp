@@ -268,22 +268,6 @@
   flex-shrink: 0;
 }
 
-.new-report-banner-dismiss {
-  background: none;
-  border: none;
-  color: inherit;
-  opacity: 0.7;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 2px;
-}
-
-.new-report-banner-dismiss:hover {
-  opacity: 1;
-}
-
 /* Freshly-arrived card gets a brief highlight so it's obvious where it landed */
 .case-card.is-fresh {
   animation: case-card-flash 2.2s ease-out;

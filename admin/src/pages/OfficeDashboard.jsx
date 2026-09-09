@@ -23,7 +23,8 @@ const STATUS_LABELS = {
   resolved:   'Resolved',
 };
 
-
+// Minutes since assignment before the elapsed-time badge switches to
+// "warning" and then "critical" — urgent reports get a much tighter clock.
 const SLA_MINUTES = {
   urgent: { warning: 5,  critical: 15 },
   normal: { warning: 20, critical: 60 },
@@ -35,7 +36,9 @@ function elapsedMinutes(dateStr) {
   return (Date.now() - new Date(dateStr).getTime()) / 60000;
 }
 
-
+// Returns 'ok' | 'warning' | 'critical' for how overdue an active
+// assignment is against its SLA. Resolved reports never warn — the clock
+// stops once someone has acted on it.
 function slaTier(a) {
   if (a.assignment_status === 'resolved') return 'ok';
   const sla = a.is_urgent ? SLA_MINUTES.urgent : SLA_MINUTES.normal;
@@ -77,7 +80,7 @@ export default function OfficeDashboard() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [muted, setMuted] = useState(() => localStorage.getItem(MUTE_STORAGE_KEY) === '1');
   const [newAlerts, setNewAlerts] = useState([]);
-  const seenIdsRef = useRef(null); 
+  const seenIdsRef = useRef(null); // null until first fetch completes, then a Set of known assignment_ids
   const mutedRef = useRef(muted);
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
@@ -128,7 +131,7 @@ export default function OfficeDashboard() {
       const data = res.data;
 
       if (seenIdsRef.current === null) {
-       
+        // First load: just remember what's already here, don't alert on it.
         seenIdsRef.current = new Set(data.map(a => a.assignment_id));
       } else {
         const freshOnes = data.filter(a => !seenIdsRef.current.has(a.assignment_id));
@@ -147,7 +150,10 @@ export default function OfficeDashboard() {
     }
   }
 
- 
+  // Fires the audible + visual "new report" indicator for a just-arrived
+  // assignment, whether or not it's flagged urgent — mute only affects sound.
+  // Stays visible until the office actually opens that report (see
+  // openAssignment below) — it does not auto-dismiss on a timer.
   function triggerNewReportAlert(a) {
     const alertId = `${a.assignment_id}-${Date.now()}`;
     setNewAlerts(prev => [...prev, { ...a, alertId }]);
@@ -156,14 +162,6 @@ export default function OfficeDashboard() {
       if (a.is_urgent) playUrgentAlertSound();
       else playNotificationSound();
     }
-
-    setTimeout(() => {
-      setNewAlerts(prev => prev.filter(x => x.alertId !== alertId));
-    }, 9000);
-  }
-
-  function dismissAlert(alertId) {
-    setNewAlerts(prev => prev.filter(x => x.alertId !== alertId));
   }
 
   function toggleMute() {
@@ -177,6 +175,8 @@ export default function OfficeDashboard() {
   function openAssignment(a) {
     setSelected(a);
     setNote(a.action_note || '');
+    // Opening a report is what clears its "new report" alert(s).
+    setNewAlerts(prev => prev.filter(x => x.assignment_id !== a.assignment_id));
   }
 
   async function performUpdateStatus(assignmentId, status, fromStatus) {
@@ -277,7 +277,8 @@ export default function OfficeDashboard() {
         a.location_note?.toLowerCase().includes(q);
       return matchesStatus && matchesSearch;
     })
-   
+    // Pin active urgent reports above everything else; stable sort keeps
+    // the existing order within each group otherwise.
     .sort((a, b) => (isActiveUrgent(a) ? 0 : 1) - (isActiveUrgent(b) ? 0 : 1));
 
   const ongoingCount    = assignments.filter(a => a.assignment_status === 'ongoing').length;
@@ -327,16 +328,9 @@ export default function OfficeDashboard() {
               </span>
               <button
                 className="new-report-banner-view"
-                onClick={() => { openAssignment(a); dismissAlert(a.alertId); }}
+                onClick={() => openAssignment(a)}
               >
-                View
-              </button>
-              <button
-                className="new-report-banner-dismiss"
-                aria-label="Dismiss"
-                onClick={() => dismissAlert(a.alertId)}
-              >
-                <CloseIcon width={12} height={12} />
+                View report
               </button>
             </div>
           ))}
