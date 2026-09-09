@@ -240,9 +240,11 @@ tr:hover td {
 }
 
 .empty-state-icon {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 10px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .empty-state-title {

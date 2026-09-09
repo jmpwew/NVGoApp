@@ -6,6 +6,7 @@ import './NewsPage.css';
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
 import ConfirmModal from '../components/ConfirmModal';
+import { NewspaperIcon } from '../components/Icons';
 
 const emptyForm = { title: '', content: '', category: 'announcement' };
 
@@ -178,7 +179,19 @@ export default function NewsPage() {
         </thead>
         <tbody>
           {filteredNews.length === 0 ? (
-            <tr><td colSpan="6">{newsList.length === 0 ? 'No news posts yet.' : 'No news posts match your search.'}</td></tr>
+            <tr>
+              <td colSpan="5">
+                <div className="empty-state">
+                  <div className="empty-state-icon"><NewspaperIcon width={32} height={32} /></div>
+                  <div className="empty-state-title">
+                    {newsList.length === 0 ? 'No news posts yet' : 'No news posts match your search'}
+                  </div>
+                  <div className="empty-state-text">
+                    {newsList.length === 0 ? 'Posts you publish will show up here.' : 'Try a different search term.'}
+                  </div>
+                </div>
+              </td>
+            </tr>
           ) : (
             filteredNews.map(n => (
               <tr key={n.id}>

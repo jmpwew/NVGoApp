@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import UserGrowthChart from '../components/UserGrowthChart';
 import QuarterlyLogsModal from '../components/QuarterlyLogsModal';
+import { ClipboardListIcon } from '../components/Icons';
 import './DashboardPage.css';
 
 import { API } from '../config';
@@ -185,7 +186,7 @@ export default function DashboardPage() {
         </div>
         {reports.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📋</div>
+            <div className="empty-state-icon"><ClipboardListIcon width={32} height={32} /></div>
             <div className="empty-state-title">No reports yet</div>
             <div className="empty-state-text">New reports will show up here as they come in.</div>
           </div>

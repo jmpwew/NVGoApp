@@ -5,6 +5,7 @@ import './NewsPage.css';
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
 import ConfirmModal from '../components/ConfirmModal';
+import { MegaphoneIcon } from '../components/Icons';
 
 const emptyForm = { title: '', message: '', urgency: 'info', is_active: true, duration_hours: '' };
 
@@ -181,7 +182,15 @@ export default function AnnouncementsPage() {
         </thead>
         <tbody>
           {list.length === 0 ? (
-            <tr><td colSpan="8">No announcements yet.</td></tr>
+            <tr>
+              <td colSpan="7">
+                <div className="empty-state">
+                  <div className="empty-state-icon"><MegaphoneIcon width={32} height={32} /></div>
+                  <div className="empty-state-title">No announcements yet</div>
+                  <div className="empty-state-text">Announcements you post will show up here.</div>
+                </div>
+              </td>
+            </tr>
           ) : (
             list.map(a => {
               const um = URGENCY_META[a.urgency] || URGENCY_META.info;

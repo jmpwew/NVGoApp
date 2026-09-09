@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, CheckCircleIcon, ClipboardListIcon } from '../components/Icons';
 import { REPORT_TYPES, REPORT_TYPE_LABELS } from '../constants/reportTypes';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
@@ -268,7 +268,7 @@ export default function VerifierDashboard() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">✅</div>
+            <div className="empty-state-icon"><CheckCircleIcon width={32} height={32} /></div>
             <div className="empty-state-title">{pending.length === 0 ? 'No pending reports' : 'No matching reports'}</div>
             <div className="empty-state-text">
               {pending.length === 0 ? 'New reports will appear here for review.' : 'Try a different search term.'}
@@ -313,7 +313,7 @@ export default function VerifierDashboard() {
       ) : (
         filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🗂️</div>
+            <div className="empty-state-icon"><ClipboardListIcon width={32} height={32} /></div>
             <div className="empty-state-title">{verified.length === 0 ? 'No verified reports yet' : 'No matching reports'}</div>
             <div className="empty-state-text">
               {verified.length === 0 ? 'Reports you verify will show up here for reference.' : 'Try a different search term.'}

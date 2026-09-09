@@ -36,10 +36,18 @@
 }
 
 .tb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: #aaa;
   font-size: 14px;
   text-align: center;
   padding: 20px 0;
+}
+
+.tb-empty svg {
+  opacity: 0.6;
 }
 
 .tb-item-grid {

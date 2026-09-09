@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import { API } from '../config';
 import ConfirmModal from '../components/ConfirmModal';
+import { BellIcon } from '../components/Icons';
 
 const TYPE_OPTIONS = [
   { value: 'info',   label: 'Info'   },
@@ -226,7 +227,7 @@ export default function NotificationsPage() {
           </table>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🔔</div>
+            <div className="empty-state-icon"><BellIcon width={32} height={32} /></div>
             <div className="empty-state-title">
               {notifications.length === 0 ? 'No notifications sent yet' : 'No notifications match your search'}
             </div>

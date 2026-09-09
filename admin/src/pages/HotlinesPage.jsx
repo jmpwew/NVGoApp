@@ -159,7 +159,7 @@ export default function HotlinesPage() {
           </table>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">📞</div>
+            <div className="empty-state-icon"><PhoneIcon width={32} height={32} /></div>
             <div className="empty-state-title">
               {hotlines.length === 0 ? 'No hotlines yet' : 'No hotlines match your search'}
             </div>

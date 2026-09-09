@@ -5,6 +5,7 @@ import './UsersPage.css';
 
 import { API } from '../config';
 import ConfirmModal from '../components/ConfirmModal';
+import { UserIcon } from '../components/Icons';
 
 const STAFF_ROLES  = ['admin', 'verifier', 'police', 'bfp', 'medical'];
 const OFFICE_ROLES = ['police', 'bfp', 'medical'];
@@ -193,7 +194,13 @@ export default function UsersPage() {
           {filtered.length === 0 ? (
             <tr>
               <td colSpan="7">
-                {tab === 'users' ? 'No app users found.' : 'No staff accounts found.'}
+                <div className="empty-state">
+                  <div className="empty-state-icon"><UserIcon width={32} height={32} /></div>
+                  <div className="empty-state-title">
+                    {tab === 'users' ? 'No app users found' : 'No staff accounts found'}
+                  </div>
+                  <div className="empty-state-text">Try a different search term.</div>
+                </div>
               </td>
             </tr>
           ) : (

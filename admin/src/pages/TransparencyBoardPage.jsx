@@ -5,6 +5,7 @@ import './TransparencyBoardPage.css';
 import { API } from '../config';
 import { getImageUrl } from '../getImageUrl';
 import ConfirmModal from '../components/ConfirmModal';
+import { ClipboardListIcon, DashboardIcon, CheckCircleIcon } from '../components/Icons';
 
 const emptyBoardForm = {
   lgu_name: '',
@@ -671,7 +672,7 @@ export default function TransparencyBoardPage() {
         </div>
 
         {documents.length === 0 ? (
-          <p className="tb-empty">No documents uploaded yet.</p>
+          <p className="tb-empty"><ClipboardListIcon width={18} height={18} />No documents uploaded yet.</p>
         ) : (
           <div className="tb-doc-list">
             {documents.map(doc => (
@@ -718,7 +719,7 @@ export default function TransparencyBoardPage() {
         </div>
 
         {filteredInfrastructure.length === 0 ? (
-          <p className="tb-empty">No infrastructure projects match this filter.</p>
+          <p className="tb-empty"><DashboardIcon width={18} height={18} />No infrastructure projects match this filter.</p>
         ) : (
           <div className="tb-item-grid">
             {filteredInfrastructure.map(item => (
@@ -785,7 +786,7 @@ export default function TransparencyBoardPage() {
         </div>
 
         {filteredAccomplishments.length === 0 ? (
-          <p className="tb-empty">No accomplishments match this filter.</p>
+          <p className="tb-empty"><CheckCircleIcon width={18} height={18} />No accomplishments match this filter.</p>
         ) : (
           <div className="tb-item-grid">
             {filteredAccomplishments.map(item => (
@@ -828,7 +829,7 @@ export default function TransparencyBoardPage() {
        
 
         {sections.length === 0 ? (
-          <p className="tb-empty">No additional sections added yet.</p>
+          <p className="tb-empty"><ClipboardListIcon width={18} height={18} />No additional sections added yet.</p>
         ) : (
           <div className="tb-item-grid">
             {sections.map(item => (

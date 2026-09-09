@@ -3,7 +3,7 @@ import axios from 'axios';
 import './AuditLogsPage.css';
 
 import { API } from '../config';
-import { ChevronDownIcon } from '../components/Icons';
+import { ChevronDownIcon, ClipboardListIcon } from '../components/Icons';
 
 const FIELD_LABELS = {
   id: 'ID',
@@ -251,7 +251,15 @@ export default function AuditLogsPage() {
         </thead>
         <tbody>
           {logs.length === 0 && !loading ? (
-            <tr><td colSpan="7" style={{ textAlign: 'center', color: '#aaa' }}>No audit log entries match these filters.</td></tr>
+            <tr>
+              <td colSpan="7">
+                <div className="empty-state">
+                  <div className="empty-state-icon"><ClipboardListIcon width={32} height={32} /></div>
+                  <div className="empty-state-title">No audit log entries</div>
+                  <div className="empty-state-text">No entries match these filters.</div>
+                </div>
+              </td>
+            </tr>
           ) : (
             logs.map(log => {
               const isOpen = expandedId === log.id;

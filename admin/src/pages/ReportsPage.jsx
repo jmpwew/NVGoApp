@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, TrashIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, TrashIcon, ClipboardListIcon } from '../components/Icons';
 import './ReportsPage.css';
 
 import { API } from '../config';
@@ -197,7 +197,7 @@ export default function ReportsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">📄</div>
+          <div className="empty-state-icon"><ClipboardListIcon width={32} height={32} /></div>
           <div className="empty-state-title">No reports found</div>
           <div className="empty-state-text">Try a different search or filter.</div>
         </div>

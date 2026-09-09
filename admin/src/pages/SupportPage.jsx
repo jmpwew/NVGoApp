@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 import { API } from '../config';
+import { MessageCircleIcon } from '../components/Icons';
 
 export default function SupportPage() {
   const [messages, setMessages] = useState([]);
@@ -86,7 +87,11 @@ export default function SupportPage() {
       {loading ? (
         <p style={{ color: '#6b7280' }}>Loading…</p>
       ) : messages.length === 0 ? (
-        <p style={{ color: '#6b7280' }}>No messages yet.</p>
+        <div className="empty-state">
+          <div className="empty-state-icon"><MessageCircleIcon width={32} height={32} /></div>
+          <div className="empty-state-title">No messages yet</div>
+          <div className="empty-state-text">Messages sent through Contact Support will show up here.</div>
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 720 }}>
           {messages.map(m => (
