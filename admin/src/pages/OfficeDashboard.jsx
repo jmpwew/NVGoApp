@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon, UserIcon, PhoneIcon, PhotoIcon, VideoIcon, AlertTriangleIcon, CloseIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, ClockIcon, UserIcon, PhoneIcon, PhotoIcon, VideoIcon, AlertTriangleIcon, CloseIcon, BellIcon, BellOffIcon } from '../components/Icons';
 import QuarterlyLogsModal from '../components/QuarterlyLogsModal';
+import playNotificationSound, { playUrgentAlertSound } from '../playNotificationSound';
 import './OfficeDashboard.css';
 import './ReportsPage.css'; 
 import { API } from '../config';
@@ -21,6 +22,28 @@ const STATUS_LABELS = {
   dispatched: 'Unit Dispatched',  
   resolved:   'Resolved',
 };
+
+
+const SLA_MINUTES = {
+  urgent: { warning: 5,  critical: 15 },
+  normal: { warning: 20, critical: 60 },
+};
+
+const MUTE_STORAGE_KEY = 'office_alert_muted';
+
+function elapsedMinutes(dateStr) {
+  return (Date.now() - new Date(dateStr).getTime()) / 60000;
+}
+
+
+function slaTier(a) {
+  if (a.assignment_status === 'resolved') return 'ok';
+  const sla = a.is_urgent ? SLA_MINUTES.urgent : SLA_MINUTES.normal;
+  const mins = elapsedMinutes(a.assigned_at);
+  if (mins >= sla.critical) return 'critical';
+  if (mins >= sla.warning) return 'warning';
+  return 'ok';
+}
 
 function initials(name) {
   if (!name) return '?';
@@ -52,6 +75,12 @@ export default function OfficeDashboard() {
   const [toast, setToast]             = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); 
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [muted, setMuted] = useState(() => localStorage.getItem(MUTE_STORAGE_KEY) === '1');
+  const [newAlerts, setNewAlerts] = useState([]);
+  const seenIdsRef = useRef(null); 
+  const mutedRef = useRef(muted);
+
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
 
   const token = localStorage.getItem('token');
   const admin = JSON.parse(localStorage.getItem('admin') || '{}');
@@ -96,13 +125,53 @@ export default function OfficeDashboard() {
       const res = await axios.get(`${API}/api/office/assignments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAssignments(res.data);
+      const data = res.data;
+
+      if (seenIdsRef.current === null) {
+       
+        seenIdsRef.current = new Set(data.map(a => a.assignment_id));
+      } else {
+        const freshOnes = data.filter(a => !seenIdsRef.current.has(a.assignment_id));
+        if (freshOnes.length > 0) {
+          freshOnes.forEach(a => seenIdsRef.current.add(a.assignment_id));
+          freshOnes.forEach(a => triggerNewReportAlert(a));
+        }
+      }
+
+      setAssignments(data);
     } catch (err) {
       console.log(err);
       if (!silent) setToast({ type: 'error', text: 'Failed to load assigned reports.' });
     } finally {
       if (!silent) setLoading(false);
     }
+  }
+
+ 
+  function triggerNewReportAlert(a) {
+    const alertId = `${a.assignment_id}-${Date.now()}`;
+    setNewAlerts(prev => [...prev, { ...a, alertId }]);
+
+    if (!mutedRef.current) {
+      if (a.is_urgent) playUrgentAlertSound();
+      else playNotificationSound();
+    }
+
+    setTimeout(() => {
+      setNewAlerts(prev => prev.filter(x => x.alertId !== alertId));
+    }, 9000);
+  }
+
+  function dismissAlert(alertId) {
+    setNewAlerts(prev => prev.filter(x => x.alertId !== alertId));
+  }
+
+  function toggleMute() {
+    setMuted(prev => {
+      const next = !prev;
+      localStorage.setItem(MUTE_STORAGE_KEY, next ? '1' : '0');
+      return next;
+    });
   }
 
   function openAssignment(a) {
@@ -196,18 +265,27 @@ export default function OfficeDashboard() {
     }
   }
 
-  const filtered = assignments.filter(a => {
-    const matchesStatus = a.assignment_status === filter;
-    const q = search.toLowerCase();
-    const matchesSearch = !q ||
-      a.name?.toLowerCase().includes(q) ||
-      a.description?.toLowerCase().includes(q) ||
-      a.location_note?.toLowerCase().includes(q);
-    return matchesStatus && matchesSearch;
-  });
+  const isActiveUrgent = a => a.is_urgent && a.assignment_status !== 'resolved';
+
+  const filtered = assignments
+    .filter(a => {
+      const matchesStatus = filter === 'urgent' ? isActiveUrgent(a) : a.assignment_status === filter;
+      const q = search.toLowerCase();
+      const matchesSearch = !q ||
+        a.name?.toLowerCase().includes(q) ||
+        a.description?.toLowerCase().includes(q) ||
+        a.location_note?.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    })
+   
+    .sort((a, b) => (isActiveUrgent(a) ? 0 : 1) - (isActiveUrgent(b) ? 0 : 1));
+
   const ongoingCount    = assignments.filter(a => a.assignment_status === 'ongoing').length;
   const dispatchedCount = assignments.filter(a => a.assignment_status === 'dispatched').length;
   const resolvedCount   = assignments.filter(a => a.assignment_status === 'resolved').length;
+  const urgentCount     = assignments.filter(isActiveUrgent).length;
+
+  const freshIds = new Set(newAlerts.map(a => a.assignment_id));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -225,8 +303,45 @@ export default function OfficeDashboard() {
             <div className="office-header-subtitle">Reports assigned to your office appear here</div>
           </div>
         </div>
-        <QuarterlyLogsModal endpoint={`${API}/api/office/reports/quarterly`} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            className={`alert-mute-toggle ${muted ? 'is-muted' : ''}`}
+            onClick={toggleMute}
+            title={muted ? 'Unmute new-report alert sound' : 'Mute new-report alert sound'}
+          >
+            {muted ? <BellOffIcon width={16} height={16} /> : <BellIcon width={16} height={16} />}
+            {muted ? 'Muted' : 'Alert sound on'}
+          </button>
+          <QuarterlyLogsModal endpoint={`${API}/api/office/reports/quarterly`} />
+        </div>
       </div>
+
+      {newAlerts.length > 0 && (
+        <div className="new-report-alerts">
+          {newAlerts.map(a => (
+            <div key={a.alertId} className={`new-report-banner ${a.is_urgent ? 'is-urgent' : 'is-normal'}`}>
+              <span className="new-report-banner-icon"><AlertTriangleIcon width={16} height={16} /></span>
+              <span className="new-report-banner-text">
+                {a.is_urgent ? 'New urgent report' : 'New report assigned'} — {a.name || 'Anonymous'}
+                {a.barangay ? `, Brgy. ${a.barangay}` : ''}
+              </span>
+              <button
+                className="new-report-banner-view"
+                onClick={() => { openAssignment(a); dismissAlert(a.alertId); }}
+              >
+                View
+              </button>
+              <button
+                className="new-report-banner-dismiss"
+                aria-label="Dismiss"
+                onClick={() => dismissAlert(a.alertId)}
+              >
+                <CloseIcon width={12} height={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="metric-grid">
         <div className="metric-card">
@@ -249,15 +364,17 @@ export default function OfficeDashboard() {
 
       <div className="report-tabs">
         {[
+          { value: 'urgent',     label: 'Urgent queue',    count: urgentCount, urgent: true },
           { value: 'ongoing',    label: 'Ongoing',         count: ongoingCount },
           { value: 'dispatched', label: 'Unit Dispatched', count: dispatchedCount },
           { value: 'resolved',   label: 'Resolved',        count: resolvedCount },
         ].map(opt => (
           <button
             key={opt.value}
-            className={`report-tab ${filter === opt.value ? 'active' : ''}`}
+            className={`report-tab ${opt.urgent ? 'report-tab-urgent' : ''} ${filter === opt.value ? 'active' : ''}`}
             onClick={() => setFilter(opt.value)}
           >
+            {opt.urgent && <AlertTriangleIcon width={13} height={13} />}
             {opt.label} <span className="report-tab-count">{opt.count}</span>
           </button>
         ))}
@@ -298,7 +415,7 @@ export default function OfficeDashboard() {
           {paginated.map(a => (
             <div
               key={a.assignment_id}
-              className={`case-card ${a.assignment_status === 'resolved' ? 'is-resolved' : ''}`}
+              className={`case-card ${a.assignment_status === 'resolved' ? 'is-resolved' : ''} ${freshIds.has(a.assignment_id) ? 'is-fresh' : ''}`}
               onClick={() => openAssignment(a)}
             >
               <div className={`case-card-stripe status-${a.assignment_status}`} />
@@ -322,11 +439,18 @@ export default function OfficeDashboard() {
                   )}
                 </div>
               </div>
-              <span className="case-card-time">
-                {a.assignment_status === 'ongoing'
-                  ? timeAgo(a.assigned_at)
-                  : <>updated {timeAgo(a.updated_at)}</>}
-              </span>
+              {slaTier(a) !== 'ok' ? (
+                <span className={`sla-badge tier-${slaTier(a)}`}>
+                  <ClockIcon width={12} height={12} />
+                  {Math.round(elapsedMinutes(a.assigned_at))}m — SLA {slaTier(a) === 'critical' ? 'critical' : 'exceeded'}
+                </span>
+              ) : (
+                <span className="case-card-time">
+                  {a.assignment_status === 'ongoing'
+                    ? timeAgo(a.assigned_at)
+                    : <>updated {timeAgo(a.updated_at)}</>}
+                </span>
+              )}
               <div className="case-card-action" onClick={e => e.stopPropagation()}>
                 {a.assignment_status === 'ongoing' ? (
                   <button className="btn-green" onClick={() => updateStatus(a.assignment_id, 'dispatched', 'ongoing')}>
@@ -407,7 +531,17 @@ export default function OfficeDashboard() {
                 </div>
                 <div className="detail-info-card">
                   <div className="detail-label"><ClockIcon width={13} height={13} /> Date Assigned</div>
-                  <div className="detail-value">{new Date(selected.assigned_at).toLocaleString()}</div>
+                  <div className="detail-value">
+                    {new Date(selected.assigned_at).toLocaleString()}
+                    {slaTier(selected) !== 'ok' && (
+                      <div style={{ marginTop: 6 }}>
+                        <span className={`sla-badge tier-${slaTier(selected)}`}>
+                          <ClockIcon width={12} height={12} />
+                          {Math.round(elapsedMinutes(selected.assigned_at))}m — SLA {slaTier(selected) === 'critical' ? 'critical' : 'exceeded'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {selected.assignment_status !== 'ongoing' && (
                   <div className="detail-info-card">

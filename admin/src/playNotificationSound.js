@@ -9,8 +9,7 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Call this from a real user-gesture event handler (click/keydown/touchstart).
-// Safe to call repeatedly - a no-op once the context is already running.
+
 export function unlockAudio() {
   try {
     const ctx = getAudioContext();
@@ -27,16 +26,14 @@ export default async function playNotificationSound() {
     if (!ctx) return;
 
     if (ctx.state === 'suspended') {
-      // Try to resume (works once the page has had any gesture at all).
-      // If this fails/never resolves - e.g. no gesture has happened yet -
-      // bail out instead of scheduling notes on a frozen clock.
+     
       await ctx.resume().catch(() => {});
       if (ctx.state === 'suspended') return;
     }
 
     const now = ctx.currentTime;
 
-    // two quick notes, like a soft "ding-dong"
+  
     [
       { freq: 880, start: 0,    dur: 0.14 },
       { freq: 660, start: 0.13, dur: 0.22 },
@@ -57,7 +54,41 @@ export default async function playNotificationSound() {
       osc.stop(now + start + dur + 0.02);
     });
   } catch (err) {
-    // Never let a sound failure break the app.
+ 
     console.log('notification sound failed:', err);
+  }
+}
+
+
+export async function playUrgentAlertSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      await ctx.resume().catch(() => {});
+      if (ctx.state === 'suspended') return;
+    }
+
+    const now = ctx.currentTime;
+
+    [0, 0.18, 0.36].forEach((start) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 1000;
+
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.2, now + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + 0.14);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + start);
+      osc.stop(now + start + 0.16);
+    });
+  } catch (err) {
+    console.log('urgent alert sound failed:', err);
   }
 }

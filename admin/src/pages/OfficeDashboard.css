@@ -134,3 +134,162 @@
   font-size: 13px;
   color: var(--text-secondary);
 }
+
+/* ── Urgent queue tab (red accent, distinct from normal status tabs) ── */
+.report-tab.report-tab-urgent {
+  color: var(--danger);
+}
+.report-tab.report-tab-urgent .report-tab-count {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+.report-tab.report-tab-urgent:hover {
+  color: var(--danger);
+}
+.report-tab.report-tab-urgent.active {
+  color: var(--danger);
+  border-bottom-color: var(--danger);
+}
+.report-tab.report-tab-urgent.active .report-tab-count {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* ── SLA elapsed-time badge (replaces plain "Xm ago" once overdue) ── */
+.sla-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sla-badge.tier-warning {
+  color: var(--warning);
+  background-color: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.sla-badge.tier-critical {
+  color: #fff;
+  background-color: var(--danger);
+  padding: 3px 9px;
+  border-radius: 999px;
+  animation: sla-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes sla-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Mute toggle for new-report alert sound ──────────── */
+.alert-mute-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.alert-mute-toggle:hover {
+  border-color: var(--border-strong);
+}
+
+.alert-mute-toggle.is-muted {
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
+}
+
+/* ── New-report alert banners (audible + visual indicator) ── */
+.new-report-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.new-report-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  animation: banner-slide-down 0.2s ease-out;
+}
+
+@keyframes banner-slide-down {
+  from { transform: translateY(-6px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.new-report-banner.is-urgent {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.new-report-banner.is-normal {
+  background-color: var(--info-bg);
+  color: var(--info-dark);
+  border: 1px solid #bfdbfe;
+}
+
+.new-report-banner-icon {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.new-report-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.new-report-banner-view {
+  background: none;
+  border: 1px solid currentColor;
+  color: inherit;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.new-report-banner-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px;
+}
+
+.new-report-banner-dismiss:hover {
+  opacity: 1;
+}
+
+/* Freshly-arrived card gets a brief highlight so it's obvious where it landed */
+.case-card.is-fresh {
+  animation: case-card-flash 2.2s ease-out;
+}
+
+@keyframes case-card-flash {
+  from { background-color: var(--danger-bg); }
+  to   { background-color: var(--surface); }
+}
