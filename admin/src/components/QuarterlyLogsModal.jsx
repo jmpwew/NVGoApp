@@ -120,6 +120,7 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
             <button className="map-modal-close" onClick={() => setOpen(false)}>{'\u2715'}</button>
             <h2 className="detail-modal-title">Quarterly Logs</h2>
 
+            <div className="detail-modal-body">
             <div className="quarterly-controls">
               <select value={quarter} onChange={e => setQuarter(Number(e.target.value))}>
                 {QUARTERS.map(q => (
@@ -145,7 +146,6 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
             )}
 
             {data && (
-              <>
                 <div ref={reportRef}>
                 <div className="metric-grid" style={{ marginTop: 4 }}>
                   <div className="metric-card">
@@ -245,15 +245,17 @@ export default function QuarterlyLogsModal({ endpoint, buttonLabel = 'Generate Q
                   </>
                 )}
                 </div>
+            )}
+            </div>
 
-                <div className="action-buttons detail-modal-actions">
-                  <button className="btn-gray" onClick={() => window.print()}>Print</button>
-                  <button className="btn-gray" onClick={saveAsPdf} disabled={exporting}>
-                    {exporting ? <><span className="spinner" /> Saving...</> : 'Save as PDF'}
-                  </button>
-                  <button className="btn-gray" onClick={() => setOpen(false)}>Close</button>
-                </div>
-              </>
+            {data && (
+              <div className="action-buttons detail-modal-actions">
+                <button className="btn-gray" onClick={() => window.print()}>Print</button>
+                <button className="btn-gray" onClick={saveAsPdf} disabled={exporting}>
+                  {exporting ? <><span className="spinner" /> Saving...</> : 'Save as PDF'}
+                </button>
+                <button className="btn-gray" onClick={() => setOpen(false)}>Close</button>
+              </div>
             )}
           </div>
         </div>
