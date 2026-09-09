@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
-import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, CheckCircleIcon, ClipboardListIcon } from '../components/Icons';
+import { ShieldIcon, FlameIcon, CrossIcon, MapPinIcon, PhotoIcon, VideoIcon, UserIcon, PhoneIcon, ClockIcon, AlertTriangleIcon, CloseIcon, CheckCircleIcon, ClipboardListIcon, BellIcon, BellOffIcon } from '../components/Icons';
 import { REPORT_TYPES, REPORT_TYPE_LABELS } from '../constants/reportTypes';
+import playNotificationSound from '../playNotificationSound';
 import './VerifierDashboard.css';
 import './OfficeDashboard.css';
 import './ReportsPage.css';
+
+const MUTE_STORAGE_KEY = 'verifier_alert_muted';
 
 function initials(name) {
   if (!name) return '?';
@@ -53,7 +56,13 @@ export default function VerifierDashboard() {
   const [page, setPage]           = useState(1);
   const PAGE_SIZE = 10;
   const [confirmVerify, setConfirmVerify] = useState(false); 
+  const [muted, setMuted] = useState(() => localStorage.getItem(MUTE_STORAGE_KEY) === '1');
+  const [newAlerts, setNewAlerts] = useState([]);
+  const seenIdsRef = useRef(null); 
+  const mutedRef = useRef(muted);
   const token = localStorage.getItem('token');
+
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
 
   useEffect(() => {
     fetchPending();
@@ -105,13 +114,42 @@ export default function VerifierDashboard() {
       const res = await axios.get(`${API}/api/verifier/reports/pending`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPending(res.data);
+      const data = res.data;
+
+      if (seenIdsRef.current === null) {
+        // First load: just remember what's already here, don't alert on it.
+        seenIdsRef.current = new Set(data.map(r => r.id));
+      } else {
+        const freshOnes = data.filter(r => !seenIdsRef.current.has(r.id));
+        if (freshOnes.length > 0) {
+          freshOnes.forEach(r => seenIdsRef.current.add(r.id));
+          freshOnes.forEach(r => triggerNewReportAlert(r));
+        }
+      }
+
+      setPending(data);
     } catch (err) {
       console.log(err);
       if (!silent) setToast({ type: 'error', text: 'Failed to load pending reports.' });
     } finally {
       if (!silent) setLoading(false);
     }
+  }
+
+
+  function triggerNewReportAlert(r) {
+    const alertId = `${r.id}-${Date.now()}`;
+    setNewAlerts(prev => [...prev, { ...r, alertId }]);
+
+    if (!mutedRef.current) playNotificationSound();
+  }
+
+  function toggleMute() {
+    setMuted(prev => {
+      const next = !prev;
+      localStorage.setItem(MUTE_STORAGE_KEY, next ? '1' : '0');
+      return next;
+    });
   }
 
   async function fetchVerified() {
@@ -131,6 +169,8 @@ export default function VerifierDashboard() {
     setChecked([]);
     setReportType(report.report_type || '');
     setIsUrgent(!!report.is_urgent);
+    // Opening a report is what clears its "new report" alert(s).
+    setNewAlerts(prev => prev.filter(x => x.id !== report.id));
   }
 
   function toggleOffice(value) {
@@ -214,10 +254,40 @@ export default function VerifierDashboard() {
           <h1>Report verifier</h1>
           
         </div>
-        <div className="live-chip">
-          {loading ? 'Loading…' : `${pending.length} awaiting review`}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            className={`alert-mute-toggle ${muted ? 'is-muted' : ''}`}
+            onClick={toggleMute}
+            title={muted ? 'Unmute new-report alert sound' : 'Mute new-report alert sound'}
+          >
+            {muted ? <BellOffIcon width={16} height={16} /> : <BellIcon width={16} height={16} />}
+            {muted ? 'Muted' : 'Alert sound on'}
+          </button>
+          <div className="live-chip">
+            {loading ? 'Loading…' : `${pending.length} awaiting review`}
+          </div>
         </div>
       </div>
+
+      {newAlerts.length > 0 && (
+        <div className="new-report-alerts">
+          {newAlerts.map(r => (
+            <div key={r.alertId} className="new-report-banner is-normal">
+              <span className="new-report-banner-icon"><AlertTriangleIcon width={16} height={16} /></span>
+              <span className="new-report-banner-text">
+                New report submitted — {r.name || 'Anonymous'}
+                {r.barangay ? `, Brgy. ${r.barangay}` : ''}
+              </span>
+              <button
+                className="new-report-banner-view"
+                onClick={() => openReview(r)}
+              >
+                Review
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="metric-grid verifier-metric-grid">
         <div className={`metric-card ${pending.length > 0 ? 'accent' : ''}`}>
